@@ -1,0 +1,47 @@
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.stat-card {
+  padding: 24px;
+}
+
+.stat-title {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.stat-trend {
+  font-size: 0.75rem;
+}
+
+.activity-card {
+  padding: 24px;
+  height: 400px;
+}
+
+.activity-title {
+  font-size: 1.25rem;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+
+.activity-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80%;
+  color: var(--text-muted);
+}

@@ -1,0 +1,10 @@
+.manage-products-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.manage-products-title {
+  margin: 0;
+}

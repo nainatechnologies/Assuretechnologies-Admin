@@ -1,0 +1,113 @@
+.product-table-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.product-table-wrapper {
+  overflow: hidden;
+}
+
+.product-table-scroll {
+  overflow-x: auto;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 800px;
+}
+
+.product-table thead tr {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-hover);
+}
+
+.product-table th {
+  padding: 16px 24px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.product-table th.id-col {
+  width: 80px;
+}
+
+.product-table td {
+  padding: 16px 24px;
+}
+
+.product-table tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.product-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.product-id {
+  color: var(--text-muted);
+}
+
+.product-name {
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.product-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.product-category-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: var(--surface-hover);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+}
+
+.product-banner {
+  color: var(--text-muted);
+}
+
+.product-price {
+  font-weight: 500;
+}
+
+.product-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.edit-btn {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10B981;
+}
+
+.edit-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.delete-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
