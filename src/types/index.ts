@@ -10,3 +10,11 @@ export interface Product {
   additionalImage?: string | File;
   additionalImageName?: string;
 }
+
+export interface Service {
+  id: string;
+  category: string;
+  subCategory: string;
+  image: string | File;
+  imageName: string;
+}

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import type { Product } from '../types';
-import './ProductTable.css';
+import type { Service } from '../types';
+import './ProductTable.css'; // Reuse table styles
 
-interface ProductTableProps {
-  products: Product[];
-  onEditProduct: (id: string) => void;
-  onDeleteProduct: (id: string) => void;
+interface ServiceTableProps {
+  services: Service[];
+  onEditService: (id: string) => void;
+  onDeleteService: (id: string) => void;
 }
 
 function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
@@ -29,11 +29,15 @@ function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
   return <img src={url} alt={alt} style={{ height: '40px', width: 'auto', borderRadius: '4px', objectFit: 'cover' }} />;
 }
 
-export default function ProductTable({ products, onEditProduct, onDeleteProduct }: ProductTableProps) {
-  if (products.length === 0) {
+export default function ServiceTable({
+  services,
+  onEditService,
+  onDeleteService
+}: ServiceTableProps) {
+  if (services.length === 0) {
     return (
       <div className="glass-panel product-table-empty">
-        No products found. Add a product to get started.
+        <p>No services found. Add a new service to get started.</p>
       </div>
     );
   }
@@ -45,41 +49,42 @@ export default function ProductTable({ products, onEditProduct, onDeleteProduct 
           <thead>
             <tr>
               <th className="id-col">ID</th>
-              <th>Product</th>
               <th>Category</th>
-              <th>Banner</th>
-              <th>Price</th>
-              <th>Action</th>
+              <th>Sub Category</th>
+              <th>Image</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
-              <tr key={product.id}>
-                <td className="product-id">#{product.id}</td>
+            {services.map((service) => (
+              <tr key={service.id}>
                 <td>
-                  <div className="product-name">{product.name}</div>
-                  <div className="product-desc">{product.description}</div>
+                  <span className="product-id">#{service.id}</span>
                 </td>
                 <td>
-                  <span className="product-category-badge">
-                    {product.category}
-                  </span>
+                  <span className="product-category-badge">{service.category}</span>
                 </td>
-                <td className="product-banner">
-                  <ImageCell image={product.banner} alt={product.bannerName || 'Product'} />
+                <td>
+                  <div className="product-name">{service.subCategory}</div>
                 </td>
-                <td className="product-price">{product.price}</td>
+                <td>
+                  <div className="product-banner" title={service.imageName}>
+                    <ImageCell image={service.image} alt={service.imageName || 'Service Image'} />
+                  </div>
+                </td>
                 <td>
                   <div className="product-actions">
                     <button
-                      onClick={() => onEditProduct(product.id)}
                       className="action-btn edit-btn"
+                      onClick={() => onEditService(service.id)}
+                      title="Edit Service"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => onDeleteProduct(product.id)}
                       className="action-btn delete-btn"
+                      onClick={() => onDeleteService(service.id)}
+                      title="Delete Service"
                     >
                       Delete
                     </button>

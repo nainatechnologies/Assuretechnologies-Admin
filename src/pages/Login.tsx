@@ -7,18 +7,18 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  
+
   const navigate = useNavigate();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
+
+    // Validation 
     if (password.length < 6) {
       setPasswordError('Password must be at least 6 characters long');
       return;
     }
-    
+
     setPasswordError('');
 
     // Simulate login success
@@ -51,21 +51,21 @@ export default function Login() {
         <div className="login-logo"></div>
         <h2 className="login-title">Welcome Back</h2>
         <p className="login-subtitle">Sign in to your account to continue</p>
-        
+
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label className="input-label" htmlFor="email">Email Address</label>
-            <input 
-              type="email" 
+            <input
+              type="email"
               id="email"
-              className="input-field" 
+              className="input-field"
               placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          
+
           <div className="input-group">
             <div className="password-header">
               <label className="input-label" htmlFor="password">Password</label>
@@ -73,10 +73,10 @@ export default function Login() {
                 Forgot password?
               </a>
             </div>
-            <input 
-              type="password" 
+            <input
+              type="password"
               id="password"
-              className="input-field" 
+              className="input-field"
               placeholder="••••••••"
               value={password}
               onChange={(e) => {
@@ -87,7 +87,7 @@ export default function Login() {
             />
           </div>
           {passwordError && <div className="input-error">{passwordError}</div>}
-          
+
           <div className="login-btn-wrapper">
             <button type="submit" className="btn-primary">
               Sign In

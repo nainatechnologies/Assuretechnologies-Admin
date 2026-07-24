@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import ManageProducts from './pages/ManageProducts';
+import ManageServices from './pages/ManageServices';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
 
@@ -20,6 +21,7 @@ function App() {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ManageProducts />} />
+          <Route path="services" element={<ManageServices />} />
         </Route>
         
         {/* Fallback route */}

@@ -227,3 +227,60 @@ div:where(.swal2-container) div:where(.swal2-popup) {
 div:where(.swal2-container) h2:where(.swal2-title) {
   color: var(--text-main);
 }
+
+/* Colorful inputs */
+.colorful-input {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.colorful-input:focus, .colorful-input:hover {
+  border-color: #6366f1;
+  background: #ffffff;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.modern-file-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 6px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modern-file-input:hover {
+  border-color: #94a3b8;
+}
+
+.modern-file-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  margin-right: 12px;
+  transition: all 0.2s;
+}
+
+.modern-file-input:hover .modern-file-btn {
+  background: #e2e8f0;
+}
+
+.modern-file-name {
+  font-size: 0.9rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}

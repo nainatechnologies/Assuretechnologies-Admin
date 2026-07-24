@@ -12,7 +12,7 @@ export const CATEGORIES = [
   'Biometrics',
   'Communication',
   'Infrastructure',
-  'ITSupport',
+  'IT Support',
   'Solar',
   'IoT',
   'Security',
@@ -27,7 +27,7 @@ interface ProductFormProps {
 
 export default function ProductForm({ onAddProduct }: ProductFormProps) {
   const [name, setName] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
+  const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
   const [priceError, setPriceError] = useState('');
   const [description, setDescription] = useState('');
@@ -64,7 +64,7 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
 
     // Reset form
     setName('');
-    setCategory(CATEGORIES[0]);
+    setCategory('');
     setPrice('');
     setPriceError('');
     setDescription('');
@@ -92,7 +92,7 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
             <input
               type="text"
               id="productName"
-              className="input-field"
+              className="input-field colorful-input"
               placeholder="Enter product name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -102,25 +102,29 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
 
           <div className="input-group form-group">
             <label className="input-label" htmlFor="category">Category</label>
-            <select
-              id="category"
-              className="input-field category-select"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-            >
-              {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <select
+                id="category"
+                className="input-field category-select colorful-input"
+                style={{ width: '100%', paddingRight: '40px' }}
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                required
+              >
+                <option value="" disabled hidden>Select Category...</option>
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="input-group form-group">
-            <label className="input-label" htmlFor="price">Price (Numbers only)</label>
+            <label className="input-label" htmlFor="price">Price</label>
             <input
               type="text"
               id="price"
-              className="input-field"
+              className="input-field colorful-input"
               placeholder="299.00"
               value={price}
               onChange={handlePriceChange}
@@ -130,18 +134,15 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
           </div>
 
           <div className="input-group form-group">
-            <label className="input-label" htmlFor="banner">Banner Image</label>
-            <div className="file-input-wrapper">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="input-field file-input-btn"
-              >
-                Choose File
-              </button>
-              <span className="file-name">
+            <label className="input-label">Banner Image</label>
+            <div
+              className="modern-file-input"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="modern-file-btn">Choose File</div>
+              <div className="modern-file-name">
                 {bannerFile ? bannerFile.name : 'No file chosen'}
-              </span>
+              </div>
               <input
                 type="file"
                 id="banner"
@@ -159,7 +160,7 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
             </label>
             <textarea
               id="description"
-              className="input-field textarea-field"
+              className="input-field textarea-field colorful-input"
               placeholder="Enter short description (max 100 chars)..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}

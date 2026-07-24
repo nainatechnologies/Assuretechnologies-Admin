@@ -26,6 +26,8 @@ export default function EditProductModal({
   const [bannerName, setBannerName] = useState('');
   const [additionalFile, setAdditionalFile] = useState<File | null>(null);
   const [additionalImageName, setAdditionalImageName] = useState('');
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [additionalPreview, setAdditionalPreview] = useState<string | null>(null);
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
   const additionalInputRef = useRef<HTMLInputElement>(null);
@@ -43,8 +45,35 @@ export default function EditProductModal({
       setAdditionalImageName(product.additionalImageName || 'No file chosen');
       setBannerFile(null);
       setAdditionalFile(null);
+
+      if (product.banner instanceof File) {
+        setBannerPreview(URL.createObjectURL(product.banner));
+      } else if (typeof product.banner === 'string' && product.banner) {
+        setBannerPreview(product.banner);
+      } else {
+        setBannerPreview(null);
+      }
+
+      if (product.additionalImage instanceof File) {
+        setAdditionalPreview(URL.createObjectURL(product.additionalImage));
+      } else if (typeof product.additionalImage === 'string' && product.additionalImage) {
+        setAdditionalPreview(product.additionalImage);
+      } else {
+        setAdditionalPreview(null);
+      }
     }
   }, [product]);
+
+  useEffect(() => {
+    return () => {
+      if (bannerPreview && bannerPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(bannerPreview);
+      }
+      if (additionalPreview && additionalPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(additionalPreview);
+      }
+    };
+  }, [bannerPreview, additionalPreview]);
 
   if (!isOpen || !product) return null;
 
@@ -61,6 +90,7 @@ export default function EditProductModal({
       const file = e.target.files[0];
       setBannerFile(file);
       setBannerName(file.name);
+      setBannerPreview(URL.createObjectURL(file));
     }
   };
 
@@ -69,6 +99,7 @@ export default function EditProductModal({
       const file = e.target.files[0];
       setAdditionalFile(file);
       setAdditionalImageName(file.name);
+      setAdditionalPreview(URL.createObjectURL(file));
     }
   };
 
@@ -116,7 +147,7 @@ export default function EditProductModal({
               <input
                 type="text"
                 id="editProductName"
-                className="input-field"
+                className="input-field colorful-input"
                 placeholder="Enter product name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -127,26 +158,30 @@ export default function EditProductModal({
             {/* Category */}
             <div className="input-group form-group">
               <label className="input-label" htmlFor="editCategory">Category</label>
-              <select
-                id="editCategory"
-                className="input-field category-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                required
-              >
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <select
+                  id="editCategory"
+                  className="input-field category-select colorful-input"
+                  style={{ width: '100%', paddingRight: '40px' }}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  required
+                >
+                  <option value="" disabled hidden>Select Category...</option>
+                  {CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             {/* Price (Numeric Validation) */}
             <div className="input-group form-group">
-              <label className="input-label" htmlFor="editPrice">Price (Numbers only)</label>
+              <label className="input-label" htmlFor="editPrice">Price</label>
               <input
                 type="text"
                 id="editPrice"
-                className="input-field"
+                className="input-field colorful-input"
                 placeholder="299.00"
                 value={price}
                 onChange={handlePriceChange}
@@ -157,18 +192,23 @@ export default function EditProductModal({
 
             {/* Banner Image */}
             <div className="input-group form-group">
-              <label className="input-label" htmlFor="editBanner">Banner Image</label>
-              <div className="file-input-wrapper">
-                <button
-                  type="button"
-                  onClick={() => bannerInputRef.current?.click()}
-                  className="input-field file-input-btn"
-                >
-                  Choose File
-                </button>
-                <span className="file-name" title={bannerName}>
-                  {bannerName}
-                </span>
+              <label className="input-label">Banner Image</label>
+              <div
+                className="modern-file-input"
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                <div className="modern-file-btn">Choose File</div>
+                {bannerPreview ? (
+                  <img 
+                    src={bannerPreview} 
+                    alt="Preview" 
+                    style={{ height: '40px', width: 'auto', borderRadius: '4px', marginLeft: '12px', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  <div className="modern-file-name" title={bannerName}>
+                    {bannerName}
+                  </div>
+                )}
                 <input
                   type="file"
                   id="editBanner"
@@ -182,18 +222,23 @@ export default function EditProductModal({
 
             {/* Add Image */}
             <div className="input-group form-group">
-              <label className="input-label" htmlFor="editAddImage">Add Image</label>
-              <div className="file-input-wrapper">
-                <button
-                  type="button"
-                  onClick={() => additionalInputRef.current?.click()}
-                  className="input-field file-input-btn"
-                >
-                  Choose File
-                </button>
-                <span className="file-name" title={additionalImageName}>
-                  {additionalImageName}
-                </span>
+              <label className="input-label">Add Image</label>
+              <div
+                className="modern-file-input"
+                onClick={() => additionalInputRef.current?.click()}
+              >
+                <div className="modern-file-btn">Choose File</div>
+                {additionalPreview ? (
+                  <img 
+                    src={additionalPreview} 
+                    alt="Preview" 
+                    style={{ height: '40px', width: 'auto', borderRadius: '4px', marginLeft: '12px', objectFit: 'cover' }} 
+                  />
+                ) : (
+                  <div className="modern-file-name" title={additionalImageName}>
+                    {additionalImageName}
+                  </div>
+                )}
                 <input
                   type="file"
                   id="editAddImage"
@@ -212,7 +257,7 @@ export default function EditProductModal({
               </label>
               <textarea
                 id="editDescription"
-                className="input-field textarea-field"
+                className="input-field textarea-field colorful-input"
                 placeholder="Enter product description (max 100 chars)..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
