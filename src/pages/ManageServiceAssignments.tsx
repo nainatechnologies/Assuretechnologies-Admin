@@ -40,7 +40,7 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     serviceName: 'Baofeng Walkie Talkie BF-888S Pack of 2 with Earphone',
     date: '16 Jun 2026',
     time: '10 AM - 12 PM',
-    status: 'New Request'
+    status: 'Pending'
   },
   {
     id: 'SR-42',
@@ -52,12 +52,15 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     serviceName: 'Biometric device',
     date: '16 Jun 2026',
     time: '2 PM - 4 PM',
-    status: 'Accepted'
+    status: 'Accepted',
+    technicianId: 'T1',
+    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1'],
+    completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+1']
   }
 ];
 
 export default function ManageServiceAssignments() {
-  const [activeTab, setActiveTab] = useState<'new' | 'accepted'>('new');
+  const [activeTab, setActiveTab] = useState<'pending' | 'accepted'>('pending');
   const [requests, setRequests] = useState<ServiceRequest[]>(INITIAL_REQUESTS);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -72,7 +75,7 @@ export default function ManageServiceAssignments() {
 
   const filteredRequests = useMemo(() => {
     return requests.filter(r => 
-      activeTab === 'new' ? r.status === 'New Request' : r.status === 'Accepted'
+      activeTab === 'pending' ? r.status === 'Pending' : r.status === 'Accepted'
     );
   }, [requests, activeTab]);
 
@@ -152,10 +155,10 @@ export default function ManageServiceAssignments() {
       <div className="content-card">
         <div className="tabs-container">
           <button 
-            className={`tab-btn ${activeTab === 'new' ? 'active' : ''}`}
-            onClick={() => setActiveTab('new')}
+            className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+            onClick={() => setActiveTab('pending')}
           >
-            New Requests
+            Pending Requests
           </button>
           <button 
             className={`tab-btn ${activeTab === 'accepted' ? 'active' : ''}`}
@@ -166,7 +169,7 @@ export default function ManageServiceAssignments() {
         </div>
 
         <div className="tab-content">
-          {activeTab === 'new' && (
+          {activeTab === 'pending' && (
             <ServiceRequestTable 
               requests={paginatedRequests}
               viewType="assignments-new"

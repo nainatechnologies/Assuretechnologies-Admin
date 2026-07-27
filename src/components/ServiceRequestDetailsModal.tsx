@@ -11,6 +11,7 @@ interface ServiceRequestDetailsModalProps {
 
 export default function ServiceRequestDetailsModal({ request, technician, onClose }: ServiceRequestDetailsModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -66,6 +67,40 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
               {technician ? technician.name : '-'}
             </div>
           </div>
+
+          {request.startWorkPhotos && request.startWorkPhotos.length > 0 && (
+            <div className="details-card">
+              Photos - Before Work <br/><br/>
+              <div className="details-photo-grid">
+                {request.startWorkPhotos.map((photo, index) => (
+                  <img 
+                    key={index} 
+                    src={photo} 
+                    alt={`Before work ${index + 1}`} 
+                    className="details-photo-thumbnail cursor-pointer" 
+                    onClick={() => setPreviewImage(photo)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {request.completeWorkPhotos && request.completeWorkPhotos.length > 0 && (
+            <div className="details-card">
+              Photos - After Work <br/><br/>
+              <div className="details-photo-grid">
+                {request.completeWorkPhotos.map((photo, index) => (
+                  <img 
+                    key={index} 
+                    src={photo} 
+                    alt={`After work ${index + 1}`} 
+                    className="details-photo-thumbnail cursor-pointer" 
+                    onClick={() => setPreviewImage(photo)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="details-footer">
@@ -74,6 +109,16 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
           </button>
         </div>
       </div>
+
+      {/* Image Preview Overlay */}
+      {previewImage && (
+        <div className="image-preview-overlay" onClick={() => setPreviewImage(null)}>
+          <div className="image-preview-container" onClick={(e) => e.stopPropagation()}>
+            <button className="image-preview-close" onClick={() => setPreviewImage(null)}>&times;</button>
+            <img src={previewImage} alt="Preview" className="image-preview-full" />
+          </div>
+        </div>
+      )}
     </div>,
     document.body
   );
