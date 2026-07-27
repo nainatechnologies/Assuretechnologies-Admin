@@ -82,10 +82,12 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
 
   return (
     <div className="glass-panel product-form-panel">
-      <h2 className="product-form-title">Add New Product / Service</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 className="product-form-title" style={{ margin: 0 }}>Add New Product / Service</h2>
+      </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="product-form-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
           <div className="input-group form-group">
             <label className="input-label" htmlFor="productName">Product Name</label>

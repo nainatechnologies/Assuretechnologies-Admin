@@ -42,10 +42,12 @@ export default function ServiceForm({ onAddService }: ServiceFormProps) {
 
   return (
     <div className="glass-panel product-form-panel">
-      <h2 className="product-form-title">Add New Service</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h2 className="product-form-title" style={{ margin: 0 }}>Add New Service</h2>
+      </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
 
           <div className="input-group form-group">
             <label className="input-label" htmlFor="serviceCategory">Category</label>

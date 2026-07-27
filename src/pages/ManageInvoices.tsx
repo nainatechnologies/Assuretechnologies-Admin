@@ -1,0 +1,456 @@
+import { useState } from 'react';
+import { MdClose, MdVisibility } from 'react-icons/md';
+import type { Invoice, InvoiceItem } from '../types';
+import './ManageInvoices.css';
+
+interface MockSR {
+  id: string;
+  srNo: string;
+  customerName: string;
+  mobile: string;
+  service: string;
+  category: string;
+  completedOn: string;
+}
+
+const mockSRs: MockSR[] = [
+  { id: '1', srNo: 'SR1781691076', customerName: 'eswararao', mobile: '8008759767', service: 'internet installation service', category: 'Installation', completedOn: '17 Jun 2026' },
+  { id: '2', srNo: 'SR1781493494', customerName: 'eswararao', mobile: '8008759767', service: 'internet installation service', category: 'Installation', completedOn: '15 Jun 2026' },
+  { id: '3', srNo: 'SR1781493173', customerName: 'eswararao', mobile: '8008759767', service: 'Cctv installation', category: 'Installation', completedOn: '15 Jun 2026' },
+  { id: '4', srNo: 'SR1778593411', customerName: 'Venkatesh Marripelly', mobile: '9701712335', service: 'Biometric device', category: 'Device Delivery', completedOn: '12 May 2026' },
+  { id: '5', srNo: 'SR1767715098', customerName: 'Venkatesh Marripelly', mobile: '9701712335', service: 'Baofeng Walkie Talkie BF-888S Pack of 2 with Earphone', category: 'Device Delivery', completedOn: '06 Jan 2026' }
+];
+
+export default function ManageInvoices() {
+  const [activeTab, setActiveTab] = useState<'table' | 'form' | 'view'>('table');
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
+  const [selectedSR, setSelectedSR] = useState<MockSR | null>(null);
+
+  // Form State
+  const [customerName, setCustomerName] = useState('');
+  const [mobile, setMobile] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+
+  const [items, setItems] = useState<InvoiceItem[]>([
+    { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0 }
+  ]);
+
+  const [additionalChargesDesc, setAdditionalChargesDesc] = useState('');
+  const [additionalCharges, setAdditionalCharges] = useState<number>(0);
+  const [gstPercent, setGstPercent] = useState<number>(18);
+
+  // Derived calculations
+  const itemsTotal = items.reduce((sum, item) => sum + item.amount, 0);
+  const totalBeforeGst = itemsTotal + additionalCharges;
+  const gstAmount = (totalBeforeGst * gstPercent) / 100;
+  const grandTotal = totalBeforeGst + gstAmount;
+
+  const handleAddRow = () => {
+    setItems([
+      ...items,
+      { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0 }
+    ]);
+  };
+
+  const handleRemoveRow = (id: string) => {
+    if (items.length > 1) {
+      setItems(items.filter(item => item.id !== id));
+    }
+  };
+
+  const handleItemChange = (id: string, field: keyof InvoiceItem, value: string | number) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: value };
+        if (field === 'qty' || field === 'rate') {
+          updated.amount = updated.qty * updated.rate;
+        }
+        return updated;
+      }
+      return item;
+    }));
+  };
+
+  const handleSaveInvoice = () => {
+    if (!customerName || !mobile) {
+      alert("Please fill in the required customer details (Name, Mobile).");
+      return;
+    }
+
+    const newInvoice: Invoice = {
+      id: Date.now().toString(),
+      invoiceNumber: `INV-${Math.floor(1000 + Math.random() * 9000)}`,
+      customerName,
+      mobile,
+      email,
+      address,
+      items,
+      additionalChargesDesc,
+      additionalCharges,
+      gstPercent,
+      grandTotal,
+      date: new Date().toLocaleDateString(),
+      status: 'Paid',
+      srNo: selectedSR ? selectedSR.srNo : `SR${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+      serviceName: selectedSR ? `${selectedSR.category} - ${selectedSR.service}` : items[0]?.description || 'Custom Service'
+    };
+
+    setInvoices([newInvoice, ...invoices]);
+
+    // Reset Form
+    setCustomerName('');
+    setMobile('');
+    setEmail('');
+    setAddress('');
+    setItems([{ id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0 }]);
+    setAdditionalChargesDesc('');
+    setAdditionalCharges(0);
+    setGstPercent(18);
+    setSelectedSR(null);
+
+    // Switch to table
+    setActiveTab('table');
+  };
+
+  const handleSelectSR = (sr: MockSR) => {
+    setSelectedSR(sr);
+    setCustomerName(sr.customerName);
+    setMobile(sr.mobile);
+    // Pre-fill the first item with the service name if items is just the empty default one
+    if (items.length === 1 && items[0].description === '') {
+      setItems([{ ...items[0], description: `${sr.category} - ${sr.service}` }]);
+    }
+  };
+
+  const handleDeleteInvoice = (id: string) => {
+    setInvoices(invoices.filter(i => i.id !== id));
+  };
+
+  return (
+    <div className="manage-invoices">
+      <h3 className="invoices-title">Invoices</h3>
+
+      <div className="invoice-tabs">
+        <button
+          className={`invoice-tab ${activeTab === 'table' ? 'active' : ''}`}
+          onClick={() => setActiveTab('table')}
+        >
+          Invoices
+        </button>
+        <button
+          className={`invoice-tab ${activeTab === 'form' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('form');
+            setSelectedSR(null); // Reset selection when clicking the tab
+          }}
+        >
+          Generate Invoice
+        </button>
+      </div>
+
+      <div className="invoice-container">
+        {activeTab === 'table' && (
+          <div className="ref-table-wrapper" style={{ margin: 0 }}>
+            <table className="invoices-list-table ref-table" style={{ border: 'none' }}>
+              <thead>
+                <tr>
+                  <th className='tableheadings'>Invoice No</th>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>SR No</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th style={{ textAlign: 'center' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#333' }}>
+                      No invoices generated yet
+                    </td>
+                  </tr>
+                ) : (
+                  invoices.map(inv => (
+                    <tr key={inv.id}>
+                      <td><strong>{inv.invoiceNumber}</strong></td>
+                      <td>{inv.customerName}</td>
+                      <td>{inv.serviceName}</td>
+                      <td>{inv.srNo}</td>
+                      <td>{inv.grandTotal.toFixed(2)}</td>
+                      <td>{inv.status}</td>
+                      <td>{inv.date}</td>
+                      <td style={{ textAlign: 'center', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <button
+                          className="btn-action-green"
+                          onClick={() => {
+                            setViewingInvoice(inv);
+                            setActiveTab('view');
+                          }}
+                          style={{ padding: '4px 8px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <MdVisibility /> View
+                        </button>
+                        <button
+                          className="btn-remove-row"
+                          onClick={() => handleDeleteInvoice(inv.id)}
+                          style={{ padding: '4px 8px', fontSize: '0.9rem' }}
+                        >
+                          <MdClose />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'form' && !selectedSR && (
+          <div className="ref-table-wrapper" style={{ margin: 0 }}>
+            <table className="invoices-list-table ref-table" style={{ border: 'none' }}>
+              <thead>
+                <tr>
+                  <th>SR No</th>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>Completed On</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockSRs.map(sr => (
+                  <tr key={sr.id}>
+                    <td>{sr.srNo}</td>
+                    <td>
+                      {sr.customerName}<br />
+                      <small className="text-muted">{sr.mobile}</small>
+                    </td>
+                    <td>
+                      {sr.service}<br />
+                      <small className="text-muted" style={{ color: '#6c757d' }}>{sr.category}</small>
+                    </td>
+                    <td>{sr.completedOn}</td>
+                    <td>
+                      <button
+                        className="btn-action-green"
+                        onClick={() => handleSelectSR(sr)}
+                      >
+                        Generate Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {activeTab === 'form' && selectedSR && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 className="section-title" style={{ margin: 0 }}>Customer Details</h4>
+              <button
+                className="btn-remove-row"
+                style={{ width: 'auto', padding: '4px 8px', fontSize: '0.85rem' }}
+                onClick={() => setSelectedSR(null)}
+              >
+                Back to SR List
+              </button>
+            </div>
+
+            <div className="form-grid-3">
+              <input type="text" className="ref-input" placeholder="Name" value={customerName} onChange={e => setCustomerName(e.target.value)} required />
+              <input type="text" className="ref-input" placeholder="Mobile" value={mobile} onChange={e => setMobile(e.target.value)} required />
+              <input type="text" className="ref-input" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+
+            <div className="form-grid-1">
+              <input type="text" className="ref-input" placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} />
+            </div>
+
+            <hr style={{ border: '0', borderTop: '1px solid #dee2e6', margin: '20px 0' }} />
+
+            <h4 className="section-title">Items</h4>
+
+            <div className="ref-table-wrapper">
+              <table className="ref-table">
+                <thead>
+                  <tr>
+                    <th className="col-num">S.No</th>
+                    <th className="col-name">Description</th>
+                    <th className="col-qty">Qty</th>
+                    <th className="col-cost">Rate</th>
+                    <th className="col-total">Amount</th>
+                    <th className="col-action"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, idx) => (
+                    <tr key={item.id}>
+                      <td className="col-num">{idx + 1}</td>
+                      <td>
+                        <input
+                          type="text"
+                          className="ref-input"
+                          value={item.description}
+                          onChange={e => handleItemChange(item.id, 'description', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className="ref-input"
+                          value={item.qty || ''}
+                          onChange={e => handleItemChange(item.id, 'qty', parseInt(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          className="ref-input"
+                          value={item.rate || ''}
+                          onChange={e => handleItemChange(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td>
+                        <div className="ref-input" style={{ background: '#e9ecef', border: '1px solid transparent', color: '#495057' }}>
+                          {item.amount.toFixed(2)}
+                        </div>
+                      </td>
+                      <td className="col-action">
+                        <button type="button" className="btn-remove-row" onClick={() => handleRemoveRow(item.id)}>
+                          <MdClose />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button type="button" className="btn-add-row" onClick={handleAddRow}>
+              + Add Row
+            </button>
+
+            <div className="calc-grid-2">
+              <input
+                type="text"
+                className="ref-input"
+                placeholder="Additional Charges Description"
+                value={additionalChargesDesc}
+                onChange={e => setAdditionalChargesDesc(e.target.value)}
+              />
+              <input
+                type="number"
+                className="ref-input"
+                placeholder="0"
+                value={additionalCharges || ''}
+                onChange={e => setAdditionalCharges(parseFloat(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="calc-grid-3">
+              <input
+                type="number"
+                className="ref-input"
+                placeholder="18"
+                value={gstPercent}
+                onChange={e => setGstPercent(parseFloat(e.target.value) || 0)}
+              />
+              <div className="ref-readonly">
+                {gstAmount.toFixed(2)}
+              </div>
+              <div className="ref-readonly">
+                {grandTotal.toFixed(2)}
+              </div>
+            </div>
+
+            <div className="terms-box">
+              <p>• Prices valid for 15 days</p>
+              <p>• GST applicable as per norms</p>
+              <p>• Payment due immediately</p>
+            </div>
+
+            <button className="btn-save-invoice" onClick={handleSaveInvoice}>
+              Save Invoice
+            </button>
+          </div>
+        )}
+        {activeTab === 'view' && viewingInvoice && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h4 className="section-title" style={{ margin: 0 }}>Invoice Details</h4>
+              <button
+                className="btn-remove-row"
+                style={{ width: 'auto', padding: '4px 8px', fontSize: '0.85rem' }}
+                onClick={() => {
+                  setActiveTab('table');
+                  setViewingInvoice(null);
+                }}
+              >
+                Back to List
+              </button>
+            </div>
+            
+            <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '4px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div><strong>Invoice No:</strong> {viewingInvoice.invoiceNumber}</div>
+              <div><strong>Date:</strong> {viewingInvoice.date}</div>
+              <div><strong>SR No:</strong> {viewingInvoice.srNo || 'N/A'}</div>
+              <div><strong>Customer:</strong> {viewingInvoice.customerName}</div>
+              <div><strong>Mobile:</strong> {viewingInvoice.mobile}</div>
+              <div><strong>Email:</strong> {viewingInvoice.email || 'N/A'}</div>
+              <div><strong>Address:</strong> {viewingInvoice.address || 'N/A'}</div>
+              <div><strong>Service Name:</strong> {viewingInvoice.serviceName || 'N/A'}</div>
+              <div><strong>Status:</strong> {viewingInvoice.status || 'N/A'}</div>
+            </div>
+
+            <h4 className="section-title">Items</h4>
+            <div className="ref-table-wrapper">
+              <table className="ref-table">
+                <thead>
+                  <tr>
+                    <th className="col-num">S.No</th>
+                    <th className="col-name">Description</th>
+                    <th className="col-qty">Qty</th>
+                    <th className="col-cost">Rate</th>
+                    <th className="col-total">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {viewingInvoice.items.map((item, idx) => (
+                    <tr key={item.id}>
+                      <td className="col-num">{idx + 1}</td>
+                      <td>{item.description}</td>
+                      <td>{item.qty}</td>
+                      <td>{item.rate.toFixed(2)}</td>
+                      <td>{item.amount.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {(() => {
+              const itemsTotal = viewingInvoice.items.reduce((sum, item) => sum + item.amount, 0);
+              const totalBeforeGst = itemsTotal + viewingInvoice.additionalCharges;
+              const gstAmount = (totalBeforeGst * viewingInvoice.gstPercent) / 100;
+              return (
+                <div style={{ marginTop: '20px', padding: '15px', background: '#e9ecef', borderRadius: '4px', textAlign: 'right' }}>
+                  <p><strong>Items Total:</strong> {itemsTotal.toFixed(2)}</p>
+                  <p><strong>Additional Charges {viewingInvoice.additionalChargesDesc ? `(${viewingInvoice.additionalChargesDesc})` : ''}:</strong> {viewingInvoice.additionalCharges.toFixed(2)}</p>
+                  <p><strong>GST ({viewingInvoice.gstPercent}%):</strong> {gstAmount.toFixed(2)}</p>
+                  <h4><strong>Grand Total:</strong> {viewingInvoice.grandTotal.toFixed(2)}</h4>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

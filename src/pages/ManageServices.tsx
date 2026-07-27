@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import ServiceForm from '../components/ServiceForm';
 import ServiceTable from '../components/ServiceTable';
 import EditServiceModal from '../components/EditServiceModal';
@@ -25,6 +25,10 @@ export default function ManageServices() {
   ]);
 
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleAddService = (newServiceData: Omit<Service, 'id'>) => {
     const newService: Service = {
@@ -33,6 +37,7 @@ export default function ManageServices() {
     };
 
     setServices(prevServices => [...prevServices, newService]);
+    setIsAdding(false);
     Swal.fire({
       title: 'Added!',
       text: 'New service added successfully.',
@@ -89,21 +94,119 @@ export default function ManageServices() {
     });
   };
 
+  const filteredServices = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return services.filter(s => 
+      s.category.toLowerCase().includes(query) ||
+      s.subCategory.toLowerCase().includes(query)
+    );
+  }, [services, searchQuery]);
+
+  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
+  const paginatedServices = filteredServices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div>
-      <div className="manage-products-header">
+      <div className="manage-products-header" style={{ flexWrap: 'wrap', gap: '15px' }}>
         <h1 className="page-title manage-products-title">Manage Services</h1>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+          <input
+            type="text"
+            placeholder="Search by category, name..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{
+              padding: '10px 15px',
+              borderRadius: '8px',
+              border: '1px solid #ccc',
+              minWidth: '250px'
+            }}
+          />
+          <button
+            onClick={() => setIsAdding(!isAdding)}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isAdding ? '#ef4444' : '#4F46E5',
+              color: 'white',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            {isAdding ? 'Cancel' : '+ Add Service'}
+          </button>
+        </div>
       </div>
 
-      {/* Service Form Component */}
-      <ServiceForm onAddService={handleAddService} />
+      {/* Service Form Modal */}
+      {isAdding && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', justifyContent: 'center', alignItems: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
+             <button 
+               onClick={() => setIsAdding(false)}
+               style={{ position: 'absolute', top: '25px', right: '25px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', zIndex: 10, color: '#64748b' }}
+             >
+               &times;
+             </button>
+             <ServiceForm onAddService={handleAddService} />
+          </div>
+        </div>
+      )}
 
       {/* Service Table Component */}
       <ServiceTable
-        services={services}
+        services={paginatedServices}
         onEditService={handleEditService}
         onDeleteService={handleDeleteService}
       />
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '10px', alignItems: 'center' }}>
+          <button 
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              background: currentPage === 1 ? '#f1f5f9' : 'white',
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ padding: '8px 15px', background: 'white', borderRadius: '6px', border: '1px solid #ccc', fontWeight: 500 }}>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button 
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              background: currentPage === totalPages ? '#f1f5f9' : 'white',
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Edit Service Modal */}
       {editingService && (

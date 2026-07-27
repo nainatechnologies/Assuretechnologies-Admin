@@ -4,6 +4,8 @@ import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import ManageProducts from './pages/ManageProducts';
 import ManageServices from './pages/ManageServices';
+import ManageQuotations from './pages/ManageQuotations';
+import ManageInvoices from './pages/ManageInvoices';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
 
@@ -22,6 +24,8 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ManageProducts />} />
           <Route path="services" element={<ManageServices />} />
+          <Route path="quotations" element={<ManageQuotations />} />
+          <Route path="invoices" element={<ManageInvoices />} />
         </Route>
         
         {/* Fallback route */}

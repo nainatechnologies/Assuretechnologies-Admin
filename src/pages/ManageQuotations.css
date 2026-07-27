@@ -1,0 +1,228 @@
+.manage-quotations {
+  padding: 20px;
+  background-color: #f4f6f9;
+  min-height: 100vh;
+}
+
+.quotations-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20px;
+  margin-top: 0;
+}
+
+/* Tabs */
+.quotation-tabs {
+  display: flex;
+  border-bottom: 1px solid #dee2e6;
+  margin-bottom: 20px;
+}
+
+.quotation-tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  font-size: 1rem;
+  color: #007bff;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+
+.quotation-tab.active {
+  background: #fff;
+  border-color: #dee2e6;
+  border-bottom-color: #fff;
+  color: #495057;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+
+/* Main Container */
+.quotation-container {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  margin-top: 0;
+}
+
+/* Grid Layouts */
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-grid-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  margin-bottom: 15px;
+}
+
+.ref-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: #495057;
+  background-color: #fff;
+}
+
+.ref-input:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.ref-readonly {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  color: #495057;
+  background-color: #e9ecef;
+}
+
+/* Service Table */
+.ref-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 15px;
+}
+
+.ref-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dee2e6;
+}
+
+.ref-table th, .ref-table td {
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  text-align: left;
+}
+
+.ref-table th {
+  background-color: #fff;
+  color: #212529;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.col-num { width: 50px; text-align: center; }
+.col-name { width: auto; }
+.col-qty { width: 120px; }
+.col-cost { width: 150px; }
+.col-total { width: 150px; }
+.col-action { width: 60px; text-align: center; }
+
+.btn-remove-row {
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.btn-remove-row:hover { background: #c82333; }
+
+.btn-add-row {
+  background: #fff;
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+.btn-add-row:hover {
+  background: #f8f9fa;
+}
+
+/* Calc Area */
+.calc-grid-2 {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.calc-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.terms-box {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.terms-box p {
+  margin: 0 0 5px 0;
+  color: #495057;
+  font-size: 0.95rem;
+}
+.terms-box p:last-child {
+  margin-bottom: 0;
+}
+
+.btn-save-quotation {
+  background: #198754;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.btn-save-quotation:hover {
+  background: #157347;
+}
+
+/* Quotation Table Styles */
+.quotations-list-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.quotations-list-table th {
+  background: #212529;
+  color: #ffffff;
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #dee2e6;
+  font-weight: 600;
+}
+.quotations-list-table td {
+  padding: 12px;
+  border: 1px solid #dee2e6;
+}
