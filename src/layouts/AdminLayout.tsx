@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { MdDashboard, MdInventory, MdLogout, MdDesignServices, MdReceipt } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import './AdminLayout.css';
 
@@ -42,8 +42,20 @@ export default function AdminLayout() {
             <MdInventory />
             Manage Products
           </NavLink>
+          <NavLink to="/admin/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdShoppingCart />
+            Orders
+          </NavLink>
+          <NavLink to="/admin/service-requests" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdAssignment />
+            Service Requests
+          </NavLink>
+          <NavLink to="/admin/service-assignments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdAssignmentInd />
+            Service Assignments
+          </NavLink>
           <NavLink to="/admin/services" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdDesignServices />
+            <MdBuild />
             Manage Services
           </NavLink>
           <NavLink to="/admin/quotations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
@@ -53,6 +65,18 @@ export default function AdminLayout() {
           <NavLink to="/admin/invoices" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdReceipt />
             Invoices
+          </NavLink>
+          <NavLink to="/admin/technicians" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdEngineering />
+            Manage Technicians
+          </NavLink>
+          <NavLink to="/admin/vendors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdStore />
+            Manage Vendors
+          </NavLink>
+          <NavLink to="/admin/stock" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdInventory />
+            Manage Stock
           </NavLink>
         </nav>
         

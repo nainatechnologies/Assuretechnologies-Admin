@@ -3,9 +3,15 @@ import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import ManageProducts from './pages/ManageProducts';
+import ManageOrders from './pages/ManageOrders';
+import ManageTechnicians from './pages/ManageTechnicians';
+import ManageVendors from './pages/ManageVendors';
 import ManageServices from './pages/ManageServices';
+import ManageServiceAssignments from './pages/ManageServiceAssignments';
+import ManageServiceRequests from './pages/ManageServiceRequests';
 import ManageQuotations from './pages/ManageQuotations';
 import ManageInvoices from './pages/ManageInvoices';
+import ManageStock from './pages/ManageStock';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
 
@@ -23,9 +29,15 @@ function App() {
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ManageProducts />} />
+          <Route path="orders" element={<ManageOrders />} />
+          <Route path="service-assignments" element={<ManageServiceAssignments />} />
+          <Route path="service-requests" element={<ManageServiceRequests />} />
           <Route path="services" element={<ManageServices />} />
           <Route path="quotations" element={<ManageQuotations />} />
           <Route path="invoices" element={<ManageInvoices />} />
+          <Route path="technicians" element={<ManageTechnicians />} />
+          <Route path="vendors" element={<ManageVendors />} />
+          <Route path="stock" element={<ManageStock />} />
         </Route>
         
         {/* Fallback route */}

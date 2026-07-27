@@ -1,0 +1,157 @@
+.manage-stock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.manage-stock-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #1f2937;
+}
+
+.stock-search-wrapper {
+  position: relative;
+  width: 300px;
+}
+
+.stock-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+.stock-search-input {
+  width: 100%;
+  padding: 10px 16px 10px 40px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.stock-search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.stock-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stock-table th {
+  background-color: #f9fafb;
+  text-align: left;
+  padding: 16px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stock-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.stock-table tr:last-child td {
+  border-bottom: none;
+}
+
+.stock-img-container {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.stock-img-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.product-name-col {
+  font-weight: 500;
+  color: #111827;
+}
+
+.stock-badge {
+  display: inline-flex;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stock-badge.low {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.stock-badge.ok {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.stock-badge.out {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.btn-add-stock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-add-stock:hover {
+  background-color: #1d4ed8;
+}
+
+.plus-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* Modal specific styles */
+.stock-modal {
+  max-width: 450px !important;
+}
+
+.stock-modal-footer {
+  justify-content: flex-end;
+  padding-top: 16px;
+}
+
+.save-stock-btn {
+  background-color: #10b981;
+}
+
+.save-stock-btn:hover {
+  background-color: #059669;
+}

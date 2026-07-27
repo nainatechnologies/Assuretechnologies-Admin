@@ -1,0 +1,135 @@
+.order-table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.order-table th {
+  background-color: #1f2937;
+  color: white;
+  text-align: left;
+  padding: 12px 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.order-table td {
+  padding: 12px 10px;
+  font-size: 0.875rem;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.order-table tr:hover {
+  background-color: #f9fafb;
+}
+
+.order-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-contact-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-address-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.order-address-pincode {
+  font-weight: bold;
+}
+
+.order-payment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.order-btn-view {
+  background: white;
+  border: 1px solid #3b82f6;
+  color: #3b82f6;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.order-btn-view:hover {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.order-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-btn-accept {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.order-btn-reject {
+  background-color: #ef4444; /* red-500 */
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.order-btn-delivery {
+  background-color: #facc15; /* yellow-400 */
+  color: #000000;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.order-status-badge {
+  background-color: #10b981; /* emerald-500 */
+  color: white;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.order-empty-state {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}

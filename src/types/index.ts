@@ -9,14 +9,94 @@ export interface Product {
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   additionalImage?: string | File;
   additionalImageName?: string;
+  stock?: number;
+}
+
+export interface Technician {
+  id: string;
+  name: string;
+  mobile: string;
+  email: string;
+  address: string;
+  location: string;
+  status: 'Active' | 'Inactive';
+  password?: string;
+  idFile?: string | File;
+  idFileName?: string;
+  nocFile?: string | File;
+  nocFileName?: string;
+}
+
+export interface Vendor {
+  id: string;
+  fullName: string;
+  businessName: string;
+  mobile: string;
+  email: string;
+  gstNumber: string;
+  fullAddress: string;
+  pincode: string;
+  businessDescription: string;
+  bankAccountDetails: string;
+  location: string;
+  status: 'Active' | 'Inactive';
+  password?: string;
+  aadharFile?: string | File;
+  aadharFileName?: string;
+  panFile?: string | File;
+  panFileName?: string;
+  shopPhotoFile?: string | File;
+  shopPhotoFileName?: string;
 }
 
 export interface Service {
   id: string;
   category: string;
   subCategory: string;
-  image: string | File;
-  imageName: string;
+  image?: string | File;
+  imageName?: string;
+}
+
+export interface OrderItem {
+  id: string;
+  productName: string;
+  vendorName: string;
+  price: number;
+  qty: number;
+  subtotal: number;
+}
+
+export type OrderStatus = 'New' | 'Accepted' | 'Out for Delivery' | 'Completed' | 'Rejected';
+
+export interface Order {
+  id: string;
+  date: string;
+  user: string;
+  mobile: string;
+  email: string;
+  address: string;
+  pincode: string;
+  totalAmount: number;
+  paymentMethod: string;
+  paymentStatus: 'Pending' | 'Paid';
+  status: OrderStatus;
+  items: OrderItem[];
+}
+
+export type ServiceRequestStatus = 'New Request' | 'Accepted' | 'Assigned' | 'Awaiting Approval' | 'Completed' | 'Cancelled';
+
+export interface ServiceRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  userMobile: string;
+  userEmail: string;
+  userAddress: string;
+  serviceName: string;
+  date: string;
+  time: string;
+  status: ServiceRequestStatus;
+  technicianId?: string;
 }
 
 export interface QuotationService {

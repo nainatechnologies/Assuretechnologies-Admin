@@ -1,0 +1,105 @@
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: white;
+  border: 1px solid var(--border);
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.custom-table th {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 16px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.5px;
+}
+
+.custom-table th:first-child {
+  border-top-left-radius: 12px;
+}
+.custom-table th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.custom-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.custom-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.custom-table tbody tr:hover {
+  background-color: var(--surface-hover);
+}
+
+.custom-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-badge.active {
+  background-color: #22c55e;
+  color: white;
+}
+
+.status-badge.inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: white;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.action-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.edit-btn {
+  background-color: #eab308;
+}
+
+.hide-btn {
+  background-color: #0ea5e9;
+}
+
+.delete-btn {
+  background-color: #ef4444;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-muted);
+}

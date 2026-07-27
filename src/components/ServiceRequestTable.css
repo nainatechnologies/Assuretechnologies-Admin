@@ -1,0 +1,194 @@
+.btn-accept {
+  background-color: #10b981;
+  /* emerald-500 */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-accept:hover {
+  background-color: #059669;
+  /* emerald-600 */
+}
+
+.btn-reject {
+  background-color: #ef4444;
+  /* red-500 */
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-reject:hover {
+  background-color: #dc2626;
+  /* red-600 */
+}
+
+.btn-assign {
+  background-color: #2563eb;
+  /* blue-600 */
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-assign:hover {
+  background-color: #1d4ed8;
+  /* blue-700 */
+}
+
+.btn-view {
+  background-color: white;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-view:hover {
+  background-color: #eff6ff;
+}
+
+.btn-view-dark {
+  background-color: #374151;
+  /* gray-700 */
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-view-dark:hover {
+  background-color: #1f2937;
+  /* gray-800 */
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #111827;
+}
+
+.user-mobile {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+  text-align: center;
+}
+
+.status-badge.new-request {
+  background-color: #6b7280;
+  /* gray-500 */
+  color: white;
+}
+
+.status-badge.assigned {
+  background-color: #3b82f6;
+  /* blue-500 */
+  color: white;
+}
+
+.status-badge.accepted {
+  background-color: #10b981;
+  /* emerald-500 */
+  color: white;
+}
+
+.status-badge.awaiting-approval {
+  background-color: #f59e0b;
+  /* amber-500 */
+  color: white;
+}
+
+.status-badge.completed {
+  background-color: #10b981;
+  /* emerald-500 */
+  color: white;
+}
+
+.status-badge.cancelled {
+  background-color: #ef4444;
+  /* red-500 */
+  color: white;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.modern-table th {
+  background-color: #f9fafb;
+  color: #374151;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modern-table td {
+  padding: 16px;
+  font-size: 0.875rem;
+  color: #111827;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: middle;
+}
+
+.modern-table tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Specific styling to match the screenshot header which has dark background */
+.modern-table th.dark-header {
+  background-color: #1f2937;
+  color: white;
+}
