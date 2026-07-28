@@ -84,7 +84,8 @@
 }
 
 .order-btn-accept {
-  background-color: #10b981; /* emerald-500 */
+  background-color: #10b981;
+  /* emerald-500 */
   color: white;
   border: none;
   padding: 4px 12px;
@@ -95,7 +96,8 @@
 }
 
 .order-btn-reject {
-  background-color: #ef4444; /* red-500 */
+  background-color: #ef4444;
+  /* red-500 */
   color: white;
   border: none;
   padding: 4px 12px;
@@ -106,7 +108,8 @@
 }
 
 .order-btn-delivery {
-  background-color: #facc15; /* yellow-400 */
+  background-color: #facc15;
+  /* yellow-400 */
   color: #000000;
   border: none;
   padding: 4px 12px;
@@ -115,8 +118,32 @@
   font-weight: 500;
   cursor: pointer;
 }
+
+.order-btn-track {
+  background-color: #3b82f6;
+  /* blue-500 */
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.order-tracking-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tracking-id-text {
+  font-weight: 600;
+  color: #111827;
+}
+
 .order-status-badge {
-  background-color: #10b981; /* emerald-500 */
+  background-color: #10b981;
+  /* emerald-500 */
   color: white;
   padding: 4px 12px;
   border-radius: 16px;

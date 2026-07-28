@@ -38,7 +38,7 @@
   background: #ffffff;
   padding: 48px;
   width: 100%;
-  max-width: 440px;
+  max-width: 560px;
   text-align: center;
   border-radius: 24px;
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05), 0 10px 20px -5px rgba(0, 0, 0, 0.02);
@@ -145,4 +145,21 @@
 
 .google-icon {
   font-size: 1.25rem;
+}
+
+/* Colorful Inputs Override for Login */
+.login-panel .input-field {
+  background: linear-gradient(#ffffff, #ffffff) padding-box,
+              linear-gradient(45deg, #4f46e5, #ec4899, #06b6d4) border-box;
+  border: 2px solid transparent;
+  padding: 12px 16px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.login-panel .input-field:focus {
+  background: linear-gradient(#ffffff, #ffffff) padding-box,
+              linear-gradient(45deg, #4f46e5, #ec4899, #06b6d4) border-box;
+  box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.4);
+  outline: none;
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { MdClose, MdVisibility } from 'react-icons/md';
+import { MdClose, MdVisibility, MdDownload } from 'react-icons/md';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import type { Quotation, QuotationService } from '../types';
 import './ManageQuotations.css';
 
@@ -104,6 +106,33 @@ export default function ManageQuotations() {
     setQuotations(quotations.filter(q => q.id !== id));
   };
 
+  const handleDownloadPDF = async (quotationNumber: string) => {
+    const input = document.getElementById('quotation-details-pdf');
+    if (!input) return;
+
+    const actionButtons = input.querySelector('.pdf-exclude-buttons');
+    if (actionButtons) {
+      (actionButtons as HTMLElement).style.display = 'none';
+    }
+
+    try {
+      const canvas = await html2canvas(input, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Quotation_${quotationNumber}.pdf`);
+    } catch (err) {
+      console.error('Failed to generate PDF', err);
+    } finally {
+      if (actionButtons) {
+        (actionButtons as HTMLElement).style.display = 'flex';
+      }
+    }
+  };
+
   return (
     <div className="manage-quotations">
       <h3 className="quotations-title">Quotation Management</h3>
@@ -162,6 +191,20 @@ export default function ManageQuotations() {
                           style={{ padding: '4px 8px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
                           <MdVisibility /> View
+                        </button>
+                        <button 
+                          className="btn-action-green"
+                          onClick={() => {
+                            setViewingQuotation(q);
+                            setActiveTab('view');
+                            // Delay to allow DOM update
+                            setTimeout(() => {
+                              handleDownloadPDF(q.quotationNumber);
+                            }, 300);
+                          }}
+                          style={{ padding: '4px 8px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#3b82f6' }}
+                        >
+                          <MdDownload /> Download
                         </button>
                         <button 
                           className="btn-remove-row"
@@ -311,19 +354,28 @@ export default function ManageQuotations() {
           </div>
         )}
         {activeTab === 'view' && viewingQuotation && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+          <div id="quotation-details-pdf" style={{ padding: '20px', background: 'white' }}>
+            <div className="pdf-exclude-buttons" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h4 className="section-title" style={{ margin: 0 }}>Quotation Details</h4>
-              <button
-                className="btn-remove-row"
-                style={{ width: 'auto', padding: '4px 8px', fontSize: '0.85rem' }}
-                onClick={() => {
-                  setActiveTab('table');
-                  setViewingQuotation(null);
-                }}
-              >
-                Back to List
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  className="btn-action-green"
+                  style={{ width: 'auto', padding: '4px 12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#3b82f6' }}
+                  onClick={() => handleDownloadPDF(viewingQuotation.quotationNumber)}
+                >
+                  <MdDownload /> Download PDF
+                </button>
+                <button
+                  className="btn-remove-row"
+                  style={{ width: 'auto', padding: '4px 12px', fontSize: '0.85rem' }}
+                  onClick={() => {
+                    setActiveTab('table');
+                    setViewingQuotation(null);
+                  }}
+                >
+                  Back to List
+                </button>
+              </div>
             </div>
             
             <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '4px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>

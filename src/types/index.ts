@@ -81,6 +81,8 @@ export interface Order {
   paymentStatus: 'Pending' | 'Paid';
   status: OrderStatus;
   items: OrderItem[];
+  transportName?: string;
+  trackingId?: string;
 }
 
 export type ServiceRequestStatus = 

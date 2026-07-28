@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import type { Order, OrderStatus } from '../types';
 import OrderTable from '../components/OrderTable';
 import OrderModal from '../components/OrderModal';
+import TrackOrderModal from '../components/TrackOrderModal';
 import './ManageOrders.css';
 
 // Mock Data
@@ -62,6 +63,7 @@ export default function ManageOrders() {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [activeTab, setActiveTab] = useState<OrderStatus>('New');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
 
   const tabs: OrderStatus[] = ['New', 'Accepted', 'Out for Delivery', 'Completed'];
 
@@ -130,12 +132,25 @@ export default function ManageOrders() {
         currentTab={activeTab} 
         onViewOrder={setSelectedOrder} 
         onActionOrder={handleActionOrder} 
+        onTrackOrder={setTrackingOrder}
       />
 
       {selectedOrder && (
         <OrderModal 
           order={selectedOrder} 
           onClose={() => setSelectedOrder(null)} 
+        />
+      )}
+
+      {trackingOrder && (
+        <TrackOrderModal
+          order={trackingOrder}
+          onClose={() => setTrackingOrder(null)}
+          onSubmit={(transportName, trackingId) => {
+            setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId } : o));
+            Swal.fire('Saved!', `Tracking info saved for order ${trackingOrder.id}.`, 'success');
+            setTrackingOrder(null);
+          }}
         />
       )}
     </div>
