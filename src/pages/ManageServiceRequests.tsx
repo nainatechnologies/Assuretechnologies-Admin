@@ -35,7 +35,8 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     date: '06 May 2026',
     time: '9 AM - 11 AM',
     status: 'Assigned',
-    technicianId: 'T2'
+    technicianId: 'T2',
+    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2']
   },
   {
     id: 'SR1767504918',
@@ -47,8 +48,21 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     serviceName: 'Cctv installation',
     date: '06 Jan 2026',
     time: '9 AM - 11 AM',
-    status: 'Assigned',
+    status: 'Assigned', // Let's keep it as Assigned but simulate awaiting approval data
     technicianId: 'T2'
+  },
+  {
+    id: 'SR1767504955',
+    userId: 'U3',
+    userName: 'siri',
+    userMobile: '9505261283',
+    userEmail: 'siri@gmail.com',
+    userAddress: 'srnagar',
+    serviceName: 'Router installation',
+    date: '10 Jan 2026',
+    time: '2 PM - 4 PM',
+    status: 'In Progress',
+    technicianId: 'T1'
   },
   {
     id: 'SR1784884394',
@@ -60,12 +74,27 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     serviceName: 'agricture',
     date: '24 Jul 2026',
     time: '4 PM - 6 PM',
-    status: 'New Request'
+    status: 'Pending'
+  },
+  {
+    id: 'SR1784889999',
+    userId: 'U4',
+    userName: 'Ravi',
+    userMobile: '9123456780',
+    userEmail: 'ravi@example.com',
+    userAddress: 'kondapur',
+    serviceName: 'Plumbing Repair',
+    date: '20 Jul 2026',
+    time: '10 AM - 12 PM',
+    status: 'Completed',
+    technicianId: 'T1',
+    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+Pipe+Leak'],
+    completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+Fixed+Pipe']
   }
 ];
 
 export default function ManageServiceRequests() {
-  const [activeTab, setActiveTab] = useState<'assigned' | 'awaiting' | 'completed' | 'cancelled'>('assigned');
+  const [activeTab, setActiveTab] = useState<'assigned' | 'inProgress' | 'awaiting' | 'completed' | 'cancelled'>('assigned');
   const [requests] = useState<ServiceRequest[]>(INITIAL_REQUESTS);
   
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -81,6 +110,7 @@ export default function ManageServiceRequests() {
   const filteredRequests = useMemo(() => {
     switch(activeTab) {
       case 'assigned': return requests.filter(r => r.status === 'Assigned');
+      case 'inProgress': return requests.filter(r => r.status === 'In Progress');
       case 'awaiting': return requests.filter(r => r.status === 'Awaiting Approval');
       case 'completed': return requests.filter(r => r.status === 'Completed');
       case 'cancelled': return requests.filter(r => r.status === 'Cancelled');
@@ -115,6 +145,12 @@ export default function ManageServiceRequests() {
             onClick={() => setActiveTab('assigned')}
           >
             Assigned
+          </button>
+          <button 
+            className={`tab-btn whitespace-nowrap ${activeTab === 'inProgress' ? 'active' : ''}`}
+            onClick={() => setActiveTab('inProgress')}
+          >
+            In Progress
           </button>
           <button 
             className={`tab-btn whitespace-nowrap ${activeTab === 'awaiting' ? 'active' : ''}`}

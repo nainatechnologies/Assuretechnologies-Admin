@@ -83,7 +83,14 @@ export interface Order {
   items: OrderItem[];
 }
 
-export type ServiceRequestStatus = 'New Request' | 'Accepted' | 'Assigned' | 'Awaiting Approval' | 'Completed' | 'Cancelled';
+export type ServiceRequestStatus = 
+  | 'Pending' 
+  | 'Accepted' 
+  | 'Assigned' 
+  | 'In Progress' 
+  | 'Awaiting Approval' 
+  | 'Completed' 
+  | 'Cancelled';
 
 export interface ServiceRequest {
   id: string;
@@ -97,6 +104,8 @@ export interface ServiceRequest {
   time: string;
   status: ServiceRequestStatus;
   technicianId?: string;
+  startWorkPhotos?: string[];
+  completeWorkPhotos?: string[];
 }
 
 export interface QuotationService {
