@@ -94,6 +94,13 @@ export type ServiceRequestStatus =
   | 'Completed' 
   | 'Cancelled';
 
+export type ProgressUpdate = {
+  id: string;
+  date: string;
+  description: string;
+  photos: string[];
+};
+
 export interface ServiceRequest {
   id: string;
   userId: string;
@@ -106,8 +113,10 @@ export interface ServiceRequest {
   time: string;
   status: ServiceRequestStatus;
   technicianId?: string;
+  startDescription?: string;
   startWorkPhotos?: string[];
   completeWorkPhotos?: string[];
+  progressUpdates?: ProgressUpdate[];
 }
 
 export interface QuotationService {

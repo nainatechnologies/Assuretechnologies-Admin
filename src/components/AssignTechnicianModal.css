@@ -82,19 +82,74 @@
   color: #6b7280;
 }
 
-.select-blue {
-  border: 1px solid #93c5fd;
+.technician-list-container {
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  padding: 10px 12px;
-  width: 100%;
-  font-size: 1rem;
-  color: #374151;
-  outline: none;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #ffffff;
 }
 
-.select-blue:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+.no-technicians {
+  padding: 12px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.technician-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.technician-list-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.technician-list-item:last-child {
+  border-bottom: none;
+}
+
+.technician-list-item:hover {
+  background-color: #f9fafb;
+}
+
+.technician-list-item.selected {
+  background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.tech-info-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tech-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.tech-mobile {
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+.tech-pincodes {
+  font-size: 0.8rem;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
 }
 
 .footer-buttons {
@@ -144,3 +199,38 @@
   /* green-300 */
   cursor: not-allowed;
 }
+
+.pincode-search-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background-color: #ffffff;
+}
+
+.pincode-search-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.pincode-search-wrapper .search-icon {
+  color: #9ca3af;
+  margin-right: 8px;
+}
+
+.pincode-search-wrapper .search-input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.pincode-search-wrapper .search-input::placeholder {
+  color: #9ca3af;
+}
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.gap-3 { gap: 12px; }

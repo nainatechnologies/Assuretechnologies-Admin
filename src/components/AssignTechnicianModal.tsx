@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import type { ServiceRequest, Technician } from '../types';
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdSearch } from 'react-icons/md';
 import './AssignTechnicianModal.css';
 
 interface Props {
@@ -13,12 +13,23 @@ interface Props {
 
 export default function AssignTechnicianModal({ request, technicians, onClose, onAssign }: Props) {
   const [selectedTech, setSelectedTech] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleAssign = () => {
     if (selectedTech) {
       onAssign(request.id, selectedTech);
     }
   };
+
+  const filteredTechnicians = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const lowerQuery = searchQuery.toLowerCase().trim();
+    return technicians.filter(tech => 
+      tech.location.toLowerCase().includes(lowerQuery) ||
+      tech.name.toLowerCase().includes(lowerQuery) ||
+      tech.mobile.includes(lowerQuery)
+    );
+  }, [technicians, searchQuery]);
 
   const [mounted, setMounted] = useState(false);
 
@@ -45,19 +56,43 @@ export default function AssignTechnicianModal({ request, technicians, onClose, o
             <p>{request.date}</p>
           </div>
 
-          <div className="mt-4">
-            <select 
-              className="select-blue"
-              value={selectedTech}
-              onChange={(e) => setSelectedTech(e.target.value)}
-            >
-              <option value="">-- Select Technician --</option>
-              {technicians.map(tech => (
-                <option key={tech.id} value={tech.id}>
-                  {tech.name} - {tech.mobile}
-                </option>
-              ))}
-            </select>
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="pincode-search-wrapper">
+              <MdSearch className="search-icon" size={20} />
+              <input 
+                type="text"
+                placeholder="Search by name, mobile, or pincode..."
+                className="search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            {searchQuery.trim() && (
+              <div className="technician-list-container">
+                {filteredTechnicians.length === 0 ? (
+                  <div className="no-technicians">No technicians found.</div>
+                ) : (
+                  <ul className="technician-list">
+                    {filteredTechnicians.map(tech => (
+                      <li 
+                        key={tech.id} 
+                        className={`technician-list-item ${selectedTech === tech.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedTech(tech.id)}
+                      >
+                        <div className="tech-info-main">
+                          <span className="tech-name">{tech.name}</span>
+                          <span className="tech-mobile">{tech.mobile}</span>
+                        </div>
+                        {tech.location && (
+                          <div className="tech-pincodes">{tech.location}</div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

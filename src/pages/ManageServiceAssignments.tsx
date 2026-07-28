@@ -15,7 +15,7 @@ const MOCK_TECHNICIANS: Technician[] = [
     mobile: '9876543210',
     email: 'venkat@example.com',
     address: 'srnagar',
-    location: 'Hyderabad',
+    location: '500001, 500002',
     status: 'Active'
   },
   {
@@ -24,7 +24,7 @@ const MOCK_TECHNICIANS: Technician[] = [
     mobile: '9876543211',
     email: 'suresh@example.com',
     address: 'ameerpet',
-    location: 'Hyderabad',
+    location: '500032, 500033',
     status: 'Active'
   }
 ];
@@ -54,6 +54,7 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     time: '2 PM - 4 PM',
     status: 'Accepted',
     technicianId: 'T1',
+    startDescription: 'Arrived on site, checking biometric machine power supply.',
     startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1'],
     completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+1']
   }

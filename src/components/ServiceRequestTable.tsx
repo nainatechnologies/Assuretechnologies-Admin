@@ -8,9 +8,10 @@ interface Props {
   onReject?: (id: string) => void;
   onView?: (id: string) => void;
   onAssign?: (id: string) => void;
+  onReassign?: (id: string) => void;
 }
 
-export default function ServiceRequestTable({ requests, viewType, onAccept, onReject, onView, onAssign }: Props) {
+export default function ServiceRequestTable({ requests, viewType, onAccept, onReject, onView, onAssign, onReassign }: Props) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'New Request':
@@ -121,9 +122,16 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                   <td>{req.time}</td>
                   <td>{getStatusBadge(req.status)}</td>
                   <td>
-                    <button className="btn-view-dark" onClick={() => onView && onView(req.id)}>
-                      View
-                    </button>
+                    <div className="action-buttons">
+                      <button className="btn-view-dark" onClick={() => onView && onView(req.id)}>
+                        View
+                      </button>
+                      {req.status === 'In Progress' && onReassign && (
+                        <button className="btn-assign" onClick={() => onReassign(req.id)}>
+                          Reassign
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </>
               )}

@@ -71,6 +71,11 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
           {request.startWorkPhotos && request.startWorkPhotos.length > 0 && (
             <div className="details-card">
               Photos - Before Work <br/><br/>
+              {request.startDescription && (
+                <div style={{ marginBottom: '15px', padding: '10px', background: '#f8fafc', borderLeft: '4px solid #3b82f6', borderRadius: '4px', fontSize: '14px', color: '#334155' }}>
+                  {request.startDescription}
+                </div>
+              )}
               <div className="details-photo-grid">
                 {request.startWorkPhotos.map((photo, index) => (
                   <img 
@@ -80,6 +85,33 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
                     className="details-photo-thumbnail cursor-pointer" 
                     onClick={() => setPreviewImage(photo)}
                   />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {request.progressUpdates && request.progressUpdates.length > 0 && (
+            <div className="details-card">
+              Daily Progress Updates <br/><br/>
+              <div className="progress-timeline">
+                {request.progressUpdates.map((update) => (
+                  <div key={update.id} className="progress-item">
+                    <div className="progress-date">{update.date}</div>
+                    <div className="progress-description">{update.description}</div>
+                    {update.photos && update.photos.length > 0 && (
+                      <div className="details-photo-grid mt-2">
+                        {update.photos.map((photo, idx) => (
+                          <img 
+                            key={idx} 
+                            src={photo} 
+                            alt={`Progress ${idx + 1}`} 
+                            className="details-photo-thumbnail cursor-pointer" 
+                            onClick={() => setPreviewImage(photo)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>

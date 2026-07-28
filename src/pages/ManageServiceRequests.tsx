@@ -2,12 +2,30 @@ import { useState, useEffect, useMemo } from 'react';
 import ServiceRequestTable from '../components/ServiceRequestTable';
 import Pagination from '../components/Pagination';
 import ServiceRequestDetailsModal from '../components/ServiceRequestDetailsModal';
+import AssignTechnicianModal from '../components/AssignTechnicianModal';
 import type { ServiceRequest, Technician } from '../types';
+import Swal from 'sweetalert2';
 import './ManageServiceAssignments.css';
 
 const MOCK_TECHNICIANS: Technician[] = [
-  { id: 'T1', name: 'John Doe', mobile: '9876543210', email: 'john@example.com', address: '', location: 'North', status: 'Active' },
-  { id: 'T2', name: 'Jane Smith', mobile: '8765432109', email: 'jane@example.com', address: '', location: 'South', status: 'Active' }
+  {
+    id: 'T1',
+    name: 'Venkatesh',
+    mobile: '9876543210',
+    email: 'venkat@example.com',
+    address: 'srnagar',
+    location: '500001, 500002',
+    status: 'Active'
+  },
+  {
+    id: 'T2',
+    name: 'Suresh',
+    mobile: '9876543211',
+    email: 'suresh@example.com',
+    address: 'ameerpet',
+    location: '500032, 500033',
+    status: 'Active'
+  }
 ];
 
 const INITIAL_REQUESTS: ServiceRequest[] = [
@@ -62,7 +80,15 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     date: '10 Jan 2026',
     time: '2 PM - 4 PM',
     status: 'In Progress',
-    technicianId: 'T1'
+    technicianId: 'T1',
+    progressUpdates: [
+      {
+        id: 'PRG1',
+        date: '2026-07-25 10:00:00',
+        description: 'Installed the main router, testing signal strength across rooms.',
+        photos: ['https://placehold.co/150x150/e2e8f0/64748b?text=Progress+1'] // Added mock photo
+      }
+    ]
   },
   {
     id: 'SR1784884394',
@@ -95,10 +121,13 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
 
 export default function ManageServiceRequests() {
   const [activeTab, setActiveTab] = useState<'assigned' | 'inProgress' | 'awaiting' | 'completed' | 'cancelled'>('assigned');
-  const [requests] = useState<ServiceRequest[]>(INITIAL_REQUESTS);
+  const [requests, setRequests] = useState<ServiceRequest[]>(INITIAL_REQUESTS);
   
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [selectedReassignId, setSelectedReassignId] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
@@ -129,6 +158,36 @@ export default function ManageServiceRequests() {
     if (request) {
       setSelectedRequest(request);
       setViewModalOpen(true);
+    }
+  };
+
+  const handleReassign = (id: string) => {
+    setSelectedReassignId(id);
+    setAssignModalOpen(true);
+  };
+
+  const handleAssignConfirm = (requestId: string, technicianId: string) => {
+    if (selectedReassignId) {
+      Swal.fire({
+        title: 'Reassign Technician?',
+        text: "Are you sure you want to reassign this request?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#10b981',
+        confirmButtonText: 'Yes, Reassign'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setRequests(prev => prev.map(req => 
+            req.id === selectedReassignId 
+              ? { ...req, technicianId, status: 'Assigned' } 
+              : req
+          ));
+          setAssignModalOpen(false);
+          setSelectedReassignId(null);
+          setActiveTab('assigned');
+          Swal.fire('Reassigned!', 'Technician has been reassigned successfully.', 'success');
+        }
+      });
     }
   };
 
@@ -177,6 +236,7 @@ export default function ManageServiceRequests() {
             requests={paginatedRequests}
             viewType="requests"
             onView={handleView}
+            onReassign={handleReassign}
           />
           <Pagination 
             currentPage={currentPage}
@@ -191,6 +251,18 @@ export default function ManageServiceRequests() {
           request={selectedRequest}
           technician={selectedRequest.technicianId ? MOCK_TECHNICIANS.find(t => t.id === selectedRequest.technicianId) : undefined}
           onClose={() => setViewModalOpen(false)}
+        />
+      )}
+
+      {assignModalOpen && selectedReassignId && (
+        <AssignTechnicianModal 
+          request={requests.find(r => r.id === selectedReassignId)!}
+          technicians={MOCK_TECHNICIANS}
+          onClose={() => {
+            setAssignModalOpen(false);
+            setSelectedReassignId(null);
+          }}
+          onAssign={handleAssignConfirm}
         />
       )}
     </div>
