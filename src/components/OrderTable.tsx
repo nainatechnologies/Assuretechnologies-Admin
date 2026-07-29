@@ -8,9 +8,11 @@ interface OrderTableProps {
   onViewOrder: (order: Order) => void;
   onActionOrder: (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete') => void;
   onTrackOrder?: (order: Order) => void;
+  showVendor?: boolean;
+  hideActions?: boolean;
 }
 
-export default function OrderTable({ orders, currentTab, onViewOrder, onActionOrder, onTrackOrder }: OrderTableProps) {
+export default function OrderTable({ orders, currentTab, onViewOrder, onActionOrder, onTrackOrder, showVendor, hideActions }: OrderTableProps) {
   if (orders.length === 0) {
     return (
       <div className="order-table-container">
@@ -19,14 +21,15 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
             <tr>
               <th>Order ID</th>
               <th>Ordered Date</th>
-              <th>User</th>
+              <th>Customer</th>
+              {showVendor && <th>Vendor</th>}
               <th>Contact</th>
               <th>Address</th>
               <th>Amount</th>
               <th>Payment</th>
               <th>View</th>
               {currentTab !== 'New' && <th>Track Id</th>}
-              <th>Action</th>
+              {!hideActions && <th>Action</th>}
             </tr>
           </thead>
         </table>
@@ -44,14 +47,15 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
           <tr>
             <th>Order ID</th>
             <th>Ordered Date</th>
-            <th>User</th>
+            <th>Customer</th>
+            {showVendor && <th>Vendor</th>}
             <th>Contact</th>
             <th>Address</th>
             <th>Amount</th>
             <th>Payment</th>
             <th>View</th>
             {currentTab !== 'New' && <th>Track Id</th>}
-            <th>Action</th>
+            {!hideActions && <th>Action</th>}
           </tr>
         </thead>
         <tbody>
@@ -60,6 +64,11 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
               <td>{order.id}</td>
               <td>{order.date}</td>
               <td>{order.user}</td>
+              {showVendor && (
+                <td>
+                  <span className="order-vendor-badge">{order.items[0]?.vendorName || 'N/A'}</span>
+                </td>
+              )}
               <td>
                 <div className="order-contact-info">
                   <span>{order.mobile}</span>
@@ -96,25 +105,27 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
                   )}
                 </td>
               )}
-              <td>
-                <div className="order-action-buttons">
-                  {currentTab === 'New' && (
-                    <>
-                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept')}>Accept</button>
-                      <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject')}>Reject</button>
-                    </>
-                  )}
-                  {currentTab === 'Accepted' && (
-                    <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery')}>Out for Delivery</button>
-                  )}
-                  {currentTab === 'Out for Delivery' && (
-                    <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Complete')}>Delivered</button>
-                  )}
-                  {currentTab === 'Completed' && (
-                    <span className="order-status-badge">Delivered</span>
-                  )}
-                </div>
-              </td>
+              {!hideActions && (
+                <td>
+                  <div className="order-action-buttons">
+                    {currentTab === 'New' && (
+                      <>
+                        <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept')}>Accept</button>
+                        <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject')}>Reject</button>
+                      </>
+                    )}
+                    {currentTab === 'Accepted' && (
+                      <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery')}>Out for Delivery</button>
+                    )}
+                    {currentTab === 'Out for Delivery' && (
+                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Complete')}>Delivered</button>
+                    )}
+                    {currentTab === 'Completed' && (
+                      <span className="order-status-badge">Delivered</span>
+                    )}
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

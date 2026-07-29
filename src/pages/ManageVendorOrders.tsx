@@ -39,7 +39,7 @@ const initialOrders: Order[] = [
     paymentStatus: 'Pending',
     status: 'New',
     items: [
-      { id: '2', productName: 'lens', vendorName: 'Admin Product', price: 5000.00, qty: 1, subtotal: 5000.00 }
+      { id: '2', productName: 'lens', vendorName: 'Assure Vendor', price: 5000.00, qty: 1, subtotal: 5000.00 }
     ]
   },
   {
@@ -55,12 +55,12 @@ const initialOrders: Order[] = [
     paymentStatus: 'Pending',
     status: 'Completed',
     items: [
-      { id: '3', productName: 'camera', vendorName: 'Admin Product', price: 10000.00, qty: 1, subtotal: 10000.00 }
+      { id: '3', productName: 'camera', vendorName: 'Admin', price: 10000.00, qty: 1, subtotal: 10000.00 }
     ]
   }
 ];
 
-export default function ManageOrders() {
+export default function ManageVendorOrders() {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
   const [activeTab, setActiveTab] = useState<OrderStatus>('New');
   const [searchQuery, setSearchQuery] = useState('');
@@ -219,6 +219,8 @@ export default function ManageOrders() {
         onViewOrder={setSelectedOrder} 
         onActionOrder={handleActionOrder} 
         onTrackOrder={setTrackingOrder}
+        showVendor={true}
+        hideActions={true}
       />
 
       {selectedOrder && (

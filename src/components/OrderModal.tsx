@@ -1,13 +1,14 @@
 import { MdClose, MdPersonOutline, MdLocationOn, MdCreditCard, MdVerifiedUser } from 'react-icons/md';
-import type { Order } from '../types';
+import type { Order, OrderItem } from '../types';
 import './OrderModal.css';
 
 interface OrderModalProps {
   order: Order;
   onClose: () => void;
+  onSplitClick?: (item: OrderItem) => void;
 }
 
-export default function OrderModal({ order, onClose }: OrderModalProps) {
+export default function OrderModal({ order, onClose, onSplitClick }: OrderModalProps) {
   return (
     <div className="order-modal-overlay" onClick={onClose}>
       <div className="order-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -77,6 +78,7 @@ export default function OrderModal({ order, onClose }: OrderModalProps) {
                   <th>Price</th>
                   <th>Qty</th>
                   <th>Subtotal</th>
+                  {onSplitClick && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -90,10 +92,23 @@ export default function OrderModal({ order, onClose }: OrderModalProps) {
                     <td>₹{item.price.toFixed(2)}</td>
                     <td>{item.qty}</td>
                     <td>₹{item.subtotal.toFixed(2)}</td>
+                    {onSplitClick && (
+                      <td>
+                        {item.qty > 1 && (
+                          <button 
+                            className="order-item-split-btn"
+                            onClick={() => onSplitClick(item)}
+                            title="Split order quantity to another vendor"
+                          >
+                            Split
+                          </button>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
                 <tr className="order-items-footer">
-                  <td colSpan={4}></td>
+                  <td colSpan={onSplitClick ? 5 : 4}></td>
                   <td style={{ textAlign: 'right', paddingRight: '24px' }}>Total Payable</td>
                   <td>₹{order.totalAmount.toFixed(2)}</td>
                 </tr>

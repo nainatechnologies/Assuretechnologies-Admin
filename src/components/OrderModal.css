@@ -216,8 +216,28 @@
 .order-verification {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
-  color: #6b7280;
+  color: #10b981;
   font-size: 0.875rem;
+  font-weight: 500;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.order-item-split-btn {
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.order-item-split-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
 }

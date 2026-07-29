@@ -44,7 +44,11 @@ export default function AdminLayout() {
           </NavLink>
           <NavLink to="/admin/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdShoppingCart />
-            Orders
+            Admin Orders
+          </NavLink>
+          <NavLink to="/admin/vendor-orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdShoppingCart />
+            Vendor Orders
           </NavLink>
           <NavLink to="/admin/service-requests" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdAssignment />

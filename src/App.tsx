@@ -4,6 +4,7 @@ import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import ManageProducts from './pages/ManageProducts';
 import ManageOrders from './pages/ManageOrders';
+import ManageVendorOrders from './pages/ManageVendorOrders';
 import ManageTechnicians from './pages/ManageTechnicians';
 import ManageVendors from './pages/ManageVendors';
 import ManageServices from './pages/ManageServices';
@@ -30,6 +31,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<ManageProducts />} />
           <Route path="orders" element={<ManageOrders />} />
+          <Route path="vendor-orders" element={<ManageVendorOrders />} />
           <Route path="service-assignments" element={<ManageServiceAssignments />} />
           <Route path="service-requests" element={<ManageServiceRequests />} />
           <Route path="services" element={<ManageServices />} />
