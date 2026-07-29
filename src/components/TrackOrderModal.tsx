@@ -32,25 +32,29 @@ export default function TrackOrderModal({ order, onClose, onSubmit }: TrackOrder
         <form onSubmit={handleSubmit} className="track-modal-body">
           <div className="track-form-group">
             <label htmlFor="transportName">Transport Name</label>
-            <input
-              id="transportName"
-              type="text"
-              value={transportName}
-              onChange={(e) => setTransportName(e.target.value)}
-              placeholder="Enter transport name"
-              required
-            />
+            <div className="track-input-wrapper">
+              <input
+                id="transportName"
+                type="text"
+                value={transportName}
+                onChange={(e) => setTransportName(e.target.value)}
+                placeholder="Enter transport name"
+                required
+              />
+            </div>
           </div>
           <div className="track-form-group">
             <label htmlFor="trackingId">Tracking ID</label>
-            <input
-              id="trackingId"
-              type="text"
-              value={trackingId}
-              onChange={(e) => setTrackingId(e.target.value)}
-              placeholder="Enter tracking ID"
-              required
-            />
+            <div className="track-input-wrapper">
+              <input
+                id="trackingId"
+                type="text"
+                value={trackingId}
+                onChange={(e) => setTrackingId(e.target.value)}
+                placeholder="Enter tracking ID"
+                required
+              />
+            </div>
           </div>
           <div className="track-modal-footer">
             <button type="button" className="track-btn-cancel" onClick={onClose}>Cancel</button>

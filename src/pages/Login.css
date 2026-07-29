@@ -149,17 +149,16 @@
 
 /* Colorful Inputs Override for Login */
 .login-panel .input-field {
-  background: linear-gradient(#ffffff, #ffffff) padding-box,
-              linear-gradient(45deg, #4f46e5, #ec4899, #06b6d4) border-box;
-  border: 2px solid transparent;
+  background: #ffffff;
+  border: 2px solid #312e81;
   padding: 12px 16px;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .login-panel .input-field:focus {
-  background: linear-gradient(#ffffff, #ffffff) padding-box,
-              linear-gradient(45deg, #4f46e5, #ec4899, #06b6d4) border-box;
-  box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.4);
+  background: #ffffff;
+  border-color: #312e81;
+  box-shadow: 0 8px 20px -6px rgba(49, 46, 129, 0.4);
   outline: none;
 }

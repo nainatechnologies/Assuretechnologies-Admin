@@ -4,7 +4,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -13,17 +14,25 @@
 
 .track-modal-content {
   background: white;
-  border-radius: 8px;
+  border-radius: 16px;
   width: 90%;
   max-width: 450px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  animation: modal-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modal-pop {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 .track-modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 24px;
+  background: #2a3342; /* Dark navy from image */
+  border-bottom: 4px solid #8cc63f; /* Lime green accent from image */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,33 +40,35 @@
 
 .track-modal-header h2 {
   margin: 0;
-  font-size: 1.125rem;
-  color: #111827;
+  font-size: 1.25rem;
+  color: white;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 .track-close-btn {
-  background: none;
+  background: rgba(255, 255, 255, 0.1);
   border: none;
-  color: #6b7280;
+  color: white;
   cursor: pointer;
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 50%;
   transition: all 0.2s;
 }
 
 .track-close-btn:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg);
 }
 
 .track-modal-body {
-  padding: 20px;
+  padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
 }
 
 .track-form-group {
@@ -68,62 +79,107 @@
 
 .track-form-group label {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
+  font-weight: 600;
+  color: #2a3342;
+  margin-left: 4px;
 }
 
-.track-form-group input {
-  padding: 10px 12px;
-  border: 2px solid #c7d2fe;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  color: #312e81;
-  background-color: #e0e7ff;
+.track-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.track-input-wrapper input {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  border-radius: 8px 8px 0 0;
+  font-size: 1rem;
+  color: #2a3342;
+  background-color: #f8fafc;
   outline: none;
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease;
+  box-sizing: border-box;
 }
 
-.track-form-group input:focus {
-  border-color: #6366f1;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+.track-input-wrapper input:focus {
+  background-color: #f1f5f9;
+}
+
+.track-input-wrapper::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background-color: #2a3342; /* Dark navy */
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.track-input-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 0%;
+  height: 3px;
+  background-color: #8cc63f; /* Lime green */
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.track-input-wrapper:focus-within::before,
+.track-input-wrapper:focus-within::after {
+  width: 50%;
 }
 
 .track-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 8px;
+  gap: 16px;
+  margin-top: 12px;
 }
 
 .track-btn-cancel {
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .track-btn-cancel:hover {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #2a3342;
 }
 
 .track-btn-submit {
-  background: #3b82f6;
+  background: #8cc63f;
   border: none;
   color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(140, 198, 63, 0.3);
 }
 
 .track-btn-submit:hover {
-  background-color: #2563eb;
+  background: #7ab033;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(140, 198, 63, 0.4);
+}
+
+.track-btn-submit:active {
+  transform: translateY(0);
 }
