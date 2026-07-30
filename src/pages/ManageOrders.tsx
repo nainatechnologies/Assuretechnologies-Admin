@@ -62,16 +62,21 @@ const initialOrders: Order[] = [
 
 export default function ManageOrders() {
   const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [activeTab, setActiveTab] = useState<OrderStatus>('New');
+  const [activeTab, setActiveTab] = useState<string>('New');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
 
-  const tabs: OrderStatus[] = ['New', 'Accepted', 'Out for Delivery', 'Completed'];
+  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Pending COD'];
 
   const filteredOrders = orders.filter(order => {
-    const matchesTab = order.status === activeTab;
+    let matchesTab = false;
+    if (activeTab === 'Pending COD') {
+      matchesTab = order.status === 'Completed' && order.paymentMethod === 'COD' && order.paymentStatus === 'Pending';
+    } else {
+      matchesTab = order.status === activeTab;
+    }
     const query = searchQuery.toLowerCase();
     const matchesSearch = query === '' || 
       order.id.toLowerCase().includes(query) ||
@@ -81,7 +86,7 @@ export default function ManageOrders() {
     return matchesTab && matchesSearch;
   });
 
-  const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete') => {
+  const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => {
     let actionText = '';
     let successText = '';
     let nextStatus: OrderStatus = 'New';
@@ -102,6 +107,9 @@ export default function ManageOrders() {
       actionText = 'mark this order as Delivered';
       successText = 'Order status updated to Completed.';
       nextStatus = 'Completed';
+    } else if (action === 'MarkPaid') {
+      actionText = 'collect cash and mark this order as Paid';
+      successText = 'Payment status updated to Paid.';
     }
 
     Swal.fire({
@@ -114,7 +122,11 @@ export default function ManageOrders() {
       confirmButtonText: 'Yes'
     }).then((result) => {
       if (result.isConfirmed) {
-        setOrders(orders.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
+        if (action === 'MarkPaid') {
+          setOrders(orders.map(o => o.id === orderId ? { ...o, paymentStatus: 'Paid' } : o));
+        } else {
+          setOrders(orders.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
+        }
         Swal.fire('Updated!', successText, 'success');
       }
     });

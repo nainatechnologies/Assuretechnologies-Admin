@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt, MdAttachMoney } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import './AdminLayout.css';
 
@@ -69,6 +69,10 @@ export default function AdminLayout() {
           <NavLink to="/admin/invoices" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdReceipt />
             Invoices
+          </NavLink>
+          <NavLink to="/admin/payments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdAttachMoney />
+            Manage Payments
           </NavLink>
           <NavLink to="/admin/technicians" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdEngineering />

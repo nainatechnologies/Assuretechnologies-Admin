@@ -4,9 +4,9 @@ import './OrderTable.css';
 
 interface OrderTableProps {
   orders: Order[];
-  currentTab: OrderStatus;
+  currentTab: string;
   onViewOrder: (order: Order) => void;
-  onActionOrder: (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete') => void;
+  onActionOrder: (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => void;
   onTrackOrder?: (order: Order) => void;
   showVendor?: boolean;
   hideActions?: boolean;
@@ -122,6 +122,9 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
                     )}
                     {currentTab === 'Completed' && (
                       <span className="order-status-badge">Delivered</span>
+                    )}
+                    {currentTab === 'Pending COD' && (
+                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'MarkPaid')}>Mark as Paid</button>
                     )}
                   </div>
                 </td>

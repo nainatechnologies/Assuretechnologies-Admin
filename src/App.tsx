@@ -12,6 +12,7 @@ import ManageServiceAssignments from './pages/ManageServiceAssignments';
 import ManageServiceRequests from './pages/ManageServiceRequests';
 import ManageQuotations from './pages/ManageQuotations';
 import ManageInvoices from './pages/ManageInvoices';
+import ManagePayments from './pages/ManagePayments';
 import ManageStock from './pages/ManageStock';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
@@ -37,6 +38,7 @@ function App() {
           <Route path="services" element={<ManageServices />} />
           <Route path="quotations" element={<ManageQuotations />} />
           <Route path="invoices" element={<ManageInvoices />} />
+          <Route path="payments" element={<ManagePayments />} />
           <Route path="technicians" element={<ManageTechnicians />} />
           <Route path="vendors" element={<ManageVendors />} />
           <Route path="stock" element={<ManageStock />} />
