@@ -6,17 +6,18 @@ import './TrackOrderModal.css';
 interface TrackOrderModalProps {
   order: Order;
   onClose: () => void;
-  onSubmit: (transportName: string, trackingId: string) => void;
+  onSubmit: (transportName: string, trackingId: string, trackUrl: string) => void;
 }
 
 export default function TrackOrderModal({ order, onClose, onSubmit }: TrackOrderModalProps) {
-  const [transportName, setTransportName] = useState('');
-  const [trackingId, setTrackingId] = useState('');
+  const [transportName, setTransportName] = useState(order.transportName || '');
+  const [trackingId, setTrackingId] = useState(order.trackingId || '');
+  const [trackUrl, setTrackUrl] = useState(order.trackUrl || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!transportName.trim() || !trackingId.trim()) return;
-    onSubmit(transportName, trackingId);
+    onSubmit(transportName, trackingId, trackUrl);
   };
 
   return (
@@ -53,6 +54,18 @@ export default function TrackOrderModal({ order, onClose, onSubmit }: TrackOrder
                 onChange={(e) => setTrackingId(e.target.value)}
                 placeholder="Enter tracking ID"
                 required
+              />
+            </div>
+          </div>
+          <div className="track-form-group">
+            <label htmlFor="trackUrl">Tracking URL (Optional)</label>
+            <div className="track-input-wrapper">
+              <input
+                id="trackUrl"
+                type="url"
+                value={trackUrl}
+                onChange={(e) => setTrackUrl(e.target.value)}
+                placeholder="Enter tracking URL"
               />
             </div>
           </div>

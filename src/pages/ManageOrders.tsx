@@ -254,8 +254,8 @@ export default function ManageOrders() {
         <TrackOrderModal
           order={trackingOrder}
           onClose={() => setTrackingOrder(null)}
-          onSubmit={(transportName, trackingId) => {
-            setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId } : o));
+          onSubmit={(transportName, trackingId, trackUrl) => {
+            setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId, trackUrl } : o));
             Swal.fire('Saved!', `Tracking info saved for order ${trackingOrder.id}.`, 'success');
             setTrackingOrder(null);
           }}

@@ -83,6 +83,7 @@ export interface Order {
   items: OrderItem[];
   transportName?: string;
   trackingId?: string;
+  trackUrl?: string;
 }
 
 export type ServiceRequestStatus = 
