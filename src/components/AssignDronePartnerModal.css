@@ -1,0 +1,230 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 1.5rem;
+}
+
+.assign-tech-modal {
+  max-width: 600px;
+  width: 90%;
+}
+
+.header-blue {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+.header-blue h2 {
+  color: white !important;
+}
+
+.white-icon {
+  color: white !important;
+}
+
+.white-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.request-info {
+  margin-bottom: 24px;
+}
+
+.request-info h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.request-info p {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.technician-list-container {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.no-technicians {
+  padding: 12px;
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.technician-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.technician-list-item {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.technician-list-item:last-child {
+  border-bottom: none;
+}
+
+.technician-list-item:hover {
+  background-color: #f9fafb;
+}
+
+.technician-list-item.selected {
+  background-color: #eff6ff;
+  border-left: 3px solid #3b82f6;
+}
+
+.tech-info-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tech-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.tech-mobile {
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+.tech-pincodes {
+  font-size: 0.8rem;
+  color: #6b7280;
+  background-color: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f9fafb;
+}
+
+.btn-cancel {
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #4b5563;
+}
+
+.btn-assign-green {
+  background-color: #15803d;
+  color: white;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-assign-green:hover:not(:disabled) {
+  background-color: #166534;
+}
+
+.btn-assign-green:disabled {
+  background-color: #86efac;
+  cursor: not-allowed;
+}
+
+.pincode-search-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background-color: #ffffff;
+}
+
+.pincode-search-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.pincode-search-wrapper .search-icon {
+  color: #9ca3af;
+  margin-right: 8px;
+}
+
+.pincode-search-wrapper .search-input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.pincode-search-wrapper .search-input::placeholder {
+  color: #9ca3af;
+}
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.gap-3 { gap: 12px; }

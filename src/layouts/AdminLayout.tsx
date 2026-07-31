@@ -82,6 +82,14 @@ export default function AdminLayout() {
             <MdStore />
             Manage Vendors
           </NavLink>
+          <NavLink to="/admin/drone-partners" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdStore />
+            Manage Drone Partners
+          </NavLink>
+          <NavLink to="/admin/drone-partner-bookings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdAssignment />
+            Drone Partner Bookings
+          </NavLink>
           <NavLink to="/admin/stock" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdInventory />
             Manage Stock
