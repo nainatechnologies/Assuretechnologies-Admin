@@ -54,7 +54,13 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     time: '9 AM - 11 AM',
     status: 'Assigned',
     technicianId: 'T2',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2']
+    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2'],
+    customFieldResponses: {
+      'Number of Devices': '12',
+      'Preferred Brand': 'Motorola'
+    },
+    paymentStatus: 'Prebooking Paid',
+    prebookingAmountPaid: 500
   },
   {
     id: 'SR1767504918',

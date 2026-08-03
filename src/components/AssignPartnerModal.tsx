@@ -1,33 +1,33 @@
 import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import type { DronePartnerBooking, DronePartner } from '../types';
+import type { PartnerBooking, DronePartner } from '../types';
 import { MdClose, MdSearch } from 'react-icons/md';
 import './AssignDronePartnerModal.css';
 
 interface Props {
-  booking: DronePartnerBooking;
+  booking: PartnerBooking;
   dronePartners: DronePartner[];
   onClose: () => void;
-  onAssign: (bookingId: string, dronePartnerId: string) => void;
+  onAssign: (bookingId: string, partnerId: string) => void;
 }
 
-export default function AssignDronePartnerModal({ booking, dronePartners, onClose, onAssign }: Props) {
-  const [selectedDronePartner, setSelectedDronePartner] = useState('');
+export default function AssignPartnerModal({ booking, dronePartners, onClose, onAssign }: Props) {
+  const [selectedPartner, setSelectedPartner] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleAssign = () => {
-    if (selectedDronePartner) {
-      onAssign(booking.id, selectedDronePartner);
+    if (selectedPartner) {
+      onAssign(booking.id, selectedPartner);
     }
   };
 
-  const filteredDronePartners = useMemo(() => {
+  const filteredPartners = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const lowerQuery = searchQuery.toLowerCase().trim();
-    return dronePartners.filter(dronePartner => 
-      dronePartner.location.toLowerCase().includes(lowerQuery) ||
-      dronePartner.name.toLowerCase().includes(lowerQuery) ||
-      dronePartner.mobile.includes(lowerQuery)
+    return dronePartners.filter(partner => 
+      partner.location.toLowerCase().includes(lowerQuery) ||
+      partner.name.toLowerCase().includes(lowerQuery) ||
+      partner.mobile.includes(lowerQuery)
     );
   }, [dronePartners, searchQuery]);
 
@@ -48,7 +48,7 @@ export default function AssignDronePartnerModal({ booking, dronePartners, onClos
     <div className="modal-overlay animate-fade-in">
       <div className="modal-content assign-tech-modal">
         <div className="modal-header header-blue">
-          <h2>Assign Drone DronePartner</h2>
+          <h2>Assign Partner</h2>
           <button className="close-btn white-icon" onClick={onClose}>
             <MdClose />
           </button>
@@ -74,26 +74,26 @@ export default function AssignDronePartnerModal({ booking, dronePartners, onClos
             
             {searchQuery.trim() && (
               <div className="technician-list-container">
-                {filteredDronePartners.length === 0 ? (
-                  <div className="no-technicians">No drone dronePartners found.</div>
+                {filteredPartners.length === 0 ? (
+                  <div className="no-technicians">No partners found.</div>
                 ) : (
                   <ul className="technician-list">
-                    {filteredDronePartners.map(dronePartner => (
+                    {filteredPartners.map(partner => (
                       <li 
-                        key={dronePartner.id} 
-                        className={`technician-list-item ${selectedDronePartner === dronePartner.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedDronePartner(dronePartner.id)}
+                        key={partner.id} 
+                        className={`technician-list-item ${selectedPartner === partner.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedPartner(partner.id)}
                       >
                         <div className="tech-info-main">
-                          <span className="tech-name">{dronePartner.name}</span>
-                          <span className="tech-mobile">{dronePartner.mobile}</span>
+                          <span className="tech-name">{partner.name}</span>
+                          <span className="tech-mobile">{partner.mobile}</span>
                         </div>
-                        {dronePartner.location && (
-                          <div className="tech-pincodes">Serves: {dronePartner.location}</div>
+                        {partner.location && (
+                          <div className="tech-pincodes">Serves: {partner.location}</div>
                         )}
-                        {dronePartner.equipmentTypes && dronePartner.equipmentTypes.length > 0 && (
+                        {partner.equipmentTypes && partner.equipmentTypes.length > 0 && (
                           <div className="tech-pincodes mt-1" style={{backgroundColor: '#e0f2fe', color: '#0369a1'}}>
-                            {dronePartner.equipmentTypes.join(', ')}
+                            {partner.equipmentTypes.join(', ')}
                           </div>
                         )}
                       </li>
@@ -112,9 +112,9 @@ export default function AssignDronePartnerModal({ booking, dronePartners, onClos
           <button 
             className="btn-assign-green" 
             onClick={handleAssign}
-            disabled={!selectedDronePartner}
+            disabled={!selectedPartner}
           >
-            Assign Drone Partner
+            Assign Partner
           </button>
         </div>
       </div>

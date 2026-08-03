@@ -49,12 +49,22 @@ export interface Vendor {
   shopPhotoFileName?: string;
 }
 
+export interface CustomField {
+  id: string;
+  label: string;
+  type: 'text' | 'number' | 'dropdown';
+  options?: string[]; // Used when type is 'dropdown'
+  required: boolean;
+}
+
 export interface Service {
   id: string;
   category: string;
   subCategory: string;
   image?: string | File;
   imageName?: string;
+  customFields?: CustomField[];
+  prebookingCharge?: number;
 }
 
 export interface OrderItem {
@@ -77,6 +87,7 @@ export interface Order {
   address: string;
   pincode: string;
   totalAmount: number;
+  adminCommission?: number;
   paymentMethod: string;
   paymentStatus: 'Pending' | 'Paid';
   status: OrderStatus;
@@ -118,6 +129,9 @@ export interface ServiceRequest {
   startWorkPhotos?: string[];
   completeWorkPhotos?: string[];
   progressUpdates?: ProgressUpdate[];
+  customFieldResponses?: Record<string, string>;
+  paymentStatus?: 'Prebooking Paid' | 'Pending';
+  prebookingAmountPaid?: number;
 }
 
 export interface QuotationService {
@@ -180,14 +194,29 @@ export interface DronePartner {
   location: string;
   equipmentTypes: string[];
   status: 'Active' | 'Inactive';
+  partnerType?: 'Drone' | 'Tractor';
   password?: string;
   idFile?: string | File;
   idFileName?: string;
   licenseFile?: string | File;
   licenseFileName?: string;
+  driverLicenseFile?: string | File;
+  driverLicenseFileName?: string;
+  rcFile?: string | File;
+  rcFileName?: string;
+  vehicleNumber?: string;
 }
 
-export interface DronePartnerBooking {
+export type PartnerBookingStatus = 
+  | 'Pending'
+  | 'Accepted'
+  | 'Assigned'
+  | 'In Progress'
+  | 'Awaiting Approval'
+  | 'Completed'
+  | 'Cancelled';
+
+export interface PartnerBooking {
   id: string;
   userId: string;
   userName: string;
@@ -200,7 +229,14 @@ export interface DronePartnerBooking {
   equipmentType: string;
   date: string;
   time: string;
-  status: 'Pending' | 'Assigned' | 'Completed' | 'Cancelled';
-  dronePartnerId?: string;
+  status: PartnerBookingStatus;
+  partnerId?: string;
+  partnerType?: 'Drone' | 'Tractor';
+  startWorkPhotos?: string[];
+  completeWorkPhotos?: string[];
+  progressUpdates?: ProgressUpdate[];
+  customFieldResponses?: Record<string, string>;
+  paymentStatus?: 'Prebooking Paid' | 'Pending';
+  prebookingAmountPaid?: number;
 }
 

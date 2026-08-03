@@ -23,6 +23,7 @@ interface VendorOrderInfo {
   vendorName: string;
   date: string;
   amount: number;
+  adminCommission?: number;
   customerPaid: boolean;
   vendorPaid: boolean;
   paymentMethod: 'online' | 'cod';
@@ -35,11 +36,11 @@ const initialPayments: Payment[] = [
 ];
 
 const mockVendorOrders: VendorOrderInfo[] = [
-  { id: 'VO-202607-002', vendorName: 'TechSupplies Inc.', date: '2026-07-28', amount: 3000, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
-  { id: 'VO-202607-003', vendorName: 'TechSupplies Inc.', date: '2026-07-29', amount: 1200, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
-  { id: 'VO-202607-004', vendorName: 'Metro Hardware', date: '2026-07-29', amount: 800, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
-  { id: 'VO-202607-005', vendorName: 'Metro Hardware', date: '2026-07-30', amount: 2100, customerPaid: false, vendorPaid: false, paymentMethod: 'cod' },
-  { id: 'VO-202607-006', vendorName: 'City Electronics', date: '2026-07-30', amount: 1500, customerPaid: false, vendorPaid: false, paymentMethod: 'cod' }
+  { id: 'VO-202607-002', vendorName: 'TechSupplies Inc.', date: '2026-07-28', amount: 3000, adminCommission: 300, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
+  { id: 'VO-202607-003', vendorName: 'TechSupplies Inc.', date: '2026-07-29', amount: 1200, adminCommission: 120, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
+  { id: 'VO-202607-004', vendorName: 'Metro Hardware', date: '2026-07-29', amount: 800, adminCommission: 80, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
+  { id: 'VO-202607-005', vendorName: 'Metro Hardware', date: '2026-07-30', amount: 2100, adminCommission: 210, customerPaid: false, vendorPaid: false, paymentMethod: 'cod' },
+  { id: 'VO-202607-006', vendorName: 'City Electronics', date: '2026-07-30', amount: 1500, adminCommission: 150, customerPaid: false, vendorPaid: false, paymentMethod: 'cod' }
 ];
 
 export default function ManagePayments() {
@@ -315,7 +316,10 @@ export default function ManagePayments() {
                     <td>{vo.vendorName}</td>
                     <td>{vo.date}</td>
                     <td><span className="status-badge completed"><FiCheckCircle style={{marginRight: '4px'}}/>Customer Paid</span></td>
-                    <td className="amount-col">₹{vo.amount.toLocaleString()}</td>
+                    <td className="amount-col">
+                      <div>₹{vo.amount.toLocaleString()}</div>
+                      {vo.adminCommission && <div style={{ fontSize: '0.75rem', color: '#64748b' }}>(Admin Comm: ₹{vo.adminCommission.toLocaleString()})</div>}
+                    </td>
                     <td>
                       <button className="btn-pay-action" onClick={() => handlePayVendorOrder(vo.id, vo.vendorName, vo.amount)}>
                         Pay Vendor

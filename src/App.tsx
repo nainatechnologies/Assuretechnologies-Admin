@@ -15,7 +15,8 @@ import ManageInvoices from './pages/ManageInvoices';
 import ManagePayments from './pages/ManagePayments';
 import ManageStock from './pages/ManageStock';
 import ManageDronePartners from './pages/ManageDronePartners';
-import ManageDronePartnerBookings from './pages/ManageDronePartnerBookings';
+import ManagePartnerAssignments from './pages/ManagePartnerAssignments';
+import ManagePartnerRequests from './pages/ManagePartnerRequests';
 import JobPortal from './pages/JobPortal';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
@@ -45,9 +46,10 @@ function App() {
           <Route path="technicians" element={<ManageTechnicians />} />
           <Route path="vendors" element={<ManageVendors />} />
           <Route path="drone-partners" element={<ManageDronePartners />} />
-          <Route path="drone-partner-bookings" element={<ManageDronePartnerBookings />} />
-          <Route path="job-portal" element={<JobPortal />} />
+          <Route path="partner-assignments" element={<ManagePartnerAssignments />} />
+          <Route path="partner-requests" element={<ManagePartnerRequests />} />
           <Route path="stock" element={<ManageStock />} />
+          <Route path="job-portal" element={<JobPortal />} />
         </Route>
         
         {/* Fallback route */}

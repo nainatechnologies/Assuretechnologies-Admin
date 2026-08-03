@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { ServiceRequest, Technician } from '../types';
-import './ServiceRequestDetailsModal.css';
+import type { PartnerBooking, DronePartner } from '../types';
+import './ServiceRequestDetailsModal.css'; // Reusing CSS
 
-interface ServiceRequestDetailsModalProps {
-  request: ServiceRequest;
-  technician?: Technician;
+interface PartnerBookingDetailsModalProps {
+  booking: PartnerBooking;
+  partner?: DronePartner;
   onClose: () => void;
 }
 
-export default function ServiceRequestDetailsModal({ request, technician, onClose }: ServiceRequestDetailsModalProps) {
+export default function PartnerBookingDetailsModal({ booking, partner, onClose }: PartnerBookingDetailsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
     <div className="modal-overlay animate-fade-in">
       <div className="modal-content details-modal">
         <div className="details-header">
-          <h2>Service Request Details</h2>
+          <h2>Partner Booking Details</h2>
           <button className="details-close-btn" onClick={onClose}>
             &times;
           </button>
@@ -33,45 +33,48 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
         <div className="details-body">
           <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
             <div className="details-badge" style={{ marginBottom: 0 }}>
-              {request.status}
+              {booking.status}
             </div>
-            {request.paymentStatus === 'Prebooking Paid' && (
+            {booking.paymentStatus === 'Prebooking Paid' && (
               <div className="details-badge" style={{ backgroundColor: '#10b981', color: 'white', marginBottom: 0 }}>
-                {request.paymentStatus} {request.prebookingAmountPaid ? `(₹${request.prebookingAmountPaid})` : ''}
+                {booking.paymentStatus} {booking.prebookingAmountPaid ? `(₹${booking.prebookingAmountPaid})` : ''}
               </div>
             )}
           </div>
 
           <div className="details-card">
-            Customer <br/><br/>
+            Farmer <br/><br/>
             <div className="details-row">
-              <strong>Name:</strong> {request.userName}
+              <strong>Name:</strong> {booking.userName}
             </div>
             <div className="details-row">
-              <strong>Mobile:</strong> {request.userMobile}
+              <strong>Mobile:</strong> {booking.userMobile}
             </div>
             <div className="details-row">
-              <strong>Email:</strong> {request.userEmail}
+              <strong>Location:</strong> {booking.village}, {booking.mandal}, {booking.district} - {booking.pincode}
+            </div>
+            <div className="details-row" style={{ color: '#4f46e5', fontWeight: 600 }}>
+              <strong>Survey Number:</strong> {booking.surveyNumber}
             </div>
           </div>
 
           <div className="details-card">
-            Service <br/><br/>
+            Service Details <br/><br/>
             <div className="details-row">
-              <strong>Service:</strong> {request.serviceName}
+              <strong>Equipment Type:</strong> {booking.equipmentType}
             </div>
             <div className="details-row">
-              <strong>Date:</strong> {request.date}
+              <strong>Date:</strong> {booking.date}
             </div>
             <div className="details-row">
-              <strong>Time:</strong> {request.time}
+              <strong>Time:</strong> {booking.time}
             </div>
           </div>
 
-          {request.customFieldResponses && Object.keys(request.customFieldResponses).length > 0 && (
+          {booking.customFieldResponses && Object.keys(booking.customFieldResponses).length > 0 && (
             <div className="details-card">
               Additional Information <br/><br/>
-              {Object.entries(request.customFieldResponses).map(([key, value]) => (
+              {Object.entries(booking.customFieldResponses).map(([key, value]) => (
                 <div className="details-row" key={key}>
                   <strong>{key}:</strong> {value}
                 </div>
@@ -80,22 +83,22 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
           )}
 
           <div className="details-card">
-            Technician <br/><br/>
+            Assigned Partner <br/><br/>
             <div className="details-row">
-              {technician ? technician.name : '-'}
+              {partner ? partner.name : '-'}
             </div>
+            {partner && (
+              <div className="details-row mt-2" style={{ fontSize: '14px', color: '#64748b' }}>
+                Contact: {partner.mobile}
+              </div>
+            )}
           </div>
 
-          {request.startWorkPhotos && request.startWorkPhotos.length > 0 && (
+          {booking.startWorkPhotos && booking.startWorkPhotos.length > 0 && (
             <div className="details-card">
               Photos - Before Work <br/><br/>
-              {request.startDescription && (
-                <div style={{ marginBottom: '15px', padding: '10px', background: '#f8fafc', borderLeft: '4px solid #3b82f6', borderRadius: '4px', fontSize: '14px', color: '#334155' }}>
-                  {request.startDescription}
-                </div>
-              )}
               <div className="details-photo-grid">
-                {request.startWorkPhotos.map((photo, index) => (
+                {booking.startWorkPhotos.map((photo, index) => (
                   <img 
                     key={index} 
                     src={photo} 
@@ -108,11 +111,11 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
             </div>
           )}
 
-          {request.progressUpdates && request.progressUpdates.length > 0 && (
+          {booking.progressUpdates && booking.progressUpdates.length > 0 && (
             <div className="details-card">
               Daily Progress Updates <br/><br/>
               <div className="progress-timeline">
-                {request.progressUpdates.map((update) => (
+                {booking.progressUpdates.map((update) => (
                   <div key={update.id} className="progress-item">
                     <div className="progress-date">{update.date}</div>
                     <div className="progress-description">{update.description}</div>
@@ -135,11 +138,11 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
             </div>
           )}
 
-          {request.completeWorkPhotos && request.completeWorkPhotos.length > 0 && (
+          {booking.completeWorkPhotos && booking.completeWorkPhotos.length > 0 && (
             <div className="details-card">
               Photos - After Work <br/><br/>
               <div className="details-photo-grid">
-                {request.completeWorkPhotos.map((photo, index) => (
+                {booking.completeWorkPhotos.map((photo, index) => (
                   <img 
                     key={index} 
                     src={photo} 
