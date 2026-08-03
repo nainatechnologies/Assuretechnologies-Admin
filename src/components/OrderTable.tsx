@@ -1,5 +1,5 @@
 import { MdRemoveRedEye } from 'react-icons/md';
-import type { Order, OrderStatus } from '../types';
+import type { Order, } from '../types';
 import './OrderTable.css';
 
 interface OrderTableProps {

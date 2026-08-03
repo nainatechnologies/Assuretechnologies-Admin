@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt, MdAttachMoney } from 'react-icons/md';
+import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt, MdAttachMoney, MdWork } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import './AdminLayout.css';
 
@@ -93,6 +93,10 @@ export default function AdminLayout() {
           <NavLink to="/admin/stock" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdInventory />
             Manage Stock
+          </NavLink>
+          <NavLink to="/admin/job-portal" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdWork />
+            Job Portal
           </NavLink>
         </nav>
         

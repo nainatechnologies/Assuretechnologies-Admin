@@ -166,7 +166,7 @@ export default function ManageServiceRequests() {
     setAssignModalOpen(true);
   };
 
-  const handleAssignConfirm = (requestId: string, technicianId: string) => {
+  const handleAssignConfirm = (_requestId: string, technicianId: string) => {
     if (selectedReassignId) {
       Swal.fire({
         title: 'Reassign Technician?',

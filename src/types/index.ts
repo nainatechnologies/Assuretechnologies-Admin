@@ -171,3 +171,36 @@ export interface Invoice {
   srNo?: string;
   serviceName?: string;
 }
+
+export interface DronePartner {
+  id: string;
+  name: string;
+  mobile: string;
+  email: string;
+  location: string;
+  equipmentTypes: string[];
+  status: 'Active' | 'Inactive';
+  password?: string;
+  idFile?: string | File;
+  idFileName?: string;
+  licenseFile?: string | File;
+  licenseFileName?: string;
+}
+
+export interface DronePartnerBooking {
+  id: string;
+  userId: string;
+  userName: string;
+  userMobile: string;
+  surveyNumber: string;
+  district: string;
+  mandal: string;
+  village: string;
+  pincode: string;
+  equipmentType: string;
+  date: string;
+  time: string;
+  status: 'Pending' | 'Assigned' | 'Completed' | 'Cancelled';
+  dronePartnerId?: string;
+}
+

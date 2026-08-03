@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, } from 'react';
 import type { DronePartnerBooking, DronePartner } from '../types';
 import Swal from 'sweetalert2';
 import AssignDronePartnerModal from '../components/AssignDronePartnerModal';

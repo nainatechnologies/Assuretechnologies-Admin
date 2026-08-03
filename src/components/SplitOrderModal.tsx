@@ -144,7 +144,7 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
           <button 
             className="split-submit-btn" 
             onClick={handleSubmit}
-            disabled={splitQty < 1 || splitQty > maxQty || !selectedVendor}
+            disabled={Number(splitQty) < 1 || Number(splitQty) > maxQty || !selectedVendor}
           >
             Confirm Split
           </button>

@@ -38,7 +38,7 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
         password: dronePartner.password || ''
       });
       if (dronePartner.location) {
-        setPincodesList(dronePartner.location.split(',').map(p => p.trim()).filter(Boolean));
+        setPincodesList(dronePartner.location.split(',').map((p: string) => p.trim()).filter(Boolean));
       }
     } else {
       setFormData({ name: '', mobile: '', email: '', location: '', equipmentTypes: '', password: '' });
@@ -171,7 +171,7 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content technician-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{dronePartner ? 'Edit Drone DronePartner' : 'Add Drone DronePartner'}</h2>
+          <h2>{dronePartner ? 'Edit Drone Partner' : 'Add Drone Partner'}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
         

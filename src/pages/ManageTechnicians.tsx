@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MdSearch, MdChevronLeft, MdChevronRight } from 'react-icons/md';
+import { MdSearch } from 'react-icons/md';
 import TechnicianTable from '../components/TechnicianTable';
 import TechnicianModal from '../components/TechnicianModal';
 import Pagination from '../components/Pagination';

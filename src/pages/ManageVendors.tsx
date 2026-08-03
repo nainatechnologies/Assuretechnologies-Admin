@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MdSearch, MdChevronLeft, MdChevronRight } from 'react-icons/md';
+import { MdSearch } from 'react-icons/md';
 import type { Vendor } from '../types';
 import VendorTable from '../components/VendorTable';
 import VendorModal from '../components/VendorModal';
