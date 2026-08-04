@@ -167,6 +167,30 @@ export default function ManageServiceRequests() {
     }
   };
 
+  const handleMarkAsPaid = (id: string) => {
+    Swal.fire({
+      title: 'Mark as Paid?',
+      text: "Has the client completed the manual payment?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: 'Yes, Mark Paid'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setRequests(prev => prev.map(req => 
+          req.id === id 
+            ? { ...req, paymentStatus: 'Paid in Full' } 
+            : req
+        ));
+        
+        // Update selected request so modal reflects changes immediately
+        setSelectedRequest(prev => prev?.id === id ? { ...prev, paymentStatus: 'Paid in Full' } : prev);
+        
+        Swal.fire('Success', 'Payment marked as paid.', 'success');
+      }
+    });
+  };
+
   const handleReassign = (id: string) => {
     setSelectedReassignId(id);
     setAssignModalOpen(true);
@@ -243,6 +267,7 @@ export default function ManageServiceRequests() {
             viewType="requests"
             onView={handleView}
             onReassign={handleReassign}
+            onMarkAsPaid={handleMarkAsPaid}
           />
           <Pagination 
             currentPage={currentPage}
@@ -257,6 +282,7 @@ export default function ManageServiceRequests() {
           request={selectedRequest}
           technician={selectedRequest.technicianId ? MOCK_TECHNICIANS.find(t => t.id === selectedRequest.technicianId) : undefined}
           onClose={() => setViewModalOpen(false)}
+          onMarkAsPaid={handleMarkAsPaid}
         />
       )}
 

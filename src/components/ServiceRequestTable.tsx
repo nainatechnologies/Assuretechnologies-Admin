@@ -9,9 +9,10 @@ interface Props {
   onView?: (id: string) => void;
   onAssign?: (id: string) => void;
   onReassign?: (id: string) => void;
+  onMarkAsPaid?: (id: string) => void;
 }
 
-export default function ServiceRequestTable({ requests, viewType, onAccept, onReject, onView, onAssign, onReassign }: Props) {
+export default function ServiceRequestTable({ requests, viewType, onAccept, onReject, onView, onAssign, onReassign, onMarkAsPaid }: Props) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'New Request':
@@ -63,6 +64,7 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                 <th>Date</th>
                 <th>Time</th>
                 <th>Status</th>
+                <th>Payment Status</th>
                 <th>Action</th>
               </>
             )}
@@ -122,6 +124,15 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                   <td>{req.time}</td>
                   <td>{getStatusBadge(req.status)}</td>
                   <td>
+                    {req.paymentStatus === 'Paid in Full' ? (
+                      <span className="status-badge" style={{ backgroundColor: '#166534', color: 'white' }}>Paid in Full</span>
+                    ) : req.paymentStatus === 'Prebooking Paid' ? (
+                      <span className="status-badge" style={{ backgroundColor: '#10b981', color: 'white' }}>{req.paymentStatus}</span>
+                    ) : (
+                      <span className="status-badge" style={{ backgroundColor: '#f59e0b', color: 'white' }}>Pending</span>
+                    )}
+                  </td>
+                  <td>
                     <div className="action-buttons">
                       <button className="btn-view-dark" onClick={() => onView && onView(req.id)}>
                         View
@@ -129,6 +140,15 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                       {req.status === 'In Progress' && onReassign && (
                         <button className="btn-assign" onClick={() => onReassign(req.id)}>
                           Reassign
+                        </button>
+                      )}
+                      {req.status === 'Completed' && req.paymentStatus !== 'Paid in Full' && onMarkAsPaid && (
+                        <button 
+                          className="btn-assign" 
+                          style={{ backgroundColor: '#10b981' }} 
+                          onClick={() => onMarkAsPaid(req.id)}
+                        >
+                          Mark Paid
                         </button>
                       )}
                     </div>

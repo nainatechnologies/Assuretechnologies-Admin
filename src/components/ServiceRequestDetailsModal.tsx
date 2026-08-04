@@ -7,9 +7,10 @@ interface ServiceRequestDetailsModalProps {
   request: ServiceRequest;
   technician?: Technician;
   onClose: () => void;
+  onMarkAsPaid?: (id: string) => void;
 }
 
-export default function ServiceRequestDetailsModal({ request, technician, onClose }: ServiceRequestDetailsModalProps) {
+export default function ServiceRequestDetailsModal({ request, technician, onClose, onMarkAsPaid }: ServiceRequestDetailsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -38,6 +39,11 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
             {request.paymentStatus === 'Prebooking Paid' && (
               <div className="details-badge" style={{ backgroundColor: '#10b981', color: 'white', marginBottom: 0 }}>
                 {request.paymentStatus} {request.prebookingAmountPaid ? `(₹${request.prebookingAmountPaid})` : ''}
+              </div>
+            )}
+            {request.paymentStatus === 'Paid in Full' && (
+              <div className="details-badge" style={{ backgroundColor: '#166534', color: 'white', marginBottom: 0 }}>
+                Paid in Full
               </div>
             )}
           </div>
@@ -153,7 +159,17 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
           )}
         </div>
 
-        <div className="details-footer">
+        <div className="details-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {request.status === 'Completed' && request.paymentStatus !== 'Paid in Full' && onMarkAsPaid ? (
+            <button 
+              style={{ backgroundColor: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }} 
+              onClick={() => onMarkAsPaid(request.id)}
+            >
+              Mark as Paid
+            </button>
+          ) : (
+            <div></div>
+          )}
           <button className="btn-close-gray" onClick={onClose}>
             Close
           </button>
