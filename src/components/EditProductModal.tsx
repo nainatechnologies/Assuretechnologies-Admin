@@ -24,13 +24,9 @@ export default function EditProductModal({
   const [description, setDescription] = useState('');
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [bannerName, setBannerName] = useState('');
-  const [additionalFile, setAdditionalFile] = useState<File | null>(null);
-  const [additionalImageName, setAdditionalImageName] = useState('');
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  const [additionalPreview, setAdditionalPreview] = useState<string | null>(null);
 
   const bannerInputRef = useRef<HTMLInputElement>(null);
-  const additionalInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (product) {
@@ -42,9 +38,7 @@ export default function EditProductModal({
       setPriceError('');
       setDescription(product.description || '');
       setBannerName(product.bannerName || 'No file chosen');
-      setAdditionalImageName(product.additionalImageName || 'No file chosen');
       setBannerFile(null);
-      setAdditionalFile(null);
 
       if (product.banner instanceof File) {
         setBannerPreview(URL.createObjectURL(product.banner));
@@ -52,14 +46,6 @@ export default function EditProductModal({
         setBannerPreview(product.banner);
       } else {
         setBannerPreview(null);
-      }
-
-      if (product.additionalImage instanceof File) {
-        setAdditionalPreview(URL.createObjectURL(product.additionalImage));
-      } else if (typeof product.additionalImage === 'string' && product.additionalImage) {
-        setAdditionalPreview(product.additionalImage);
-      } else {
-        setAdditionalPreview(null);
       }
     }
   }, [product]);
@@ -69,11 +55,8 @@ export default function EditProductModal({
       if (bannerPreview && bannerPreview.startsWith('blob:')) {
         URL.revokeObjectURL(bannerPreview);
       }
-      if (additionalPreview && additionalPreview.startsWith('blob:')) {
-        URL.revokeObjectURL(additionalPreview);
-      }
     };
-  }, [bannerPreview, additionalPreview]);
+  }, [bannerPreview]);
 
   if (!isOpen || !product) return null;
 
@@ -94,15 +77,6 @@ export default function EditProductModal({
     }
   };
 
-  const handleAdditionalImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      setAdditionalFile(file);
-      setAdditionalImageName(file.name);
-      setAdditionalPreview(URL.createObjectURL(file));
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !price || !description) return;
@@ -119,9 +93,7 @@ export default function EditProductModal({
       price: `₹${parseFloat(price).toFixed(2)}`,
       description,
       banner: bannerFile || product.banner,
-      bannerName: bannerName || product.bannerName || 'No file chosen',
-      additionalImage: additionalFile || product.additionalImage,
-      additionalImageName: additionalImageName || product.additionalImageName || 'No file chosen'
+      bannerName: bannerName || product.bannerName || 'No file chosen'
     };
 
     onUpdateProduct(updatedProduct);
@@ -199,10 +171,10 @@ export default function EditProductModal({
               >
                 <div className="modern-file-btn">Choose File</div>
                 {bannerPreview ? (
-                  <img 
-                    src={bannerPreview} 
-                    alt="Preview" 
-                    style={{ height: '40px', width: 'auto', borderRadius: '4px', marginLeft: '12px', objectFit: 'cover' }} 
+                  <img
+                    src={bannerPreview}
+                    alt="Preview"
+                    style={{ height: '40px', width: 'auto', borderRadius: '4px', marginLeft: '12px', objectFit: 'cover' }}
                   />
                 ) : (
                   <div className="modern-file-name" title={bannerName}>
@@ -214,36 +186,6 @@ export default function EditProductModal({
                   id="editBanner"
                   ref={bannerInputRef}
                   onChange={handleBannerChange}
-                  className="file-input-hidden"
-                  accept="image/*"
-                />
-              </div>
-            </div>
-
-            {/* Add Image */}
-            <div className="input-group form-group">
-              <label className="input-label">Add Image</label>
-              <div
-                className="modern-file-input"
-                onClick={() => additionalInputRef.current?.click()}
-              >
-                <div className="modern-file-btn">Choose File</div>
-                {additionalPreview ? (
-                  <img 
-                    src={additionalPreview} 
-                    alt="Preview" 
-                    style={{ height: '40px', width: 'auto', borderRadius: '4px', marginLeft: '12px', objectFit: 'cover' }} 
-                  />
-                ) : (
-                  <div className="modern-file-name" title={additionalImageName}>
-                    {additionalImageName}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  id="editAddImage"
-                  ref={additionalInputRef}
-                  onChange={handleAdditionalImageChange}
                   className="file-input-hidden"
                   accept="image/*"
                 />

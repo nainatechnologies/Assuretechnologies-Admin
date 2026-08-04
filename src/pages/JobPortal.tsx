@@ -604,26 +604,26 @@ export default function JobPortal() {
             <form style={{ display: 'flex', flexDirection: 'column', gap: '15px' }} onSubmit={handleJobSubmit}>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Job Overview</label>
-                <textarea rows={2} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="Brief overview of the job..." value={newJob.overview} onChange={e => setNewJob({ ...newJob, overview: e.target.value })} required />
+                <textarea rows={2} className="input-field" style={{ width: '100%' }} placeholder="Brief overview of the job..." value={newJob.overview} onChange={e => setNewJob({ ...newJob, overview: e.target.value })} required />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Job Description</label>
-                <textarea rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="Detailed job description..." value={newJob.description} onChange={e => setNewJob({ ...newJob, description: e.target.value })} required />
+                <textarea rows={3} className="input-field" style={{ width: '100%' }} placeholder="Detailed job description..." value={newJob.description} onChange={e => setNewJob({ ...newJob, description: e.target.value })} required />
               </div>
               <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 200px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Experience</label>
-                  <input type="text" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="e.g. 2-4 years" value={newJob.experience} onChange={e => setNewJob({ ...newJob, experience: e.target.value })} required />
+                  <input type="text" className="input-field" style={{ width: '100%' }} placeholder="e.g. 2-4 years" value={newJob.experience} onChange={e => setNewJob({ ...newJob, experience: e.target.value })} required />
                 </div>
                 <div style={{ flex: '1 1 200px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Industry</label>
-                  <input type="text" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="e.g. Technology" value={newJob.industry} onChange={e => setNewJob({ ...newJob, industry: e.target.value })} required />
+                  <input type="text" className="input-field" style={{ width: '100%' }} placeholder="e.g. Technology" value={newJob.industry} onChange={e => setNewJob({ ...newJob, industry: e.target.value })} required />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 200px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Employment Type</label>
-                  <select style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', background: 'white' }} value={newJob.employmentType} onChange={e => setNewJob({ ...newJob, employmentType: e.target.value })} required>
+                  <select className="input-field" style={{ width: '100%' }} value={newJob.employmentType} onChange={e => setNewJob({ ...newJob, employmentType: e.target.value })} required>
                     <option value="">Select Type</option>
                     <option value="full-time">Full-time</option>
                     <option value="part-time">Part-time</option>
@@ -633,16 +633,16 @@ export default function JobPortal() {
                 </div>
                 <div style={{ flex: '1 1 200px' }}>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Location</label>
-                  <input type="text" style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="e.g. New York, NY (or Remote)" value={newJob.location} onChange={e => setNewJob({ ...newJob, location: e.target.value })} required />
+                  <input type="text" className="input-field" style={{ width: '100%' }} placeholder="e.g. New York, NY (or Remote)" value={newJob.location} onChange={e => setNewJob({ ...newJob, location: e.target.value })} required />
                 </div>
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Key Responsibilities</label>
-                <textarea rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="List key responsibilities..." value={newJob.responsibilities} onChange={e => setNewJob({ ...newJob, responsibilities: e.target.value })} required />
+                <textarea rows={3} className="input-field" style={{ width: '100%' }} placeholder="List key responsibilities..." value={newJob.responsibilities} onChange={e => setNewJob({ ...newJob, responsibilities: e.target.value })} required />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', color: '#334155' }}>Required Skills and Qualifications</label>
-                <textarea rows={3} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }} placeholder="List required skills and qualifications..." value={newJob.skills} onChange={e => setNewJob({ ...newJob, skills: e.target.value })} required />
+                <textarea rows={3} className="input-field" style={{ width: '100%' }} placeholder="List required skills and qualifications..." value={newJob.skills} onChange={e => setNewJob({ ...newJob, skills: e.target.value })} required />
               </div>
 
               <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
