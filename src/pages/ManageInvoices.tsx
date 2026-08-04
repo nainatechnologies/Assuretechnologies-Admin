@@ -13,12 +13,13 @@ interface MockSR {
   service: string;
   category: string;
   completedOn: string;
+  extraItems?: { description: string, qty: number }[];
 }
 
 const mockSRs: MockSR[] = [
   { id: '1', srNo: 'SR1781691076', customerName: 'eswararao', mobile: '8008759767', service: 'internet installation service', category: 'Installation', completedOn: '17 Jun 2026' },
   { id: '2', srNo: 'SR1781493494', customerName: 'eswararao', mobile: '8008759767', service: 'internet installation service', category: 'Installation', completedOn: '15 Jun 2026' },
-  { id: '3', srNo: 'SR1781493173', customerName: 'eswararao', mobile: '8008759767', service: 'Cctv installation', category: 'Installation', completedOn: '15 Jun 2026' },
+  { id: '3', srNo: 'SR1781493173', customerName: 'eswararao', mobile: '8008759767', service: 'Cctv installation', category: 'Installation', completedOn: '15 Jun 2026', extraItems: [{ description: 'Extra camera mount', qty: 2 }] },
   { id: '4', srNo: 'SR1778593411', customerName: 'Venkatesh Marripelly', mobile: '9701712335', service: 'Biometric device', category: 'Device Delivery', completedOn: '12 May 2026' },
   { id: '5', srNo: 'SR1767715098', customerName: 'Venkatesh Marripelly', mobile: '9701712335', service: 'Baofeng Walkie Talkie BF-888S Pack of 2 with Earphone', category: 'Device Delivery', completedOn: '06 Jan 2026' }
 ];
@@ -120,10 +121,27 @@ export default function ManageInvoices() {
     setSelectedSR(sr);
     setCustomerName(sr.customerName);
     setMobile(sr.mobile);
-    // Pre-fill the first item with the service name if items is just the empty default one
+    
+    let newItems = [];
     if (items.length === 1 && items[0].description === '') {
-      setItems([{ ...items[0], description: `${sr.category} - ${sr.service}` }]);
+      newItems = [{ ...items[0], description: `${sr.category} - ${sr.service}` }];
+    } else {
+      newItems = [{ id: Date.now().toString(), description: `${sr.category} - ${sr.service}`, qty: 1, rate: 0, amount: 0 }];
     }
+
+    if (sr.extraItems && sr.extraItems.length > 0) {
+      sr.extraItems.forEach((extra, idx) => {
+        newItems.push({
+          id: (Date.now() + idx + 1).toString(),
+          description: extra.description,
+          qty: extra.qty,
+          rate: 0,
+          amount: 0
+        });
+      });
+    }
+    
+    setItems(newItems);
   };
 
   const handleDeleteInvoice = (id: string) => {

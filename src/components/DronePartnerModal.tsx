@@ -17,7 +17,9 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
     email: '',
     location: '',
     equipmentTypes: '',
-    password: ''
+    password: '',
+    partnerType: 'Drone' as 'Drone' | 'Tractor',
+    vehicleNumber: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -26,6 +28,8 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
   
   const [idFile, setIdFile] = useState<File | null>(null);
   const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const [driverLicenseFile, setDriverLicenseFile] = useState<File | null>(null);
+  const [rcFile, setRcFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (dronePartner) {
@@ -35,16 +39,20 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
         email: dronePartner.email || '',
         location: dronePartner.location || '',
         equipmentTypes: dronePartner.equipmentTypes ? dronePartner.equipmentTypes.join(', ') : '',
-        password: dronePartner.password || ''
+        password: dronePartner.password || '',
+        partnerType: dronePartner.partnerType || 'Drone',
+        vehicleNumber: dronePartner.vehicleNumber || ''
       });
       if (dronePartner.location) {
         setPincodesList(dronePartner.location.split(',').map((p: string) => p.trim()).filter(Boolean));
       }
     } else {
-      setFormData({ name: '', mobile: '', email: '', location: '', equipmentTypes: '', password: '' });
+      setFormData({ name: '', mobile: '', email: '', location: '', equipmentTypes: '', password: '', partnerType: 'Drone', vehicleNumber: '' });
       setPincodesList([]);
       setIdFile(null);
       setLicenseFile(null);
+      setDriverLicenseFile(null);
+      setRcFile(null);
     }
   }, [dronePartner, isOpen]);
 
@@ -111,6 +119,18 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
     }
   };
 
+  const handleDriverLicenseFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setDriverLicenseFile(e.target.files[0]);
+    }
+  };
+
+  const handleRcFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setRcFile(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -156,8 +176,12 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
       location: formData.location,
       equipmentTypes: equipmentTypesArray,
       password: formData.password,
+      partnerType: formData.partnerType,
+      vehicleNumber: formData.vehicleNumber,
       ...(idFile && { idFile, idFileName: idFile.name }),
-      ...(licenseFile && { licenseFile, licenseFileName: licenseFile.name })
+      ...(licenseFile && { licenseFile, licenseFileName: licenseFile.name }),
+      ...(driverLicenseFile && { driverLicenseFile, driverLicenseFileName: driverLicenseFile.name }),
+      ...(rcFile && { rcFile, rcFileName: rcFile.name })
     };
 
     if (dronePartner) {
@@ -171,11 +195,24 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content technician-modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{dronePartner ? 'Edit Drone Partner' : 'Add Drone Partner'}</h2>
+          <h2>{dronePartner ? 'Edit Partner' : 'Add Partner'}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
         
         <form onSubmit={handleSubmit} className="modal-body" noValidate>
+          <div className="input-group">
+            <label className="input-label">Partner Type</label>
+            <select 
+              name="partnerType" 
+              className="input-field" 
+              value={formData.partnerType} 
+              onChange={handleChange as any}
+            >
+              <option value="Drone">Drone</option>
+              <option value="Tractor">Tractor</option>
+            </select>
+          </div>
+          
           <div className="input-group">
             <label className="input-label">Full Name</label>
             <input 
@@ -252,13 +289,28 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
             <input 
               type="text" 
               name="equipmentTypes" 
-              placeholder="Standard 10L, High-Capacity 20L"
+              placeholder={formData.partnerType === 'Drone' ? "Standard 10L, High-Capacity 20L" : "Rotavator, Trailer"}
               className={`input-field ${errors.equipmentTypes ? 'input-field-error' : ''}`} 
               value={formData.equipmentTypes} 
               onChange={handleChange} 
             />
             {errors.equipmentTypes && <span className="error-text">{errors.equipmentTypes}</span>}
           </div>
+
+          {formData.partnerType === 'Tractor' && (
+            <div className="input-group">
+              <label className="input-label">Vehicle Number</label>
+              <input 
+                type="text" 
+                name="vehicleNumber" 
+                placeholder="e.g. AP 07 AB 1234"
+                className={`input-field ${errors.vehicleNumber ? 'input-field-error' : ''}`} 
+                value={formData.vehicleNumber} 
+                onChange={handleChange} 
+              />
+              {errors.vehicleNumber && <span className="error-text">{errors.vehicleNumber}</span>}
+            </div>
+          )}
 
           <div className="input-group">
             <label className="input-label">Set Password (for portal login)</label>
@@ -301,33 +353,95 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
               </div>
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Drone Pilot License</label>
-              <div className="file-input-wrapper">
-                <input 
-                  type="file" 
-                  id="licenseFile"
-                  accept=".pdf,image/*" 
-                  onChange={handleLicenseFileChange}
-                  className="file-input-hidden"
-                />
-                <label htmlFor="licenseFile" className="file-input-button">
-                  Choose File
-                </label>
-                <span className="file-input-name">
-                  {licenseFile ? licenseFile.name : dronePartner?.licenseFileName || 'No file chosen'}
-                </span>
-                {(licenseFile || dronePartner?.licenseFile) && (
-                  <button 
-                    type="button" 
-                    className="preview-btn"
-                    onClick={() => handlePreview(licenseFile || dronePartner?.licenseFile)}
-                  >
-                    Preview
-                  </button>
-                )}
+            {formData.partnerType === 'Drone' && (
+              <div className="input-group">
+                <label className="input-label">Drone Pilot License</label>
+                <div className="file-input-wrapper">
+                  <input 
+                    type="file" 
+                    id="licenseFile"
+                    accept=".pdf,image/*" 
+                    onChange={handleLicenseFileChange}
+                    className="file-input-hidden"
+                  />
+                  <label htmlFor="licenseFile" className="file-input-button">
+                    Choose File
+                  </label>
+                  <span className="file-input-name">
+                    {licenseFile ? licenseFile.name : dronePartner?.licenseFileName || 'No file chosen'}
+                  </span>
+                  {(licenseFile || dronePartner?.licenseFile) && (
+                    <button 
+                      type="button" 
+                      className="preview-btn"
+                      onClick={() => handlePreview(licenseFile || dronePartner?.licenseFile)}
+                    >
+                      Preview
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {formData.partnerType === 'Tractor' && (
+              <>
+                <div className="input-group">
+                  <label className="input-label">Driver License</label>
+                  <div className="file-input-wrapper">
+                    <input 
+                      type="file" 
+                      id="driverLicenseFile"
+                      accept=".pdf,image/*" 
+                      onChange={handleDriverLicenseFileChange}
+                      className="file-input-hidden"
+                    />
+                    <label htmlFor="driverLicenseFile" className="file-input-button">
+                      Choose File
+                    </label>
+                    <span className="file-input-name">
+                      {driverLicenseFile ? driverLicenseFile.name : dronePartner?.driverLicenseFileName || 'No file chosen'}
+                    </span>
+                    {(driverLicenseFile || dronePartner?.driverLicenseFile) && (
+                      <button 
+                        type="button" 
+                        className="preview-btn"
+                        onClick={() => handlePreview(driverLicenseFile || dronePartner?.driverLicenseFile)}
+                      >
+                        Preview
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">Registration Certificate (RC)</label>
+                  <div className="file-input-wrapper">
+                    <input 
+                      type="file" 
+                      id="rcFile"
+                      accept=".pdf,image/*" 
+                      onChange={handleRcFileChange}
+                      className="file-input-hidden"
+                    />
+                    <label htmlFor="rcFile" className="file-input-button">
+                      Choose File
+                    </label>
+                    <span className="file-input-name">
+                      {rcFile ? rcFile.name : dronePartner?.rcFileName || 'No file chosen'}
+                    </span>
+                    {(rcFile || dronePartner?.rcFile) && (
+                      <button 
+                        type="button" 
+                        className="preview-btn"
+                        onClick={() => handlePreview(rcFile || dronePartner?.rcFile)}
+                      >
+                        Preview
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="modal-footer">

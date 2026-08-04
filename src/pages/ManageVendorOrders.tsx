@@ -35,6 +35,7 @@ const initialOrders: Order[] = [
     address: 'hyd',
     pincode: '506134',
     totalAmount: 5000.00,
+    adminCommission: 500.00,
     paymentMethod: 'COD',
     paymentStatus: 'Pending',
     status: 'New',

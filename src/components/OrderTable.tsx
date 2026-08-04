@@ -81,7 +81,10 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
                   <span className="order-address-pincode">{order.pincode}</span>
                 </div>
               </td>
-              <td>₹{order.totalAmount.toFixed(2)}</td>
+              <td>
+                <div>₹{order.totalAmount.toFixed(2)}</div>
+                {order.adminCommission && <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>(Admin Comm: ₹{order.adminCommission.toFixed(2)})</div>}
+              </td>
               <td>
                 <div className="order-payment-info">
                   <span>{order.paymentMethod}</span>

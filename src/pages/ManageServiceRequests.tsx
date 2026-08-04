@@ -54,7 +54,13 @@ const INITIAL_REQUESTS: ServiceRequest[] = [
     time: '9 AM - 11 AM',
     status: 'Assigned',
     technicianId: 'T2',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2']
+    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2'],
+    customFieldResponses: {
+      'Number of Devices': '12',
+      'Preferred Brand': 'Motorola'
+    },
+    paymentStatus: 'Prebooking Paid',
+    prebookingAmountPaid: 500
   },
   {
     id: 'SR1767504918',
@@ -161,6 +167,30 @@ export default function ManageServiceRequests() {
     }
   };
 
+  const handleMarkAsPaid = (id: string) => {
+    Swal.fire({
+      title: 'Mark as Paid?',
+      text: "Has the client completed the manual payment?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: 'Yes, Mark Paid'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setRequests(prev => prev.map(req => 
+          req.id === id 
+            ? { ...req, paymentStatus: 'Paid in Full' } 
+            : req
+        ));
+        
+        // Update selected request so modal reflects changes immediately
+        setSelectedRequest(prev => prev?.id === id ? { ...prev, paymentStatus: 'Paid in Full' } : prev);
+        
+        Swal.fire('Success', 'Payment marked as paid.', 'success');
+      }
+    });
+  };
+
   const handleReassign = (id: string) => {
     setSelectedReassignId(id);
     setAssignModalOpen(true);
@@ -237,6 +267,7 @@ export default function ManageServiceRequests() {
             viewType="requests"
             onView={handleView}
             onReassign={handleReassign}
+            onMarkAsPaid={handleMarkAsPaid}
           />
           <Pagination 
             currentPage={currentPage}
@@ -251,6 +282,7 @@ export default function ManageServiceRequests() {
           request={selectedRequest}
           technician={selectedRequest.technicianId ? MOCK_TECHNICIANS.find(t => t.id === selectedRequest.technicianId) : undefined}
           onClose={() => setViewModalOpen(false)}
+          onMarkAsPaid={handleMarkAsPaid}
         />
       )}
 
