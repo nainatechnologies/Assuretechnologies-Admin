@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import type { Service } from '../types';
-import './ProductTable.css'; // Reuse table styles
+import type { PartnerService } from '../types';
+import { MdEdit, MdDelete } from 'react-icons/md';
+import './ProductTable.css'; 
 
-interface ServiceTableProps {
-  services: Service[];
+interface PartnerServiceTableProps {
+  services: PartnerService[];
   onEditService: (id: string) => void;
   onDeleteService: (id: string) => void;
   onToggleStatus?: (id: string) => void;
@@ -30,16 +31,16 @@ function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
   return <img src={url} alt={alt} style={{ height: '40px', width: 'auto', borderRadius: '4px', objectFit: 'cover' }} />;
 }
 
-export default function ServiceTable({
+export default function PartnerServiceTable({
   services,
   onEditService,
   onDeleteService,
   onToggleStatus
-}: ServiceTableProps) {
+}: PartnerServiceTableProps) {
   if (services.length === 0) {
     return (
       <div className="glass-panel product-table-empty">
-        <p>No services found. Add a new service to get started.</p>
+        <p>No partner services found. Add a new service to get started.</p>
       </div>
     );
   }
@@ -52,7 +53,8 @@ export default function ServiceTable({
             <tr>
               <th className="id-col">ID</th>
               <th>Category</th>
-              <th>Sub Category</th>
+              <th>Service Name</th>
+              <th>Prebooking Charge</th>
               <th>Image</th>
               <th>Actions</th>
             </tr>
@@ -67,7 +69,10 @@ export default function ServiceTable({
                   <span className="product-category-badge">{service.category}</span>
                 </td>
                 <td>
-                  <div className="product-name">{service.subCategory}</div>
+                  <div className="product-name">{service.serviceName}</div>
+                </td>
+                <td>
+                  <div className="product-price">{service.prebookingCharge ? `₹${service.prebookingCharge}` : 'None'}</div>
                 </td>
                 <td>
                   <div className="product-banner" title={service.imageName}>
@@ -87,18 +92,20 @@ export default function ServiceTable({
                       </label>
                     )}
                     <button
-                      className="action-btn edit-btn"
+                      className="icon-btn edit-icon"
                       onClick={() => onEditService(service.id)}
                       title="Edit Service"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      Edit
+                      <MdEdit size={20} />
                     </button>
                     <button
-                      className="action-btn delete-btn"
+                      className="icon-btn delete-icon"
                       onClick={() => onDeleteService(service.id)}
                       title="Delete Service"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                      Delete
+                      <MdDelete size={20} />
                     </button>
                   </div>
                 </td>

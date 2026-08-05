@@ -4,6 +4,7 @@ import type { Vendor } from '../types';
 import VendorTable from '../components/VendorTable';
 import VendorModal from '../components/VendorModal';
 import Pagination from '../components/Pagination';
+import Swal from 'sweetalert2';
 import './ManageVendors.css';
 
 export default function ManageVendors() {
@@ -230,9 +231,27 @@ export default function ManageVendors() {
   };
 
   const handleDelete = (id: string) => {
-    if(window.confirm('Are you sure you want to delete this vendor?')) {
-      setVendors(prev => prev.filter(v => v.id !== id));
-    }
+    Swal.fire({
+      title: 'Delete Vendor?',
+      text: 'Are you sure you want to delete this vendor?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setVendors(prev => prev.filter(v => v.id !== id));
+        Swal.fire({
+          title: 'Deleted!',
+          text: 'Vendor has been removed successfully.',
+          icon: 'success',
+          confirmButtonColor: '#4F46E5',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+    });
   };
 
   const handleToggleStatus = (id: string) => {

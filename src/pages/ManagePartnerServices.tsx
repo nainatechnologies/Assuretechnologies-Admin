@@ -1,82 +1,63 @@
 import { useState, useMemo } from 'react';
-import ServiceForm from '../components/ServiceForm';
-import ServiceTable from '../components/ServiceTable';
-import EditServiceModal from '../components/EditServiceModal';
-import type { Service } from '../types';
+import PartnerServiceForm from '../components/PartnerServiceForm';
+import PartnerServiceTable from '../components/PartnerServiceTable';
+import type { PartnerService } from '../types';
+import { usePartnerContext } from '../context/PartnerContext';
 import Swal from 'sweetalert2';
-import './ManageProducts.css'; // Reusing the modern header styles
+import './ManageProducts.css';
 
-export default function ManageServices() {
-  const [services, setServices] = useState<Service[]>([
-    {
-      id: '1',
-      category: 'ITSupport',
-      subCategory: 'On-Site IT Maintenance',
-      image: '',
-      imageName: 'itsupport.png',
-      status: 'Active'
-    },
-    {
-      id: '2',
-      category: 'Security',
-      subCategory: '24/7 Monitoring',
-      image: '',
-      imageName: 'monitoring.jpg',
-      status: 'Active'
-    }
-  ]);
+export default function ManagePartnerServices() {
+  const { partnerServices: services, setPartnerServices: setServices } = usePartnerContext();
 
-  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [editingService, setEditingService] = useState<PartnerService | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const handleAddService = (newServiceData: Omit<Service, 'id'>) => {
-    const newService: Service = {
-      ...newServiceData,
-      id: Math.random().toString(36).substring(2, 9),
-      status: 'Active'
-    };
+  const handleSaveService = (serviceData: Omit<PartnerService, 'id'> | PartnerService) => {
+    if ('id' in serviceData && serviceData.id) {
+      setServices(prevServices => prevServices.map(s => s.id === serviceData.id ? (serviceData as PartnerService) : s));
+      setEditingService(null);
+      Swal.fire({
+        title: 'Updated!',
+        text: 'Partner service updated successfully.',
+        icon: 'success',
+        confirmButtonColor: '#4F46E5',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } else {
+      const newService: PartnerService = {
+        ...serviceData,
+        id: Math.random().toString(36).substring(2, 9),
+        status: 'Active'
+      };
 
-    setServices(prevServices => [...prevServices, newService]);
-    setIsAdding(false);
-    Swal.fire({
-      title: 'Added!',
-      text: 'New service added successfully.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-      timer: 2000,
-      showConfirmButton: false
-    });
+      setServices(prevServices => [...prevServices, newService]);
+      setIsAdding(false);
+      Swal.fire({
+        title: 'Added!',
+        text: 'New partner service added successfully.',
+        icon: 'success',
+        confirmButtonColor: '#4F46E5',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    }
   };
 
   const handleEditService = (id: string) => {
     const targetService = services.find(s => s.id === id);
     if (targetService) {
-      setEditingService(targetService);
+      setEditingService(targetService); // For now, editing can just open a generic modal or be skipped to simplify. Let's assume edit opens a modal.
     }
-  };
-
-  const handleUpdateService = (updatedService: Service) => {
-    setServices(prevServices =>
-      prevServices.map(s => (s.id === updatedService.id ? updatedService : s))
-    );
-    setEditingService(null);
-    Swal.fire({
-      title: 'Updated!',
-      text: 'Service has been updated successfully in the table.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-      timer: 2000,
-      showConfirmButton: false
-    });
   };
 
   const handleDeleteService = (id: string) => {
     Swal.fire({
       title: 'Delete Service?',
-      text: 'Are you sure you want to delete this service?',
+      text: 'Are you sure you want to delete this partner service?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
@@ -87,7 +68,7 @@ export default function ManageServices() {
         setServices(prevServices => prevServices.filter(s => s.id !== id));
         Swal.fire({
           title: 'Deleted!',
-          text: 'Service removed successfully.',
+          text: 'Partner Service removed successfully.',
           icon: 'success',
           confirmButtonColor: '#4F46E5',
           timer: 1500,
@@ -97,8 +78,8 @@ export default function ManageServices() {
     });
   };
 
-  const handleToggleServiceStatus = (id: string) => {
-    setServices(prev => prev.map(s => {
+  const handleToggleStatus = (id: string) => {
+    setServices(prevServices => prevServices.map(s => {
       if (s.id === id) {
         return { ...s, status: s.status === 'Active' ? 'Inactive' : 'Active' };
       }
@@ -110,7 +91,7 @@ export default function ManageServices() {
     const query = searchQuery.toLowerCase();
     return services.filter(s => 
       s.category.toLowerCase().includes(query) ||
-      s.subCategory.toLowerCase().includes(query)
+      s.serviceName.toLowerCase().includes(query)
     );
   }, [services, searchQuery]);
 
@@ -123,7 +104,7 @@ export default function ManageServices() {
   return (
     <div>
       <div className="manage-products-header" style={{ flexWrap: 'wrap', gap: '15px' }}>
-        <h1 className="page-title manage-products-title">Manage Services</h1>
+        <h1 className="page-title manage-products-title">Manage Partner Services</h1>
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
           <input
             type="text"
@@ -157,8 +138,7 @@ export default function ManageServices() {
         </div>
       </div>
 
-      {/* Service Form Modal */}
-      {isAdding && (
+      {(isAdding || editingService) && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.5)',
@@ -168,25 +148,27 @@ export default function ManageServices() {
         }}>
           <div style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }}>
              <button 
-               onClick={() => setIsAdding(false)}
+               onClick={() => { setIsAdding(false); setEditingService(null); }}
                style={{ position: 'absolute', top: '25px', right: '25px', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', zIndex: 10, color: '#64748b' }}
              >
                &times;
              </button>
-             <ServiceForm onAddService={handleAddService} />
+             <PartnerServiceForm 
+               onSaveService={handleSaveService} 
+               onCancel={() => { setIsAdding(false); setEditingService(null); }}
+               initialData={editingService}
+             />
           </div>
         </div>
       )}
 
-      {/* Service Table Component */}
-      <ServiceTable
+      <PartnerServiceTable
         services={paginatedServices}
         onEditService={handleEditService}
         onDeleteService={handleDeleteService}
-        onToggleStatus={handleToggleServiceStatus}
+        onToggleStatus={handleToggleStatus}
       />
 
-      {/* Pagination Controls */}
       {totalPages > 1 && (
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '10px', alignItems: 'center' }}>
           <button 
@@ -219,16 +201,6 @@ export default function ManageServices() {
             Next
           </button>
         </div>
-      )}
-
-      {/* Edit Service Modal */}
-      {editingService && (
-        <EditServiceModal
-          service={editingService}
-          isOpen={Boolean(editingService)}
-          onClose={() => setEditingService(null)}
-          onUpdateService={handleUpdateService}
-        />
       )}
     </div>
   );

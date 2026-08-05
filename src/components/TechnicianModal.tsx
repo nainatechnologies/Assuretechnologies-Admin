@@ -18,6 +18,7 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
     address: '',
     location: '',
     password: '',
+    services: [] as string[],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -26,6 +27,7 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
   const [nocFile, setNocFile] = useState<File | null>(null);
   const [pincodeInput, setPincodeInput] = useState('');
   const [pincodesList, setPincodesList] = useState<string[]>([]);
+  const [serviceInput, setServiceInput] = useState('');
 
   useEffect(() => {
     if (technician) {
@@ -36,6 +38,7 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
         address: technician.address || '',
         location: technician.location || '',
         password: technician.password || '',
+        services: technician.services || [],
       });
       if (technician.location) {
         setPincodesList(technician.location.split(',').map(p => p.trim()).filter(Boolean));
@@ -59,10 +62,30 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
       setPincodeInput(newValue);
       setErrors(prev => ({ ...prev, location: '' }));
       return;
+    } else if (name === 'serviceInput') {
+      setServiceInput(newValue);
+      setErrors(prev => ({ ...prev, services: '' }));
+      return;
     }
 
     setFormData(prev => ({ ...prev, [name]: newValue }));
     setErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const handleAddService = () => {
+    const s = serviceInput.trim();
+    if (!s) return;
+    if (formData.services.includes(s)) {
+      setErrors(prev => ({ ...prev, services: 'Service already added' }));
+      return;
+    }
+    setFormData(prev => ({ ...prev, services: [...prev.services, s] }));
+    setServiceInput('');
+    setErrors(prev => ({ ...prev, services: '' }));
+  };
+
+  const handleRemoveService = (s: string) => {
+    setFormData(prev => ({ ...prev, services: prev.services.filter(svc => svc !== s) }));
   };
 
   const handleAddPincode = () => {
@@ -138,6 +161,10 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
     }
     if (!technician && formData.password.length < 6) {
       newErrors.password = "Must be at least 6 characters long";
+      hasError = true;
+    }
+    if (formData.services.length === 0) {
+      newErrors.services = "Please add at least one service";
       hasError = true;
     }
 
@@ -262,6 +289,39 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
               onChange={handleChange} 
             />
             {errors.password && <span className="error-text">{errors.password}</span>}
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Services Provided</label>
+            <div className="pincode-input-row">
+              <input 
+                type="text"
+                name="serviceInput"
+                className={`input-field ${errors.services ? 'input-field-error' : ''}`}
+                value={serviceInput}
+                onChange={handleChange}
+                placeholder="e.g. RO Repair"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddService();
+                  }
+                }}
+              />
+              <button type="button" className="btn-add-pincode" onClick={handleAddService}>Add</button>
+            </div>
+            {errors.services && <span className="error-text">{errors.services}</span>}
+            
+            {formData.services.length > 0 && (
+              <div className="pincode-tags">
+                {formData.services.map(svc => (
+                  <span key={svc} className="pincode-tag">
+                    {svc}
+                    <button type="button" onClick={() => handleRemoveService(svc)}>&times;</button>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* New Fields: File Uploads */}

@@ -1,4 +1,5 @@
 import type { Vendor } from '../types';
+import { MdEdit, MdDelete } from 'react-icons/md';
 import './VendorTable.css';
 
 interface VendorTableProps {
@@ -25,12 +26,11 @@ export default function VendorTable({ vendors, onEdit, onDelete, onToggleStatus 
             <th>Vendor ID</th>
             <th>Full Name</th>
             <th>Business Name</th>
-            <th>Mobile</th>
-            <th>Email</th>
+            <th>Contact</th>
             <th>GST</th>
             <th>Location</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
@@ -39,8 +39,10 @@ export default function VendorTable({ vendors, onEdit, onDelete, onToggleStatus 
               <td>{vendor.id}</td>
               <td>{vendor.fullName}</td>
               <td>{vendor.businessName}</td>
-              <td>{vendor.mobile}</td>
-              <td>{vendor.email}</td>
+              <td>
+                <div>{vendor.mobile}</div>
+                <div style={{ fontSize: '12px', color: '#9ca3af' }}>{vendor.email}</div>
+              </td>
               <td>{vendor.gstNumber}</td>
               <td>{vendor.location}</td>
               <td>
@@ -50,11 +52,20 @@ export default function VendorTable({ vendors, onEdit, onDelete, onToggleStatus 
               </td>
               <td>
                 <div className="actions-cell">
-                  <button className="action-btn edit-btn" onClick={() => onEdit(vendor)}>Edit</button>
-                  <button className="action-btn hide-btn" onClick={() => onToggleStatus(vendor.id)}>
-                    {vendor.status === 'Active' ? 'Hide' : 'Show'}
+                  <label className="switch" title="Toggle Status">
+                    <input 
+                      type="checkbox" 
+                      checked={vendor.status === 'Active'}
+                      onChange={() => onToggleStatus(vendor.id)}
+                    />
+                    <span className="slider round"></span>
+                  </label>
+                  <button className="icon-btn edit-icon" onClick={() => onEdit(vendor)} title="Edit">
+                    <MdEdit size={20} />
                   </button>
-                  <button className="action-btn delete-btn" onClick={() => onDelete(vendor.id)}>Delete</button>
+                  <button className="icon-btn delete-icon" onClick={() => onDelete(vendor.id)} title="Delete">
+                    <MdDelete size={20} />
+                  </button>
                 </div>
               </td>
             </tr>

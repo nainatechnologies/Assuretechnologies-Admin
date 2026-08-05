@@ -116,7 +116,7 @@ body {
 .admin-layout {
   display: flex;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow: hidden;
   background: var(--bg-darker);
 }
@@ -198,7 +198,9 @@ body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--bg-dark);
+  min-width: 0;
 }
 
 .topbar {
@@ -214,6 +216,7 @@ body {
 .page-container {
   padding: 32px;
   flex: 1;
+  min-width: 0;
 }
 
 .page-title {

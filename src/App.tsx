@@ -14,10 +14,13 @@ import ManageQuotations from './pages/ManageQuotations';
 import ManageInvoices from './pages/ManageInvoices';
 import ManagePayments from './pages/ManagePayments';
 import ManageStock from './pages/ManageStock';
-import ManageDronePartners from './pages/ManageDronePartners';
+import ManagePartners from './pages/ManagePartners';
+import ManagePartnerTypes from './pages/ManagePartnerTypes';
+import ManagePartnerServices from './pages/ManagePartnerServices';
 import ManagePartnerAssignments from './pages/ManagePartnerAssignments';
 import ManagePartnerRequests from './pages/ManagePartnerRequests';
 import JobPortal from './pages/JobPortal';
+import { PartnerProvider } from './context/PartnerContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './App.css';
 
@@ -26,36 +29,40 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        
-        {/* Admin Routes with Layout */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="products" element={<ManageProducts />} />
-          <Route path="orders" element={<ManageOrders />} />
-          <Route path="vendor-orders" element={<ManageVendorOrders />} />
-          <Route path="service-assignments" element={<ManageServiceAssignments />} />
-          <Route path="service-requests" element={<ManageServiceRequests />} />
-          <Route path="services" element={<ManageServices />} />
-          <Route path="quotations" element={<ManageQuotations />} />
-          <Route path="invoices" element={<ManageInvoices />} />
-          <Route path="payments" element={<ManagePayments />} />
-          <Route path="technicians" element={<ManageTechnicians />} />
-          <Route path="vendors" element={<ManageVendors />} />
-          <Route path="drone-partners" element={<ManageDronePartners />} />
-          <Route path="partner-assignments" element={<ManagePartnerAssignments />} />
-          <Route path="partner-requests" element={<ManagePartnerRequests />} />
-          <Route path="stock" element={<ManageStock />} />
-          <Route path="job-portal" element={<JobPortal />} />
-        </Route>
-        
-        {/* Fallback route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+      <PartnerProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            
+            {/* Admin Routes with Layout */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="products" element={<ManageProducts />} />
+              <Route path="orders" element={<ManageOrders />} />
+              <Route path="vendor-orders" element={<ManageVendorOrders />} />
+              <Route path="service-assignments" element={<ManageServiceAssignments />} />
+              <Route path="service-requests" element={<ManageServiceRequests />} />
+              <Route path="services" element={<ManageServices />} />
+              <Route path="quotations" element={<ManageQuotations />} />
+              <Route path="invoices" element={<ManageInvoices />} />
+              <Route path="payments" element={<ManagePayments />} />
+              <Route path="technicians" element={<ManageTechnicians />} />
+              <Route path="vendors" element={<ManageVendors />} />
+              <Route path="partner-types" element={<ManagePartnerTypes />} />
+              <Route path="partner-services" element={<ManagePartnerServices />} />
+              <Route path="partners" element={<ManagePartners />} />
+              <Route path="partner-assignments" element={<ManagePartnerAssignments />} />
+              <Route path="partner-requests" element={<ManagePartnerRequests />} />
+              <Route path="stock" element={<ManageStock />} />
+              <Route path="job-portal" element={<JobPortal />} />
+            </Route>
+            
+            {/* Fallback route */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </PartnerProvider>
     </QueryClientProvider>
   );
 }

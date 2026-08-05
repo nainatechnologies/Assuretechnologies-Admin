@@ -21,6 +21,7 @@ export interface Technician {
   location: string;
   status: 'Active' | 'Inactive';
   password?: string;
+  services?: string[];
   idFile?: string | File;
   idFileName?: string;
   nocFile?: string | File;
@@ -65,6 +66,7 @@ export interface Service {
   imageName?: string;
   customFields?: CustomField[];
   prebookingCharge?: number;
+  status?: 'Active' | 'Inactive';
 }
 
 export interface OrderItem {
@@ -186,25 +188,42 @@ export interface Invoice {
   serviceName?: string;
 }
 
-export interface DronePartner {
+export interface PartnerCustomField {
+  id: string;
+  label: string;
+  type: 'text' | 'number' | 'dropdown' | 'file';
+  options?: string[]; // for dropdown
+  required: boolean;
+}
+
+export interface PartnerType {
+  id: string;
+  name: string; // e.g. "Drone", "Tractor"
+  customFields: PartnerCustomField[];
+}
+
+export interface PartnerService {
+  id: string;
+  category: string;
+  serviceName: string;
+  prebookingCharge?: number;
+  image?: string | File;
+  imageName?: string;
+  customFields?: CustomField[]; // fields required during booking this service
+  status?: 'Active' | 'Inactive';
+}
+
+export interface Partner {
   id: string;
   name: string;
   mobile: string;
   email: string;
-  location: string;
-  equipmentTypes: string[];
+  location: string; // Pincodes
   status: 'Active' | 'Inactive';
-  partnerType?: 'Drone' | 'Tractor';
   password?: string;
-  idFile?: string | File;
-  idFileName?: string;
-  licenseFile?: string | File;
-  licenseFileName?: string;
-  driverLicenseFile?: string | File;
-  driverLicenseFileName?: string;
-  rcFile?: string | File;
-  rcFileName?: string;
-  vehicleNumber?: string;
+  partnerTypeId: string; // reference to PartnerType
+  customFieldValues: Record<string, any>; // key: custom field id, value: response
+  services: string[]; // array of PartnerService IDs they provide
 }
 
 export type PartnerBookingStatus = 

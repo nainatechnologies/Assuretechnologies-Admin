@@ -131,6 +131,15 @@ export default function ManageTechnicians() {
     }
   };
 
+  const handleToggleStatus = (id: string) => {
+    setTechnicians(prev => prev.map(t => {
+      if (t.id === id) {
+        return { ...t, status: t.status === 'Active' ? 'Inactive' : 'Active' };
+      }
+      return t;
+    }));
+  };
+
   return (
     <div className="manage-technicians-container">
       <div className="manage-technicians-header">
@@ -157,6 +166,7 @@ export default function ManageTechnicians() {
         technicians={paginatedTechnicians}
         onEditTechnician={handleEditTechnician}
         onDeleteTechnician={handleDeleteTechnician}
+        onToggleStatus={handleToggleStatus}
       />
 
       <Pagination 
