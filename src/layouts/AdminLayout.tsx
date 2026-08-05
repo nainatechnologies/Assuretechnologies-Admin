@@ -38,10 +38,27 @@ export default function AdminLayout() {
             <MdDashboard />
             Dashboard
           </NavLink>
+
+          <div className="nav-group-header">MANAGEMENT</div>
           <NavLink to="/admin/products" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdInventory />
             Manage Products
           </NavLink>
+          <NavLink to="/admin/stock" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdInventory />
+            Manage Stock
+          </NavLink>
+          <NavLink to="/admin/technicians" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdEngineering />
+            Manage Technicians
+          </NavLink>
+          <NavLink to="/admin/vendors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdStore />
+            Manage Vendors
+          </NavLink>
+
+
+          <div className="nav-group-header">OPERATIONS</div>
           <NavLink to="/admin/orders" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdShoppingCart />
             Admin Orders
@@ -62,6 +79,30 @@ export default function AdminLayout() {
             <MdBuild />
             Manage Services
           </NavLink>
+
+          <div className="nav-group-header">PARTNERS</div>
+          <NavLink to="/admin/partners" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdStore />
+            Manage Partners
+          </NavLink>
+          <NavLink to="/admin/partner-types" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdStore />
+            Manage Partner Types
+          </NavLink>
+          <NavLink to="/admin/partner-requests" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdAssignment />
+            Partner Requests
+          </NavLink>
+          <NavLink to="/admin/partner-assignments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdAssignmentInd />
+            Partner Assignments
+          </NavLink>
+          <NavLink to="/admin/partner-services" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+            <MdBuild />
+            Manage Partner Services
+          </NavLink>
+
+          <div className="nav-group-header">FINANCE</div>
           <NavLink to="/admin/quotations" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdReceipt />
             Quotations
@@ -74,38 +115,8 @@ export default function AdminLayout() {
             <MdAttachMoney />
             Manage Payments
           </NavLink>
-          <NavLink to="/admin/technicians" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdEngineering />
-            Manage Technicians
-          </NavLink>
-          <NavLink to="/admin/vendors" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdStore />
-            Manage Vendors
-          </NavLink>
-          <NavLink to="/admin/partner-types" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdStore />
-            Manage Partner Types
-          </NavLink>
-          <NavLink to="/admin/partner-services" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdBuild />
-            Manage Partner Services
-          </NavLink>
-          <NavLink to="/admin/partners" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdStore />
-            Manage Partners
-          </NavLink>
-          <NavLink to="/admin/partner-requests" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdAssignment />
-            Partner Requests
-          </NavLink>
-          <NavLink to="/admin/partner-assignments" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdAssignmentInd />
-            Partner Assignments
-          </NavLink>
-          <NavLink to="/admin/stock" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-            <MdInventory />
-            Manage Stock
-          </NavLink>
+
+          <div className="nav-group-header">CAREERS</div>
           <NavLink to="/admin/job-portal" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdWork />
             Job Portal
