@@ -16,6 +16,7 @@ import ManagePayments from './pages/ManagePayments';
 import ManageStock from './pages/ManageStock';
 import ManagePartners from './pages/ManagePartners';
 import ManagePartnerTypes from './pages/ManagePartnerTypes';
+import ManagePricingTypes from './pages/ManagePricingTypes';
 import ManagePartnerServices from './pages/ManagePartnerServices';
 import ManagePartnerAssignments from './pages/ManagePartnerAssignments';
 import ManagePartnerRequests from './pages/ManagePartnerRequests';
@@ -50,6 +51,7 @@ function App() {
               <Route path="technicians" element={<ManageTechnicians />} />
               <Route path="vendors" element={<ManageVendors />} />
               <Route path="partner-types" element={<ManagePartnerTypes />} />
+              <Route path="pricing-types" element={<ManagePricingTypes />} />
               <Route path="partner-services" element={<ManagePartnerServices />} />
               <Route path="partners" element={<ManagePartners />} />
               <Route path="partner-assignments" element={<ManagePartnerAssignments />} />

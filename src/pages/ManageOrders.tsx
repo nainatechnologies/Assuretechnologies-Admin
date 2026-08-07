@@ -16,10 +16,12 @@ const initialOrders: Order[] = [
     user: 'admin',
     mobile: '9988776655',
     email: 'shyam.matham@nainatechnologies.in',
+    companyName: 'Naina Technologies',
+    gstNumber: '29ABCDE1234F1Z5',
     address: 'hyd',
     pincode: '506134',
     totalAmount: 10000.00,
-    paymentMethod: 'COD',
+    paymentMethod: 'Online',
     paymentStatus: 'Pending',
     status: 'New',
     items: [
@@ -35,7 +37,7 @@ const initialOrders: Order[] = [
     address: 'hyd',
     pincode: '506134',
     totalAmount: 5000.00,
-    paymentMethod: 'COD',
+    paymentMethod: 'Online',
     paymentStatus: 'Pending',
     status: 'New',
     items: [
@@ -51,7 +53,7 @@ const initialOrders: Order[] = [
     address: 'hyd',
     pincode: '506134',
     totalAmount: 10000.00,
-    paymentMethod: 'COD',
+    paymentMethod: 'Online',
     paymentStatus: 'Pending',
     status: 'Completed',
     items: [
@@ -68,15 +70,10 @@ export default function ManageOrders() {
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
 
-  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Pending COD'];
+  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed'];
 
   const filteredOrders = orders.filter(order => {
-    let matchesTab = false;
-    if (activeTab === 'Pending COD') {
-      matchesTab = order.status === 'Completed' && order.paymentMethod === 'COD' && order.paymentStatus === 'Pending';
-    } else {
-      matchesTab = order.status === activeTab;
-    }
+    let matchesTab = order.status === activeTab;
     const query = searchQuery.toLowerCase();
     const matchesSearch = query === '' || 
       order.id.toLowerCase().includes(query) ||
@@ -227,7 +224,8 @@ export default function ManageOrders() {
 
       <OrderTable 
         orders={filteredOrders} 
-        currentTab={activeTab} 
+        currentTab={activeTab}
+        hideActions={false} 
         onViewOrder={setSelectedOrder} 
         onActionOrder={handleActionOrder} 
         onTrackOrder={setTrackingOrder}

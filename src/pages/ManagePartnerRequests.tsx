@@ -56,7 +56,11 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
     time: '2 PM - 4 PM',
     status: 'Assigned',
     partnerId: 'DP1',
-    partnerType: 'Drone'
+    partnerType: 'Drone',
+    pricingTypeId: 'prt1',
+    quantity: 5,
+    totalAmount: 2000,
+    paymentStatus: 'Paid'
   },
   {
     id: 'PB-202',
@@ -79,8 +83,10 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
       'Crop Type': 'Paddy',
       'Acres': '5'
     },
-    paymentStatus: 'Prebooking Paid',
-    prebookingAmountPaid: 500
+    paymentStatus: 'Paid',
+    pricingTypeId: 'prt1',
+    quantity: 5,
+    totalAmount: 2000
   },
   {
     id: 'PB-203',
@@ -98,6 +104,10 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
     status: 'In Progress',
     partnerId: 'TP1',
     partnerType: 'Tractor',
+    pricingTypeId: 'prt2',
+    quantity: 4,
+    totalAmount: 5600,
+    paymentStatus: 'Paid',
     progressUpdates: [
       {
         id: 'PRG1',
@@ -123,6 +133,10 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
     status: 'Completed',
     partnerId: 'DP1',
     partnerType: 'Drone',
+    pricingTypeId: 'prt1',
+    quantity: 3,
+    totalAmount: 1200,
+    paymentStatus: 'Paid',
     startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+Work'],
     completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+Work']
   }

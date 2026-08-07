@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { PartnerService } from '../types';
 import { MdEdit, MdDelete } from 'react-icons/md';
+import { usePartnerContext } from '../context/PartnerContext';
 import './ProductTable.css'; 
 
 interface PartnerServiceTableProps {
@@ -37,6 +38,8 @@ export default function PartnerServiceTable({
   onDeleteService,
   onToggleStatus
 }: PartnerServiceTableProps) {
+  const { pricingTypes } = usePartnerContext();
+
   if (services.length === 0) {
     return (
       <div className="glass-panel product-table-empty">
@@ -54,26 +57,30 @@ export default function PartnerServiceTable({
               <th className="id-col">ID</th>
               <th>Category</th>
               <th>Service Name</th>
-              <th>Prebooking Charge</th>
+              <th>Pricing</th>
               <th>Image</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {services.map((service) => (
-              <tr key={service.id}>
-                <td>
-                  <span className="product-id">#{service.id}</span>
-                </td>
-                <td>
-                  <span className="product-category-badge">{service.category}</span>
-                </td>
-                <td>
-                  <div className="product-name">{service.serviceName}</div>
-                </td>
-                <td>
-                  <div className="product-price">{service.prebookingCharge ? `₹${service.prebookingCharge}` : 'None'}</div>
-                </td>
+            {services.map((service) => {
+              const pType = pricingTypes.find(pt => pt.id === service.pricingTypeId);
+              return (
+                <tr key={service.id}>
+                  <td>
+                    <span className="product-id">#{service.id}</span>
+                  </td>
+                  <td>
+                    <span className="product-category-badge">{service.category}</span>
+                  </td>
+                  <td>
+                    <div className="product-name">{service.serviceName}</div>
+                  </td>
+                  <td>
+                    <div className="product-price">
+                      <span>₹{service.rate} / {pType ? pType.name : 'Unknown Unit'}</span>
+                    </div>
+                  </td>
                 <td>
                   <div className="product-banner" title={service.imageName}>
                     <ImageCell image={service.image} alt={service.imageName || 'Service Image'} />
@@ -110,7 +117,8 @@ export default function PartnerServiceTable({
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

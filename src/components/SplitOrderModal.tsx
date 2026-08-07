@@ -26,7 +26,7 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
   const [selectedVendor, setSelectedVendor] = useState<{id: string, businessName: string} | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const maxQty = item.qty - 1; // Can't split the entire quantity
+  const maxQty = item.qty; // Can split or reassign the entire quantity
 
   // Close dropdown when clicking outside
   useEffect(() => {

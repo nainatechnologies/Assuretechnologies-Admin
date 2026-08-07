@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
-import type { PartnerService, CustomField } from '../types';
+import type { PartnerService, CustomField, PricingType } from '../types';
 import { MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 
 import { CATEGORIES } from './ProductForm';
+import { usePartnerContext } from '../context/PartnerContext';
 
 interface PartnerServiceFormProps {
   onSaveService: (service: Omit<PartnerService, 'id'> | PartnerService) => void;
@@ -11,11 +12,14 @@ interface PartnerServiceFormProps {
 }
 
 export default function PartnerServiceForm({ onSaveService, onCancel, initialData }: PartnerServiceFormProps) {
+  const { pricingTypes } = usePartnerContext();
+
   const [category, setCategory] = useState(initialData?.category || '');
   const [serviceName, setServiceName] = useState(initialData?.serviceName || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [customFields, setCustomFields] = useState<CustomField[]>(initialData?.customFields || []);
-  const [prebookingCharge, setPrebookingCharge] = useState<number | undefined>(initialData?.prebookingCharge);
+  const [pricingTypeId, setPricingTypeId] = useState<string>(initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
+  const [rate, setRate] = useState<number | undefined>(initialData?.rate);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -24,12 +28,14 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
       setCategory(initialData.category);
       setServiceName(initialData.serviceName);
       setCustomFields(initialData.customFields || []);
-      setPrebookingCharge(initialData.prebookingCharge);
+      setPricingTypeId(initialData.pricingTypeId || '');
+      setRate(initialData.rate);
     } else {
       setCategory('');
       setServiceName('');
       setCustomFields([]);
-      setPrebookingCharge(undefined);
+      setPricingTypeId(pricingTypes.length > 0 ? pricingTypes[0].id : '');
+      setRate(undefined);
     }
   }, [initialData]);
 
@@ -42,7 +48,8 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
       serviceName,
       image: imageFile || initialData?.image || '',
       imageName: imageFile ? imageFile.name : initialData?.imageName || 'No file chosen',
-      prebookingCharge,
+      pricingTypeId,
+      rate: rate || 0,
       customFields: customFields.map(cf => ({
         ...cf,
         options: cf.type === 'dropdown' ? (cf.options?.map(s => s.trim()).filter(s => s) || []) : undefined
@@ -59,7 +66,8 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
     setServiceName('');
     setImageFile(null);
     setCustomFields([]);
-    setPrebookingCharge(undefined);
+    setPricingTypeId(pricingTypes.length > 0 ? pricingTypes[0].id : '');
+    setRate(undefined);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -127,15 +135,31 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
           </div>
 
           <div className="input-group form-group">
-            <label className="input-label" htmlFor="prebookingCharge">Prebooking Charge (₹)</label>
+            <label className="input-label" htmlFor="pricingType">Pricing Type</label>
+            <select
+              id="pricingType"
+              className="input-field colorful-select"
+              value={pricingTypeId}
+              onChange={(e) => setPricingTypeId(e.target.value)}
+              required
+            >
+              {pricingTypes.map(pt => (
+                <option key={pt.id} value={pt.id}>{pt.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="input-group form-group">
+            <label className="input-label" htmlFor="rate">Rate (₹)</label>
             <input
               type="number"
-              id="prebookingCharge"
+              id="rate"
               className="input-field colorful-input"
-              placeholder="e.g. 500 (Optional)"
-              value={prebookingCharge || ''}
-              onChange={(e) => setPrebookingCharge(e.target.value ? Number(e.target.value) : undefined)}
-              min="0"
+              placeholder="e.g. 400"
+              value={rate || ''}
+              onChange={(e) => setRate(e.target.value ? Number(e.target.value) : undefined)}
+              min="1"
+              required
             />
           </div>
 

@@ -59,8 +59,8 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
-            <tr key={order.id}>
+          {orders.map((order, index) => (
+            <tr key={`${order.id}-${index}`}>
               <td>{order.id}</td>
               <td>{order.date}</td>
               <td>{order.user}</td>
@@ -125,9 +125,6 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
                     )}
                     {currentTab === 'Completed' && (
                       <span className="order-status-badge">Delivered</span>
-                    )}
-                    {currentTab === 'Pending COD' && (
-                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'MarkPaid')}>Mark as Paid</button>
                     )}
                   </div>
                 </td>

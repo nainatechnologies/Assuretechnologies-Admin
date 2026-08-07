@@ -25,8 +25,30 @@ const mockSRs: MockSR[] = [
 ];
 
 export default function ManageInvoices() {
-  const [activeTab, setActiveTab] = useState<'table' | 'form' | 'view'>('table');
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [activeTab, setActiveTab] = useState<'vendor_invoices' | 'service_invoices' | 'form' | 'view'>('vendor_invoices');
+  const [invoices, setInvoices] = useState<Invoice[]>([
+    {
+      id: 'inv_1',
+      invoiceNumber: 'INV-7842',
+      customerName: 'admin',
+      mobile: '9988776655',
+      email: 'shyam.matham@nainatechnologies.in',
+      address: 'hyd, 506134',
+      items: [
+        { id: 'i1', description: 'CC Camera Cable', qty: 2, rate: 5000.00, amount: 10000.00, warranty: '1 Year', modelNumber: 'CC-CAB-001', hsnCode: '8544', serialNumbers: ['SN-CC-101', 'SN-CC-102'] },
+        { id: 'i2', description: 'Camera Lens', qty: 1, rate: 5000.00, amount: 5000.00, warranty: '6 Months', modelNumber: 'LEN-50MM', hsnCode: '9002', serialNumbers: ['SN-LEN-001'] }
+      ],
+      additionalChargesDesc: '',
+      additionalCharges: 0,
+      gstPercent: 18,
+      grandTotal: 17700.00, // (15000 + 18%)
+      date: '15 Jul 2026',
+      status: 'Paid',
+      serviceName: 'Vendor Product Order',
+      vendorBusinessName: 'Super CCTV Vendors',
+      orderId: 'ORD20260715140901778'
+    }
+  ]);
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [selectedSR, setSelectedSR] = useState<MockSR | null>(null);
 
@@ -37,8 +59,9 @@ export default function ManageInvoices() {
   const [address, setAddress] = useState('');
 
   const [items, setItems] = useState<InvoiceItem[]>([
-    { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0 }
+    { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0, warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [] }
   ]);
+  const [serialInputs, setSerialInputs] = useState<Record<string, string>>({});
 
   const [additionalChargesDesc, setAdditionalChargesDesc] = useState('');
   const [additionalCharges, setAdditionalCharges] = useState<number>(0);
@@ -53,7 +76,7 @@ export default function ManageInvoices() {
   const handleAddRow = () => {
     setItems([
       ...items,
-      { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0 }
+      { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0, warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [] }
     ]);
   };
 
@@ -63,7 +86,7 @@ export default function ManageInvoices() {
     }
   };
 
-  const handleItemChange = (id: string, field: keyof InvoiceItem, value: string | number) => {
+  const handleItemChange = (id: string, field: keyof InvoiceItem, value: any) => {
     setItems(items.map(item => {
       if (item.id === id) {
         const updated = { ...item, [field]: value };
@@ -107,11 +130,12 @@ export default function ManageInvoices() {
     setMobile('');
     setEmail('');
     setAddress('');
-    setItems([{ id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0 }]);
+    setItems([{ id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0, warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [] }]);
     setAdditionalChargesDesc('');
     setAdditionalCharges(0);
     setGstPercent(18);
     setSelectedSR(null);
+    setSerialInputs({});
 
     // Switch to table
     setActiveTab('table');
@@ -126,7 +150,7 @@ export default function ManageInvoices() {
     if (items.length === 1 && items[0].description === '') {
       newItems = [{ ...items[0], description: `${sr.category} - ${sr.service}` }];
     } else {
-      newItems = [{ id: Date.now().toString(), description: `${sr.category} - ${sr.service}`, qty: 1, rate: 0, amount: 0 }];
+      newItems = [{ id: Date.now().toString(), description: `${sr.category} - ${sr.service}`, qty: 1, rate: 0, amount: 0, warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [] }];
     }
 
     if (sr.extraItems && sr.extraItems.length > 0) {
@@ -136,7 +160,11 @@ export default function ManageInvoices() {
           description: extra.description,
           qty: extra.qty,
           rate: 0,
-          amount: 0
+          amount: 0,
+          warranty: '',
+          modelNumber: '',
+          hsnCode: '',
+          serialNumbers: []
         });
       });
     }
@@ -181,10 +209,16 @@ export default function ManageInvoices() {
 
       <div className="invoice-tabs">
         <button
-          className={`invoice-tab ${activeTab === 'table' ? 'active' : ''}`}
-          onClick={() => setActiveTab('table')}
+          className={`invoice-tab ${activeTab === 'vendor_invoices' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vendor_invoices')}
         >
-          Invoices
+          Vendor Invoices
+        </button>
+        <button
+          className={`invoice-tab ${activeTab === 'service_invoices' ? 'active' : ''}`}
+          onClick={() => setActiveTab('service_invoices')}
+        >
+          Service Invoices
         </button>
         <button
           className={`invoice-tab ${activeTab === 'form' ? 'active' : ''}`}
@@ -198,15 +232,17 @@ export default function ManageInvoices() {
       </div>
 
       <div className="invoice-container">
-        {activeTab === 'table' && (
+        {(activeTab === 'vendor_invoices' || activeTab === 'service_invoices') && (
           <div className="ref-table-wrapper" style={{ margin: 0 }}>
             <table className="invoices-list-table ref-table" style={{ border: 'none' }}>
               <thead>
                 <tr>
                   <th className='tableheadings'>Invoice No</th>
                   <th>Customer</th>
+                  <th>Vendor</th>
                   <th>Service</th>
-                  <th>SR No</th>
+                  {activeTab === 'service_invoices' && <th>SR No</th>}
+                  <th>Order ID</th>
                   <th>Total</th>
                   <th>Status</th>
                   <th>Date</th>
@@ -214,19 +250,21 @@ export default function ManageInvoices() {
                 </tr>
               </thead>
               <tbody>
-                {invoices.length === 0 ? (
+                {invoices.filter(inv => activeTab === 'vendor_invoices' ? !!inv.vendorBusinessName : !inv.vendorBusinessName).length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '40px', textAlign: 'center', color: '#333' }}>
+                    <td colSpan={activeTab === 'service_invoices' ? 10 : 9} style={{ padding: '40px', textAlign: 'center', color: '#333' }}>
                       No invoices generated yet
                     </td>
                   </tr>
                 ) : (
-                  invoices.map(inv => (
+                  invoices.filter(inv => activeTab === 'vendor_invoices' ? !!inv.vendorBusinessName : !inv.vendorBusinessName).map(inv => (
                     <tr key={inv.id}>
                       <td><strong>{inv.invoiceNumber}</strong></td>
                       <td>{inv.customerName}</td>
+                      <td>{inv.vendorBusinessName || '-'}</td>
                       <td>{inv.serviceName}</td>
-                      <td>{inv.srNo}</td>
+                      {activeTab === 'service_invoices' && <td>{inv.srNo || '-'}</td>}
+                      <td>{inv.orderId || '-'}</td>
                       <td>{inv.grandTotal.toFixed(2)}</td>
                       <td>{inv.status}</td>
                       <td>{inv.date}</td>
@@ -344,6 +382,9 @@ export default function ManageInvoices() {
                   <tr>
                     <th className="col-num">S.No</th>
                     <th className="col-name">Description</th>
+                    <th>Model No</th>
+                    <th>HSN Code</th>
+                    <th>Serial Numbers</th>
                     <th className="col-qty">Qty</th>
                     <th className="col-cost">Rate</th>
                     <th className="col-total">Amount</th>
@@ -360,6 +401,35 @@ export default function ManageInvoices() {
                           className="ref-input"
                           value={item.description}
                           onChange={e => handleItemChange(item.id, 'description', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="ref-input"
+                          value={item.modelNumber || ''}
+                          onChange={e => handleItemChange(item.id, 'modelNumber', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="ref-input"
+                          value={item.hsnCode || ''}
+                          onChange={e => handleItemChange(item.id, 'hsnCode', e.target.value)}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="ref-input"
+                          placeholder="Comma separated"
+                          value={serialInputs[item.id] !== undefined ? serialInputs[item.id] : (item.serialNumbers?.join(', ') || '')}
+                          onChange={e => {
+                            setSerialInputs({ ...serialInputs, [item.id]: e.target.value });
+                            const newSerials = e.target.value.split(',').map(s => s.trim()).filter(s => s);
+                            handleItemChange(item.id, 'serialNumbers', newSerials);
+                          }}
                         />
                       </td>
                       <td>
@@ -458,7 +528,7 @@ export default function ManageInvoices() {
                   className="btn-remove-row"
                   style={{ width: 'auto', padding: '4px 12px', fontSize: '0.85rem' }}
                   onClick={() => {
-                    setActiveTab('table');
+                    setActiveTab(viewingInvoice.vendorBusinessName ? 'vendor_invoices' : 'service_invoices');
                     setViewingInvoice(null);
                   }}
                 >
@@ -470,8 +540,10 @@ export default function ManageInvoices() {
             <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '4px', marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
               <div><strong>Invoice No:</strong> {viewingInvoice.invoiceNumber}</div>
               <div><strong>Date:</strong> {viewingInvoice.date}</div>
-              <div><strong>SR No:</strong> {viewingInvoice.srNo || 'N/A'}</div>
+              {viewingInvoice.srNo && <div><strong>SR No:</strong> {viewingInvoice.srNo}</div>}
               <div><strong>Customer:</strong> {viewingInvoice.customerName}</div>
+              <div><strong>Vendor Name:</strong> {viewingInvoice.vendorBusinessName || 'N/A'}</div>
+              <div><strong>Order ID:</strong> {viewingInvoice.orderId || 'N/A'}</div>
               <div><strong>Mobile:</strong> {viewingInvoice.mobile}</div>
               <div><strong>Email:</strong> {viewingInvoice.email || 'N/A'}</div>
               <div><strong>Address:</strong> {viewingInvoice.address || 'N/A'}</div>
@@ -486,19 +558,36 @@ export default function ManageInvoices() {
                   <tr>
                     <th className="col-num">S.No</th>
                     <th className="col-name">Description</th>
+                    <th>HSN Code</th>
+                    <th>Serial Numbers</th>
                     <th className="col-qty">Qty</th>
                     <th className="col-cost">Rate</th>
                     <th className="col-total">Amount</th>
+                    <th>Warranty</th>
                   </tr>
                 </thead>
                 <tbody>
                   {viewingInvoice.items.map((item, idx) => (
                     <tr key={item.id}>
                       <td className="col-num">{idx + 1}</td>
-                      <td>{item.description}</td>
+                      <td>
+                        <div>{item.description}</div>
+                        {item.modelNumber && <small style={{ color: '#6c757d', display: 'block', marginTop: '4px' }}>Model: {item.modelNumber}</small>}
+                      </td>
+                      <td>{item.hsnCode || '-'}</td>
+                      <td>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {item.serialNumbers?.length ? item.serialNumbers.map((sn, i) => (
+                            <span key={i} style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem', color: '#334155' }}>
+                              {sn}
+                            </span>
+                          )) : '-'}
+                        </div>
+                      </td>
                       <td>{item.qty}</td>
                       <td>{item.rate.toFixed(2)}</td>
                       <td>{item.amount.toFixed(2)}</td>
+                      <td>{item.warranty || '-'}</td>
                     </tr>
                   ))}
                 </tbody>

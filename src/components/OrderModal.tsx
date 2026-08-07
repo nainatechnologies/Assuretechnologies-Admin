@@ -42,6 +42,13 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
                 <p className="bold-text">{order.user}</p>
                 <p>{order.mobile}</p>
                 <p>{order.email}</p>
+                {order.gstNumber && (
+                  <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #eee' }}>
+                    <p className="bold-text">Business Customer</p>
+                    {order.companyName && <p>{order.companyName}</p>}
+                    <p>GST: {order.gstNumber}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -95,7 +102,7 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
                     {onSplitClick && (
                       <td>
                         {item.qty > 1 && (
-                          <button 
+                          <button
                             className="order-item-split-btn"
                             onClick={() => onSplitClick(item)}
                             title="Split order quantity to another vendor"

@@ -19,7 +19,7 @@ const initialOrders: Order[] = [
     address: 'hyd',
     pincode: '506134',
     totalAmount: 10000.00,
-    paymentMethod: 'COD',
+    paymentMethod: 'Online',
     paymentStatus: 'Pending',
     status: 'New',
     items: [
@@ -36,7 +36,7 @@ const initialOrders: Order[] = [
     pincode: '506134',
     totalAmount: 5000.00,
     adminCommission: 500.00,
-    paymentMethod: 'COD',
+    paymentMethod: 'Online',
     paymentStatus: 'Pending',
     status: 'New',
     items: [
@@ -52,7 +52,7 @@ const initialOrders: Order[] = [
     address: 'hyd',
     pincode: '506134',
     totalAmount: 10000.00,
-    paymentMethod: 'COD',
+    paymentMethod: 'Online',
     paymentStatus: 'Pending',
     status: 'Completed',
     items: [
@@ -69,15 +69,10 @@ export default function ManageVendorOrders() {
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
 
-  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Pending COD'];
+  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed'];
 
   const filteredOrders = orders.filter(order => {
-    let matchesTab = false;
-    if (activeTab === 'Pending COD') {
-      matchesTab = order.status === 'Completed' && order.paymentMethod === 'COD' && order.paymentStatus === 'Pending';
-    } else {
-      matchesTab = order.status === activeTab;
-    }
+    let matchesTab = order.status === activeTab;
     const query = searchQuery.toLowerCase();
     const matchesSearch = query === '' || 
       order.id.toLowerCase().includes(query) ||
@@ -85,6 +80,23 @@ export default function ManageVendorOrders() {
       order.mobile.includes(query) ||
       order.email.toLowerCase().includes(query);
     return matchesTab && matchesSearch;
+  });
+
+  const vendorOrders = filteredOrders.flatMap(order => {
+    const itemsByVendor = order.items.reduce((acc, item) => {
+      if (!acc[item.vendorName]) acc[item.vendorName] = [];
+      acc[item.vendorName].push(item);
+      return acc;
+    }, {} as Record<string, OrderItem[]>);
+
+    return Object.entries(itemsByVendor).map(([, vendorItems]) => {
+      const vendorTotal = vendorItems.reduce((sum, i) => sum + i.subtotal, 0);
+      return {
+        ...order,
+        items: vendorItems,
+        totalAmount: vendorTotal,
+      };
+    });
   });
 
   const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => {
@@ -146,7 +158,12 @@ export default function ManageVendorOrders() {
       // Reduce original
       originalItem.qty -= transferQty;
       originalItem.subtotal = originalItem.qty * originalItem.price;
-      newItems[originalItemIndex] = originalItem;
+      
+      if (originalItem.qty === 0) {
+        newItems.splice(originalItemIndex, 1);
+      } else {
+        newItems[originalItemIndex] = originalItem;
+      }
 
       // Create new split item
       const splitItem: OrderItem = {
@@ -176,7 +193,12 @@ export default function ManageVendorOrders() {
           const originalItem = { ...newItems[originalItemIndex] };
           originalItem.qty -= transferQty;
           originalItem.subtotal = originalItem.qty * originalItem.price;
-          newItems[originalItemIndex] = originalItem;
+          
+          if (originalItem.qty === 0) {
+            newItems.splice(originalItemIndex, 1);
+          } else {
+            newItems[originalItemIndex] = originalItem;
+          }
           
           const splitItem: OrderItem = {
             ...originalItem,
@@ -227,13 +249,13 @@ export default function ManageVendorOrders() {
       </div>
 
       <OrderTable 
-        orders={filteredOrders} 
+        orders={vendorOrders} 
         currentTab={activeTab} 
         onViewOrder={setSelectedOrder} 
         onActionOrder={handleActionOrder} 
         onTrackOrder={setTrackingOrder}
         showVendor={true}
-        hideActions={activeTab !== 'Pending COD'}
+        hideActions={false}
       />
 
       {selectedOrder && (

@@ -86,6 +86,8 @@ export interface Order {
   user: string;
   mobile: string;
   email: string;
+  companyName?: string;
+  gstNumber?: string;
   address: string;
   pincode: string;
   totalAmount: number;
@@ -99,13 +101,13 @@ export interface Order {
   trackUrl?: string;
 }
 
-export type ServiceRequestStatus = 
-  | 'Pending' 
-  | 'Accepted' 
-  | 'Assigned' 
-  | 'In Progress' 
-  | 'Awaiting Approval' 
-  | 'Completed' 
+export type ServiceRequestStatus =
+  | 'Pending'
+  | 'Accepted'
+  | 'Assigned'
+  | 'In Progress'
+  | 'Awaiting Approval'
+  | 'Completed'
   | 'Cancelled';
 
 export type ProgressUpdate = {
@@ -168,6 +170,10 @@ export interface InvoiceItem {
   qty: number;
   rate: number;
   amount: number;
+  warranty?: string;
+  modelNumber?: string;
+  hsnCode?: string;
+  serialNumbers?: string[];
 }
 
 export interface Invoice {
@@ -186,6 +192,8 @@ export interface Invoice {
   status?: string;
   srNo?: string;
   serviceName?: string;
+  vendorBusinessName?: string;
+  orderId?: string;
 }
 
 export interface PartnerCustomField {
@@ -202,11 +210,18 @@ export interface PartnerType {
   customFields: PartnerCustomField[];
 }
 
+export interface PricingType {
+  id: string;
+  name: string; // e.g. "Per Acre", "Per Hour", "Per Liter"
+  label: string; // e.g. "Number of Acres", "Number of Hours"
+}
+
 export interface PartnerService {
   id: string;
   category: string;
   serviceName: string;
-  prebookingCharge?: number;
+  pricingTypeId: string; // reference to PricingType
+  rate: number;
   image?: string | File;
   imageName?: string;
   customFields?: CustomField[]; // fields required during booking this service
@@ -226,7 +241,7 @@ export interface Partner {
   services: string[]; // array of PartnerService IDs they provide
 }
 
-export type PartnerBookingStatus = 
+export type PartnerBookingStatus =
   | 'Pending'
   | 'Accepted'
   | 'Assigned'
@@ -250,12 +265,14 @@ export interface PartnerBooking {
   time: string;
   status: PartnerBookingStatus;
   partnerId?: string;
-  partnerType?: 'Drone' | 'Tractor';
+  partnerType?: string;
+  pricingTypeId?: string;
+  quantity?: number;
+  totalAmount: number;
   startWorkPhotos?: string[];
   completeWorkPhotos?: string[];
   progressUpdates?: ProgressUpdate[];
   customFieldResponses?: Record<string, string>;
-  paymentStatus?: 'Prebooking Paid' | 'Pending';
-  prebookingAmountPaid?: number;
+  paymentStatus?: 'Paid' | 'Pending';
 }
 

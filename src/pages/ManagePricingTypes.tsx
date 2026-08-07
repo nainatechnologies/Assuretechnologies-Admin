@@ -1,0 +1,172 @@
+import { useState } from 'react';
+import { MdEdit, MdDelete, MdAdd, MdClose, MdSave } from 'react-icons/md';
+import type { PricingType } from '../types';
+import { usePartnerContext } from '../context/PartnerContext';
+import Swal from 'sweetalert2';
+
+export default function ManagePricingTypes() {
+  const { pricingTypes, setPricingTypes } = usePartnerContext();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingType, setEditingType] = useState<PricingType | null>(null);
+
+  // Form State
+  const [name, setName] = useState('');
+  const [label, setLabel] = useState('');
+
+  const handleAddType = () => {
+    setEditingType(null);
+    setName('');
+    setLabel('');
+    setIsModalOpen(true);
+  };
+
+  const handleEditType = (type: PricingType) => {
+    setEditingType(type);
+    setName(type.name);
+    setLabel(type.label);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteType = (id: string) => {
+    Swal.fire({
+      title: 'Delete Pricing Type?',
+      text: 'Are you sure you want to delete this pricing type? It may affect existing services.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setPricingTypes(prev => prev.filter(t => t.id !== id));
+        Swal.fire('Deleted!', 'Pricing Type deleted.', 'success');
+      }
+    });
+  };
+
+  const handleSave = () => {
+    if (!name.trim() || !label.trim()) {
+      Swal.fire('Error', 'Both Name and Label are required', 'error');
+      return;
+    }
+
+    if (editingType) {
+      setPricingTypes(prev => prev.map(t => t.id === editingType.id ? { ...t, name, label } : t));
+      Swal.fire('Updated!', 'Pricing Type updated successfully.', 'success');
+    } else {
+      setPricingTypes(prev => [...prev, { id: `prt${Date.now()}`, name, label }]);
+      Swal.fire('Added!', 'Pricing Type created successfully.', 'success');
+    }
+    setIsModalOpen(false);
+  };
+
+  return (
+    <div className="manage-page" style={{ padding: '24px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, color: '#1f2937' }}>Manage Pricing Types</h1>
+        <button onClick={handleAddType} style={{ backgroundColor: '#2563eb', color: 'white', padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+          + Add Pricing Type
+        </button>
+      </div>
+
+      <div style={{ backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+            <tr>
+              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>ID</th>
+              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>NAME</th>
+              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>FRONTEND LABEL</th>
+              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px', textAlign: 'center' }}>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pricingTypes.length === 0 ? (
+              <tr>
+                <td colSpan={4} style={{ padding: '24px', textAlign: 'center', color: '#6b7280' }}>
+                  No pricing types found.
+                </td>
+              </tr>
+            ) : (
+              pricingTypes.map(type => (
+                <tr key={type.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '16px', color: '#6b7280', fontSize: '14px' }}>#{type.id}</td>
+                  <td style={{ padding: '16px', fontWeight: 500, color: '#111827' }}>{type.name}</td>
+                  <td style={{ padding: '16px', color: '#4b5563' }}>{type.label}</td>
+                  <td style={{ padding: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => handleEditType(type)}
+                      style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: '4px' }}
+                      title="Edit"
+                    >
+                      <MdEdit size={20} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteType(type.id)}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
+                      title="Delete"
+                    >
+                      <MdDelete size={20} />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {isModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', width: '90%', maxWidth: '500px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{editingType ? 'Edit Pricing Type' : 'Add Pricing Type'}</h2>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
+                <MdClose size={24} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Name (Admin View)</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Per Liter"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Frontend Label (Customer View)</label>
+                <input
+                  type="text"
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="e.g. Number of Liters"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #d1d5db', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: 500 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: 'white', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <MdSave size={20} />
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

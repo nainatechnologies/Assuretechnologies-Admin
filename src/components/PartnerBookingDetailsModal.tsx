@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import type { PartnerBooking, DronePartner } from '../types';
 import './ServiceRequestDetailsModal.css'; // Reusing CSS
 
+import { usePartnerContext } from '../context/PartnerContext';
+
 interface PartnerBookingDetailsModalProps {
   booking: PartnerBooking;
   partner?: DronePartner;
@@ -10,6 +12,7 @@ interface PartnerBookingDetailsModalProps {
 }
 
 export default function PartnerBookingDetailsModal({ booking, partner, onClose }: PartnerBookingDetailsModalProps) {
+  const { pricingTypes } = usePartnerContext();
   const [mounted, setMounted] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -19,6 +22,9 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
   }, []);
 
   if (!mounted) return null;
+
+  const pType = pricingTypes.find(pt => pt.id === booking.pricingTypeId);
+  const unitName = pType ? pType.name.replace('Per ', '') : 'Units';
 
   return createPortal(
     <div className="modal-overlay animate-fade-in">
@@ -35,9 +41,14 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
             <div className="details-badge" style={{ marginBottom: 0 }}>
               {booking.status}
             </div>
-            {booking.paymentStatus === 'Prebooking Paid' && (
+            {booking.paymentStatus === 'Paid' && (
               <div className="details-badge" style={{ backgroundColor: '#10b981', color: 'white', marginBottom: 0 }}>
-                {booking.paymentStatus} {booking.prebookingAmountPaid ? `(₹${booking.prebookingAmountPaid})` : ''}
+                Paid (₹{booking.totalAmount?.toLocaleString('en-IN')})
+              </div>
+            )}
+            {booking.quantity && (
+              <div className="details-badge" style={{ backgroundColor: '#6366f1', color: 'white', marginBottom: 0 }}>
+                {booking.quantity} {unitName}
               </div>
             )}
           </div>

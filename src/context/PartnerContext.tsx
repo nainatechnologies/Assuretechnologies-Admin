@@ -1,25 +1,39 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import type { PartnerType, PartnerService, Partner } from '../types';
+import type { PartnerType, PartnerService, Partner, PricingType } from '../types';
 
 interface PartnerContextType {
   partnerTypes: PartnerType[];
   partnerServices: PartnerService[];
   partners: Partner[];
+  pricingTypes: PricingType[];
   setPartnerTypes: React.Dispatch<React.SetStateAction<PartnerType[]>>;
   setPartnerServices: React.Dispatch<React.SetStateAction<PartnerService[]>>;
   setPartners: React.Dispatch<React.SetStateAction<Partner[]>>;
+  setPricingTypes: React.Dispatch<React.SetStateAction<PricingType[]>>;
 }
 
 const PartnerContext = createContext<PartnerContextType | undefined>(undefined);
 
 const INITIAL_TYPES: PartnerType[] = [
   { id: 'pt1', name: 'Drone', customFields: [{ id: 'cf1', label: 'Drone License', type: 'file', required: true }] },
-  { id: 'pt2', name: 'Tractor', customFields: [{ id: 'cf2', label: 'Vehicle Number', type: 'text', required: true }] }
+  { id: 'pt2', name: 'Tractor', customFields: [{ id: 'cf2', label: 'Vehicle Number', type: 'text', required: true }] },
+  { id: 'pt3', name: 'Harvester', customFields: [{ id: 'cf3', label: 'Machine Model', type: 'text', required: true }] },
+  { id: 'pt4', name: 'Rotavator', customFields: [{ id: 'cf4', label: 'Vehicle Number', type: 'text', required: true }] },
+  { id: 'pt5', name: 'Seeder / Seed Drill', customFields: [{ id: 'cf5', label: 'Equipment Model', type: 'text', required: true }] },
+  { id: 'pt6', name: 'Cultivator', customFields: [{ id: 'cf6', label: 'Vehicle Number', type: 'text', required: true }] },
+  { id: 'pt7', name: 'Sprayer', customFields: [{ id: 'cf7', label: 'Sprayer Type', type: 'dropdown', options: ['Manual', 'Mounted', 'Self-Propelled'], required: true }] }
+];
+
+const INITIAL_PRICING_TYPES: PricingType[] = [
+  { id: 'prt1', name: 'Per Acre', label: 'Number of Acres' },
+  { id: 'prt2', name: 'Per Hour', label: 'Number of Hours' },
+  { id: 'prt3', name: 'Per Liter', label: 'Number of Liters' },
 ];
 
 const INITIAL_SERVICES: PartnerService[] = [
-  { id: 'ps1', category: 'Agritech', serviceName: '10L Drone Spraying', prebookingCharge: 500 },
-  { id: 'ps2', category: 'Agritech', serviceName: 'Tractor Plowing' }
+  { id: 'ps1', category: 'Agritech', serviceName: '10L Drone Spraying', pricingTypeId: 'prt1', rate: 400 },
+  { id: 'ps2', category: 'Agritech', serviceName: 'Tractor Plowing', pricingTypeId: 'prt2', rate: 500 },
+  { id: 'ps3', category: 'Agriculture', serviceName: 'Harvesting Machine', pricingTypeId: 'prt1', rate: 800 }
 ];
 
 const INITIAL_PARTNERS: Partner[] = [
@@ -63,6 +77,11 @@ export const PartnerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return saved ? JSON.parse(saved) : INITIAL_PARTNERS;
   });
 
+  const [pricingTypes, setPricingTypes] = useState<PricingType[]>(() => {
+    const saved = localStorage.getItem('assure_pricingTypes');
+    return saved ? JSON.parse(saved) : INITIAL_PRICING_TYPES;
+  });
+
   useEffect(() => {
     localStorage.setItem('assure_partnerTypes', JSON.stringify(partnerTypes));
   }, [partnerTypes]);
@@ -75,8 +94,12 @@ export const PartnerProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('assure_partners', JSON.stringify(partners));
   }, [partners]);
 
+  useEffect(() => {
+    localStorage.setItem('assure_pricingTypes', JSON.stringify(pricingTypes));
+  }, [pricingTypes]);
+
   return (
-    <PartnerContext.Provider value={{ partnerTypes, setPartnerTypes, partnerServices, setPartnerServices, partners, setPartners }}>
+    <PartnerContext.Provider value={{ partnerTypes, setPartnerTypes, partnerServices, setPartnerServices, partners, setPartners, pricingTypes, setPricingTypes }}>
       {children}
     </PartnerContext.Provider>
   );
