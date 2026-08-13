@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdAdd, MdClose, MdSave } from 'react-icons/md';
 import type { PricingType } from '../types';
-import { usePartnerContext } from '../context/PartnerContext';
 import Swal from 'sweetalert2';
+import API from '../services/api';
 
 export default function ManagePricingTypes() {
-  const { pricingTypes, setPricingTypes } = usePartnerContext();
+  const [pricingTypes, setPricingTypes] = useState<PricingType[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingType, setEditingType] = useState<PricingType | null>(null);
@@ -13,6 +13,21 @@ export default function ManagePricingTypes() {
   // Form State
   const [name, setName] = useState('');
   const [label, setLabel] = useState('');
+
+  const fetchPricingTypes = async () => {
+    try {
+      const response = await API.get('/admin/pricing-types');
+      if (response.data.success) {
+        setPricingTypes(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching pricing types:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPricingTypes();
+  }, []);
 
   const handleAddType = () => {
     setEditingType(null);
@@ -44,20 +59,28 @@ export default function ManagePricingTypes() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim() || !label.trim()) {
       Swal.fire('Error', 'Both Name and Label are required', 'error');
       return;
     }
 
-    if (editingType) {
-      setPricingTypes(prev => prev.map(t => t.id === editingType.id ? { ...t, name, label } : t));
-      Swal.fire('Updated!', 'Pricing Type updated successfully.', 'success');
-    } else {
-      setPricingTypes(prev => [...prev, { id: `prt${Date.now()}`, name, label }]);
-      Swal.fire('Added!', 'Pricing Type created successfully.', 'success');
+    try {
+      if (editingType) {
+        setPricingTypes(prev => prev.map(t => t.id === editingType.id ? { ...t, name, label } : t));
+        Swal.fire('Updated!', 'Pricing Type updated successfully.', 'success');
+      } else {
+        const response = await API.post('/admin/pricing-types', { name, label });
+        if (response.data.success) {
+          Swal.fire('Added!', 'Pricing Type created successfully.', 'success');
+          fetchPricingTypes();
+        }
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to save', 'error');
     }
-    setIsModalOpen(false);
   };
 
   return (
@@ -89,7 +112,7 @@ export default function ManagePricingTypes() {
             ) : (
               pricingTypes.map(type => (
                 <tr key={type.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '16px', color: '#6b7280', fontSize: '14px' }}>#{type.id}</td>
+                  <td style={{ padding: '16px', color: '#6b7280', fontSize: '14px' }}>{type.id}</td>
                   <td style={{ padding: '16px', fontWeight: 500, color: '#111827' }}>{type.name}</td>
                   <td style={{ padding: '16px', color: '#4b5563' }}>{type.label}</td>
                   <td style={{ padding: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
@@ -116,53 +139,49 @@ export default function ManagePricingTypes() {
       </div>
 
       {isModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '12px', width: '90%', maxWidth: '500px', padding: '24px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: 0 }}>{editingType ? 'Edit Pricing Type' : 'Add Pricing Type'}</h2>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: '20px' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+            
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: '#111827' }}>
+                {editingType ? 'Edit Pricing Type' : 'Add Pricing Type'}
+              </h2>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', display: 'flex' }}>
                 <MdClose size={24} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Name (Admin View)</label>
-                <input
-                  type="text"
+            <div style={{ padding: '20px' }}>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>Name (e.g. Per Acre)</label>
+                <input 
+                  type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Per Liter"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', boxSizing: 'border-box' }}
+                  placeholder="Enter name"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontSize: '14px' }}
                 />
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#374151', marginBottom: '6px' }}>Frontend Label (Customer View)</label>
-                <input
-                  type="text"
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>Frontend Label (e.g. Number of Acres)</label>
+                <input 
+                  type="text" 
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  placeholder="e.g. Number of Liters"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', fontSize: '14px', boxSizing: 'border-box' }}
+                  placeholder="Enter label"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontSize: '14px' }}
                 />
               </div>
+            </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  style={{ padding: '10px 16px', borderRadius: '8px', border: '1px solid #d1d5db', backgroundColor: 'white', color: '#374151', cursor: 'pointer', fontWeight: 500 }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', backgroundColor: '#2563eb', color: 'white', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <MdSave size={20} />
-                  Save
-                </button>
-              </div>
+            <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', gap: '12px', backgroundColor: '#f9fafb', borderRadius: '0 0 12px 12px' }}>
+              <button onClick={() => setIsModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '6px', border: '1px solid #d1d5db', background: 'white', color: '#374151', fontWeight: 500, cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleSave} style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', background: '#2563eb', color: 'white', fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <MdSave size={18} /> Save
+              </button>
             </div>
           </div>
         </div>

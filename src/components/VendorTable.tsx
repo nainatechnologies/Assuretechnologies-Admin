@@ -28,7 +28,7 @@ export default function VendorTable({ vendors, onEdit, onDelete, onToggleStatus 
             <th>Business Name</th>
             <th>Contact</th>
             <th>GST</th>
-            <th>Location</th>
+            <th>Full Address</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -36,7 +36,7 @@ export default function VendorTable({ vendors, onEdit, onDelete, onToggleStatus 
         <tbody>
           {vendors.map((vendor) => (
             <tr key={vendor.id}>
-              <td>{vendor.id}</td>
+              <td>{vendor.display_id || vendor.id}</td>
               <td>{vendor.fullName}</td>
               <td>{vendor.businessName}</td>
               <td>
@@ -44,7 +44,7 @@ export default function VendorTable({ vendors, onEdit, onDelete, onToggleStatus 
                 <div style={{ fontSize: '12px', color: '#9ca3af' }}>{vendor.email}</div>
               </td>
               <td>{vendor.gstNumber}</td>
-              <td>{vendor.location}</td>
+              <td>{vendor.fullAddress}</td>
               <td>
                 <span className={`status-badge ${vendor.status.toLowerCase()}`}>
                   {vendor.status}

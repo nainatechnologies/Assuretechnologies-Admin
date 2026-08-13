@@ -1,48 +1,42 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MdEdit, MdDelete, MdSearch } from 'react-icons/md';
 import type { DronePartner } from '../types';
 import Swal from 'sweetalert2';
+import API from '../services/api';
 import DronePartnerModal from '../components/DronePartnerModal';
 
-const MOCK_PARTNERS: DronePartner[] = [
-  {
-    id: 'DP1',
-    name: 'AgriDrones AP',
-    mobile: '9876543210',
-    email: 'agridrones@example.com',
-    location: 'Guntur, AP',
-    equipmentTypes: ['Standard Spray Drone (10L)', 'Granule Spreader Drone'],
-    status: 'Active',
-    partnerType: 'Drone'
-  },
-  {
-    id: 'DP2',
-    name: 'Kisan Copters',
-    mobile: '9876543211',
-    email: 'kisancopters@example.com',
-    location: 'Warangal, TS',
-    equipmentTypes: ['High-Capacity Drone (20L)'],
-    status: 'Active',
-    partnerType: 'Drone'
-  },
-  {
-    id: 'DP3',
-    name: 'Balaji Tractors',
-    mobile: '9988776655',
-    email: 'balaji@example.com',
-    location: 'Guntur, AP',
-    equipmentTypes: ['Mahindra 575 DI', 'Swaraj 744 FE'],
-    status: 'Active',
-    partnerType: 'Tractor',
-    vehicleNumber: 'AP 07 AB 1234'
-  }
-];
-
 export default function ManageDronePartners() {
-  const [dronePartners, setDronePartners] = useState<DronePartner[]>(MOCK_PARTNERS);
+  const [dronePartners, setDronePartners] = useState<DronePartner[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDronePartner, setEditingDronePartner] = useState<DronePartner | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchPartners = async () => {
+    try {
+      const response = await API.get('/admin/partners');
+      if (response.data.success) {
+        const mappedPartners: DronePartner[] = response.data.data.map((p: any) => ({
+          id: p.id,
+          name: p.full_name,
+          mobile: p.mobile,
+          email: p.email,
+          location: p.address || '',
+          coverageAreas: Array.isArray(p.coverage_areas) ? p.coverage_areas.join(', ') : '',
+          equipmentTypes: Array.isArray(p.services_provided) ? p.services_provided : [],
+          status: p.is_active ? 'Active' : 'Inactive',
+          partnerType: 'Drone'
+        }));
+        setDronePartners(mappedPartners);
+      }
+    } catch (error) {
+      console.error('Failed to fetch partners:', error);
+      Swal.fire('Error', 'Failed to load partners', 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchPartners();
+  }, []);
 
   const filteredPartners = useMemo(() => {
     return dronePartners.filter(partner => {
@@ -72,20 +66,33 @@ export default function ManageDronePartners() {
     });
   };
 
-  const handleSave = (data: any) => {
+  const handleSave = async (data: any) => {
     if (editingDronePartner) {
       setDronePartners(prev => prev.map(p => p.id === editingDronePartner.id ? { ...p, ...data } : p));
       Swal.fire('Updated!', 'Partner has been updated successfully.', 'success');
+      setIsModalOpen(false);
     } else {
-      const newDronePartner: DronePartner = {
-        ...data,
-        id: `DP${Math.floor(Math.random() * 1000)}`,
-        status: 'Active'
-      };
-      setDronePartners(prev => [...prev, newDronePartner]);
-      Swal.fire('Added!', 'Partner has been added.', 'success');
+      try {
+        const payload = {
+          email: data.email,
+          mobile: data.mobile,
+          password: data.password || 'TempPass123!',
+          full_name: data.name,
+          address: data.location,
+          coverage_areas: data.location ? data.location.split(',').map((s: string) => s.trim()) : [],
+          services_provided: data.equipmentTypes || []
+        };
+        const response = await API.post('/admin/partners', payload);
+        if (response.data.success) {
+          Swal.fire('Added!', 'Partner has been added.', 'success');
+          fetchPartners();
+          setIsModalOpen(false);
+        }
+      } catch (error: any) {
+        console.error('Create partner error:', error);
+        Swal.fire('Error', error.response?.data?.message || 'Failed to create partner', 'error');
+      }
     }
-    setIsModalOpen(false);
   };
 
   const handleToggleStatus = (id: string) => {

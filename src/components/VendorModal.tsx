@@ -22,7 +22,6 @@ export default function VendorModal({ isOpen, onClose, onSave, vendor }: VendorM
     pincode: '',
     businessDescription: '',
     bankAccountDetails: '',
-    location: '',
     password: '',
   });
 
@@ -44,7 +43,6 @@ export default function VendorModal({ isOpen, onClose, onSave, vendor }: VendorM
         pincode: vendor.pincode || '',
         businessDescription: vendor.businessDescription || '',
         bankAccountDetails: vendor.bankAccountDetails || '',
-        location: vendor.location || '',
         password: vendor.password || '',
       });
     }
@@ -140,10 +138,7 @@ export default function VendorModal({ isOpen, onClose, onSave, vendor }: VendorM
       newErrors.bankAccountDetails = "Bank details must be at least 10 characters long";
       hasError = true;
     }
-    if (!formData.location) {
-      newErrors.location = "Please select a location";
-      hasError = true;
-    }
+
     if (!vendor && formData.password.length < 6) {
       newErrors.password = "Must be at least 6 characters long";
       hasError = true;
@@ -230,16 +225,7 @@ export default function VendorModal({ isOpen, onClose, onSave, vendor }: VendorM
             {errors.bankAccountDetails && <span className="error-text">{errors.bankAccountDetails}</span>}
           </div>
 
-          <div className="input-group">
-            <label className="input-label">Select Location</label>
-            <select name="location" className={`input-field ${errors.location ? 'input-field-error' : ''}`} value={formData.location} onChange={handleChange}>
-              <option value="" disabled>Choose Location</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="Bangalore">Bangalore</option>
-              <option value="Chennai">Chennai</option>
-            </select>
-            {errors.location && <span className="error-text">{errors.location}</span>}
-          </div>
+
 
           <div className="input-group">
             <label className="input-label">Set Password</label>

@@ -5,192 +5,54 @@ import VendorTable from '../components/VendorTable';
 import VendorModal from '../components/VendorModal';
 import Pagination from '../components/Pagination';
 import Swal from 'sweetalert2';
+import API from '../services/api';
 import './ManageVendors.css';
 
 export default function ManageVendors() {
-  const [vendors, setVendors] = useState<Vendor[]>([
-    {
-      id: 'VEND0001',
-      fullName: 'admin',
-      businessName: 'Naina-tech',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Hyderabad',
-      status: 'Active'
-    }, 
-    {
-      id: 'VEND0002',
-      fullName: 'admin2',
-      businessName: 'Naina-tech2',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Bangalore',
-      status: 'Active'
-    },
-    {
-      id: 'VEND0003',
-      fullName: 'admin3',
-      businessName: 'Naina-tech3',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Chennai',
-      status: 'Active'
-    }, 
-    {
-      id: 'VEND0001',
-      fullName: 'admin',
-      businessName: 'Naina-tech',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Hyderabad',
-      status: 'Active'
-    }, 
-    {
-      id: 'VEND0002',
-      fullName: 'admin2',
-      businessName: 'Naina-tech2',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Bangalore',
-      status: 'Active'
-    },
-    {
-      id: 'VEND0003',
-      fullName: 'admin3',
-      businessName: 'Naina-tech3',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Chennai',
-      status: 'Active'
-    },
-    {
-      id: 'VEND0001',
-      fullName: 'admin',
-      businessName: 'Naina-tech',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Hyderabad',
-      status: 'Active'
-    }, 
-    {
-      id: 'VEND0002',
-      fullName: 'admin2',
-      businessName: 'Naina-tech2',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Bangalore',
-      status: 'Active'
-    },
-    {
-      id: 'VEND0003',
-      fullName: 'admin3',
-      businessName: 'Naina-tech3',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Chennai',
-      status: 'Active'
-    },
-    {
-      id: 'VEND0001',
-      fullName: 'admin',
-      businessName: 'Naina-tech',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Hyderabad',
-      status: 'Active'
-    }, 
-    {
-      id: 'VEND0002',
-      fullName: 'admin2',
-      businessName: 'Naina-tech2',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Bangalore',
-      status: 'Active'
-    },
-    {
-      id: 'VEND0003',
-      fullName: 'admin3',
-      businessName: 'Naina-tech3',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      gstNumber: '112233445566',
-      fullAddress: 'Sample address',
-      pincode: '500001',
-      businessDescription: 'Tech services',
-      bankAccountDetails: 'SBI 1234',
-      location: 'Chennai',
-      status: 'Active'
-    }
-  ]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const fetchVendors = async () => {
+    try {
+      const response = await API.get('/admin/vendors');
+      if (response.data.success) {
+        const mappedVendors: Vendor[] = response.data.data.map((v: any) => ({
+          id: v.id,
+          display_id: v.display_id,
+          fullName: v.full_name,
+          businessName: v.business_name,
+          mobile: v.mobile,
+          email: v.email,
+          gstNumber: v.gst_number,
+          fullAddress: v.address,
+          pincode: v.pincode || '',
+          businessDescription: v.business_description || '',
+          bankAccountDetails: v.bank_account_details || '',
+          status: v.is_active ? 'Active' : 'Inactive'
+        }));
+        setVendors(mappedVendors);
+      }
+    } catch (error) {
+      console.error('Failed to fetch vendors:', error);
+      Swal.fire('Error', 'Failed to load vendors', 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchVendors();
+  }, []);
+
   const filteredVendors = useMemo(() => {
     const query = searchQuery.toLowerCase();
     return vendors.filter(v => 
-      v.businessName.toLowerCase().includes(query) || 
-      v.fullName.toLowerCase().includes(query) ||
-      v.mobile.includes(query) ||
-      v.email.toLowerCase().includes(query) ||
-      v.pincode.includes(query) ||
-      v.gstNumber.toLowerCase().includes(query)
+      (v.businessName || '').toLowerCase().includes(query) || 
+      (v.fullName || '').toLowerCase().includes(query) ||
+      (v.mobile || '').includes(query) ||
+      (v.email || '').toLowerCase().includes(query) ||
+      (v.pincode || '').includes(query) ||
+      (v.gstNumber || '').toLowerCase().includes(query)
     );
   }, [vendors, searchQuery]);
 
@@ -208,21 +70,39 @@ export default function ManageVendors() {
     currentPage * itemsPerPage
   );
 
-  const handleSave = (vendorData: Vendor | Omit<Vendor, 'id' | 'status'>) => {
+  const handleSave = async (vendorData: Vendor | Omit<Vendor, 'id' | 'status'>) => {
     if ('id' in vendorData) {
       // Edit existing
       setVendors(prev => prev.map(v => v.id === vendorData.id ? vendorData as Vendor : v));
+      setIsModalOpen(false);
+      setEditingVendor(undefined);
     } else {
       // Add new
-      const newVendor: Vendor = {
-        ...(vendorData as Omit<Vendor, 'id' | 'status'>),
-        id: `VEND${String(vendors.length + 1).padStart(4, '0')}`,
-        status: 'Active'
-      };
-      setVendors(prev => [...prev, newVendor]);
+      try {
+        const payload = {
+          email: vendorData.email,
+          mobile: vendorData.mobile,
+          password: vendorData.password || 'TempPass123!',
+          full_name: vendorData.fullName,
+          business_name: vendorData.businessName,
+          address: vendorData.fullAddress,
+          gst_number: vendorData.gstNumber,
+          pincode: vendorData.pincode,
+          business_description: vendorData.businessDescription,
+          bank_account_details: vendorData.bankAccountDetails
+        };
+        const response = await API.post('/admin/vendors', payload);
+        if (response.data.success) {
+          Swal.fire('Added!', 'Vendor has been added.', 'success');
+          fetchVendors();
+          setIsModalOpen(false);
+          setEditingVendor(undefined);
+        }
+      } catch (error: any) {
+        console.error('Create vendor error:', error);
+        Swal.fire('Error', error.response?.data?.message || 'Failed to create vendor', 'error');
+      }
     }
-    setIsModalOpen(false);
-    setEditingVendor(undefined);
   };
 
   const handleEdit = (vendor: Vendor) => {

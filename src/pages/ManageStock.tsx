@@ -1,41 +1,30 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import type { Product } from '../types';
 import './ManageStock.css';
 import { createPortal } from 'react-dom';
-
-// Mock data (Normally fetched from API)
-const initialProducts: Product[] = [
-  {
-    id: '#1',
-    name: 'camera',
-    category: 'CC Camera Cable',
-    price: '10000.00',
-    banner: 'https://via.placeholder.com/50',
-    bannerName: 'camera.png',
-    description: 'CC Camera Cable',
-    status: 'In Stock',
-    stock: 1, // Currently low stock
-  },
-  {
-    id: '#2',
-    name: 'lens',
-    category: 'CC Camera Cable',
-    price: '5000.00',
-    banner: 'https://via.placeholder.com/50',
-    bannerName: 'lens.png',
-    description: 'Camera lens',
-    status: 'In Stock',
-    stock: 15,
-  }
-];
+import API from '../services/api';
 
 export default function ManageStock() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await API.get('/admin/products');
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+      Swal.fire('Error', 'Failed to load products.', 'error');
+    }
+  };
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -46,7 +35,7 @@ export default function ManageStock() {
     setQuantity('');
   };
 
-  const handleSaveStock = (e: React.FormEvent) => {
+  const handleSaveStock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProduct) return;
 
@@ -56,18 +45,26 @@ export default function ManageStock() {
       return;
     }
 
-    setProducts(products.map(p => {
-      if (p.id === selectedProduct.id) {
-        return {
-          ...p,
-          stock: (p.stock || 0) + qty
-        };
-      }
-      return p;
-    }));
+    try {
+      const newStock = (selectedProduct.stock || 0) + qty;
+      await API.put(`/admin/products/${selectedProduct.id}`, { stock: newStock });
+      
+      setProducts(products.map(p => {
+        if (p.id === selectedProduct.id) {
+          return {
+            ...p,
+            stock: newStock
+          };
+        }
+        return p;
+      }));
 
-    Swal.fire('Success', 'Stock updated successfully.', 'success');
-    setSelectedProduct(null);
+      Swal.fire('Success', 'Stock updated successfully.', 'success');
+      setSelectedProduct(null);
+    } catch (error) {
+      console.error('Failed to update stock:', error);
+      Swal.fire('Error', 'Failed to update stock.', 'error');
+    }
   };
 
   const getStockBadge = (stockCount?: number) => {
@@ -75,7 +72,7 @@ export default function ManageStock() {
     if (count === 0) {
       return <span className="stock-badge out">Out of Stock</span>;
     }
-    if (count < 5) {
+    if (count < 10) {
       return <span className="stock-badge low">Low: {count}</span>;
     }
     return <span className="stock-badge ok">In Stock: {count}</span>;
@@ -146,7 +143,7 @@ export default function ManageStock() {
                 <td>
                   <div className="stock-img-container">
                     <img
-                      src={typeof product.banner === 'string' ? product.banner : URL.createObjectURL(product.banner)}
+                      src={typeof product.banner === 'string' ? product.banner : 'https://via.placeholder.com/50'}
                       alt={product.name}
                     />
                   </div>
@@ -173,3 +170,4 @@ export default function ManageStock() {
     </div>
   );
 }
+

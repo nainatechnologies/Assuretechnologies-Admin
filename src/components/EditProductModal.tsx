@@ -20,6 +20,7 @@ export default function EditProductModal({
   const [name, setName] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [price, setPrice] = useState('');
+  const [discount, setDiscount] = useState('');
   const [priceError, setPriceError] = useState('');
   const [description, setDescription] = useState('');
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -35,6 +36,7 @@ export default function EditProductModal({
       // Extract numeric value from price string (e.g., "₹299.00" -> "299.00")
       const cleanPrice = product.price ? product.price.replace(/[^0-9.]/g, '') : '';
       setPrice(cleanPrice);
+      setDiscount(product.discount ? product.discount.toString() : '');
       setPriceError('');
       setDescription(product.description || '');
       setBannerName(product.bannerName || 'No file chosen');
@@ -68,6 +70,13 @@ export default function EditProductModal({
     }
   };
 
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === '' || (/^\d*\.?\d*$/.test(val) && Number(val) <= 100)) {
+      setDiscount(val);
+    }
+  };
+
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -91,6 +100,7 @@ export default function EditProductModal({
       name,
       category,
       price: `₹${parseFloat(price).toFixed(2)}`,
+      discount: discount ? parseFloat(discount) : 0,
       description,
       banner: bannerFile || product.banner,
       bannerName: bannerName || product.bannerName || 'No file chosen'
@@ -160,6 +170,19 @@ export default function EditProductModal({
                 required
               />
               {priceError && <div className="input-error" style={{ marginTop: '4px', marginBottom: 0 }}>{priceError}</div>}
+            </div>
+
+            {/* Discount */}
+            <div className="input-group form-group">
+              <label className="input-label" htmlFor="editDiscount">Discount (%)</label>
+              <input
+                type="text"
+                id="editDiscount"
+                className="input-field colorful-input"
+                placeholder="e.g. 10"
+                value={discount}
+                onChange={handleDiscountChange}
+              />
             </div>
 
             {/* Banner Image */}

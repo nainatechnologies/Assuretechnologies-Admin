@@ -29,6 +29,7 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
+  const [discount, setDiscount] = useState('');
   const [priceError, setPriceError] = useState('');
   const [description, setDescription] = useState('');
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -41,6 +42,14 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
     if (val === '' || /^\d*\.?\d*$/.test(val)) {
       setPrice(val);
       setPriceError('');
+    }
+  };
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Allow empty string or valid numeric input up to 100
+    if (val === '' || (/^\d*\.?\d*$/.test(val) && Number(val) <= 100)) {
+      setDiscount(val);
     }
   };
 
@@ -57,6 +66,7 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
       name,
       category,
       price: `₹${parseFloat(price).toFixed(2)}`,
+      discount: discount ? parseFloat(discount) : 0,
       description,
       banner: bannerFile || '',
       bannerName: bannerFile ? bannerFile.name : 'No image'
@@ -66,6 +76,7 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
     setName('');
     setCategory('');
     setPrice('');
+    setDiscount('');
     setPriceError('');
     setDescription('');
     setBannerFile(null);
@@ -133,6 +144,18 @@ export default function ProductForm({ onAddProduct }: ProductFormProps) {
               required
             />
             {priceError && <div className="input-error" style={{ marginTop: '4px', marginBottom: 0 }}>{priceError}</div>}
+          </div>
+
+          <div className="input-group form-group">
+            <label className="input-label" htmlFor="discount">Discount (%)</label>
+            <input
+              type="text"
+              id="discount"
+              className="input-field colorful-input"
+              placeholder="e.g. 10"
+              value={discount}
+              onChange={handleDiscountChange}
+            />
           </div>
 
           <div className="input-group form-group">

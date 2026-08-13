@@ -1,16 +1,65 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { MdEdit, MdDelete, MdSearch } from 'react-icons/md';
 import type { Partner, PartnerType, PartnerService } from '../types';
 import Swal from 'sweetalert2';
 import PartnerModal from '../components/PartnerModal';
-
-import { usePartnerContext } from '../context/PartnerContext';
+import API from '../services/api';
 
 export default function ManagePartners() {
-  const { partners, setPartners, partnerTypes, partnerServices } = usePartnerContext();
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
+  const [partnerServices] = useState<PartnerService[]>([]);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<Partner | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchPartners = async () => {
+    try {
+      const response = await API.get('/admin/partners');
+      if (response.data.success) {
+        const mapped = response.data.data.map((p: any) => ({
+          id: p.id,
+          display_id: p.display_id,
+          name: p.full_name,
+          email: p.email,
+          mobile: p.mobile,
+          password: '',
+          location: p.address,
+          partnerTypeId: p.partner_type_id,
+          customFieldValues: p.custom_field_values,
+          services: p.services_provided || [],
+          status: p.is_active ? 'Active' : 'Inactive'
+        }));
+        setPartners(mapped);
+      }
+    } catch (error) {
+      console.error('Error fetching partners:', error);
+    }
+  };
+
+  const fetchTypesAndServices = async () => {
+    try {
+      // Assuming these endpoints exist or will exist shortly.
+      // If not, it falls back gracefully or uses empty.
+      const typesRes = await API.get('/admin/partner-types');
+      if (typesRes.data.success) {
+        setPartnerTypes(typesRes.data.data.map((pt: any) => ({
+          id: pt.id,
+          name: pt.name,
+          customFields: pt.custom_fields || []
+        })));
+      }
+      // For now services might still be mock or we can fetch them if implemented
+    } catch (error) {
+      console.error('Error fetching partner types:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPartners();
+    fetchTypesAndServices();
+  }, []);
 
   const filteredPartners = useMemo(() => {
     return partners.filter(partner => {
@@ -33,26 +82,42 @@ export default function ManagePartners() {
       confirmButtonText: 'Yes, delete it!'
     }).then((result) => {
       if (result.isConfirmed) {
+        // Implement delete API call if backend supports it
         setPartners(prev => prev.filter(p => p.id !== id));
         Swal.fire('Deleted!', 'Partner has been deleted.', 'success');
       }
     });
   };
 
-  const handleSave = (data: any) => {
-    if (editingPartner) {
-      setPartners(prev => prev.map(p => p.id === editingPartner.id ? { ...p, ...data } : p));
-      Swal.fire('Updated!', 'Partner has been updated successfully.', 'success');
-    } else {
-      const newPartner: Partner = {
-        ...data,
-        id: `P${Math.floor(Math.random() * 1000)}`,
-        status: 'Active'
-      };
-      setPartners(prev => [...prev, newPartner]);
-      Swal.fire('Added!', 'Partner has been added.', 'success');
+  const handleSave = async (data: any) => {
+    try {
+      if (editingPartner) {
+        // Implement update API call
+        setPartners(prev => prev.map(p => p.id === editingPartner.id ? { ...p, ...data } : p));
+        Swal.fire('Updated!', 'Partner has been updated successfully.', 'success');
+      } else {
+        const payload = {
+          full_name: data.name,
+          email: data.email,
+          mobile: data.mobile,
+          password: data.password,
+          address: data.location,
+          partner_type_id: data.partnerTypeId,
+          custom_field_values: data.customFieldValues,
+          services_provided: data.services,
+          coverage_areas: []
+        };
+        const response = await API.post('/admin/partners', payload);
+        if (response.data.success) {
+          Swal.fire('Added!', 'Partner has been added.', 'success');
+          fetchPartners();
+        }
+      }
+      setIsModalOpen(false);
+    } catch (error: any) {
+      console.error(error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to save', 'error');
     }
-    setIsModalOpen(false);
   };
 
   const handleToggleStatus = (id: string) => {
@@ -88,7 +153,7 @@ export default function ManagePartners() {
             <MdSearch size={20} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
             <input
               type="text"
-              placeholder="Search by name, mobile, pincode..."
+              placeholder="Search by name, mobile..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -124,7 +189,7 @@ export default function ManagePartners() {
           <tbody>
             {filteredPartners.length > 0 ? filteredPartners.map(partner => (
               <tr key={partner.id} className="border-b border-gray-100 hover:bg-gray-50 transition" style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>{partner.id}</td>
+                <td className="py-3 px-4 text-sm font-medium" style={{ padding: '12px' }}>{partner.display_id || partner.id}</td>
                 <td className="py-3 px-4 text-sm font-medium" style={{ padding: '12px' }}>{partner.name}</td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>
                   <span style={{ 

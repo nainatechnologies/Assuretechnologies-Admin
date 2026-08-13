@@ -1,19 +1,21 @@
 export interface Product {
   id: string;
+  vendor_id?: string;
   name: string;
   category: string;
   price: string;
+  discount?: string | number;
+  admin_commission?: string | number;
   banner: string | File;
   bannerName: string;
   description: string;
-  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-  additionalImage?: string | File;
-  additionalImageName?: string;
+  status: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Draft' | 'Active' | 'Inactive';
   stock?: number;
 }
 
 export interface Technician {
   id: string;
+  display_id?: string;
   name: string;
   mobile: string;
   email: string;
@@ -28,20 +30,34 @@ export interface Technician {
   nocFileName?: string;
 }
 
-export interface Vendor {
+export interface DronePartner {
   id: string;
-  fullName: string;
-  businessName: string;
+  display_id?: string;
+  name: string;
   mobile: string;
   email: string;
-  gstNumber: string;
-  fullAddress: string;
-  pincode: string;
-  businessDescription: string;
-  bankAccountDetails: string;
   location: string;
   status: 'Active' | 'Inactive';
   password?: string;
+  partnerType?: string;
+  coverageAreas?: string;
+  equipmentTypes?: string[];
+}
+
+export interface Vendor {
+  id: string;
+  display_id?: string;
+  fullName: string;
+  mobile: string;
+  email: string;
+  status: 'Active' | 'Inactive';
+  password?: string;
+  businessName?: string;
+  gstNumber?: string;
+  fullAddress?: string;
+  pincode?: string;
+  businessDescription?: string;
+  bankAccountDetails?: string;
   aadharFile?: string | File;
   aadharFileName?: string;
   panFile?: string | File;
@@ -230,6 +246,7 @@ export interface PartnerService {
 
 export interface Partner {
   id: string;
+  display_id?: string;
   name: string;
   mobile: string;
   email: string;
@@ -275,4 +292,5 @@ export interface PartnerBooking {
   customFieldResponses?: Record<string, string>;
   paymentStatus?: 'Paid' | 'Pending';
 }
+
 

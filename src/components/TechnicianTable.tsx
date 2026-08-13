@@ -35,7 +35,7 @@ export default function TechnicianTable({ technicians, onEditTechnician, onDelet
         <tbody>
           {technicians.map((tech) => (
             <tr key={tech.id}>
-              <td>{tech.id}</td>
+              <td>{tech.display_id || tech.id}</td>
               <td>{tech.name}</td>
               <td>
                 <div>{tech.mobile}</div>

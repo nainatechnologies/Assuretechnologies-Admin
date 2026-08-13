@@ -369,3 +369,23 @@ input:checked + .slider:before {
   color: #ef4444;
   background-color: #fee2e2;
 }
+
+/* Status Badges */
+.product-status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.product-status-success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.product-status-warning {
+  background-color: #fee2e2;
+  color: #991b1b;
+}

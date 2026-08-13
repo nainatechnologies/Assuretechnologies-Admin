@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import API from '../services/api';
+import { loginUser } from '../services/auth';
 import './Login.css';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation 
@@ -20,30 +23,39 @@ export default function Login() {
     }
 
     setPasswordError('');
+    setLoading(true);
 
-    // Simulate login success
-    Swal.fire({
-      title: 'Success!',
-      text: 'You have successfully logged in.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-    }).then(() => {
-      navigate('/admin/dashboard');
-    });
+    try {
+      const response = await API.post('/auth/admin/login', { email, password });
+      
+      if (response.data.success) {
+        loginUser(response.data.data.user);
+        
+        Swal.fire({
+          title: 'Success!',
+          text: 'You have successfully logged in.',
+          icon: 'success',
+          confirmButtonColor: '#4F46E5',
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          navigate('/admin/dashboard');
+        });
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      Swal.fire({
+        title: 'Login Failed',
+        text: error.response?.data?.message || 'Invalid credentials or server error.',
+        icon: 'error',
+        confirmButtonColor: '#EF4444',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleForgotPassword = (e: React.MouseEvent) => {
-    e.preventDefault();
-    Swal.fire({
-      title: 'Reset Password',
-      text: 'Instructions to reset your password will be sent to your email.',
-      input: 'email',
-      inputPlaceholder: 'Enter your email address',
-      showCancelButton: true,
-      confirmButtonText: 'Send Reset Link',
-      confirmButtonColor: '#4F46E5',
-    });
-  };
+
 
   return (
     <div className="login-container">
@@ -69,9 +81,6 @@ export default function Login() {
           <div className="input-group">
             <div className="password-header">
               <label className="input-label" htmlFor="password">Password</label>
-              <a href="#" className="forgot-password" onClick={handleForgotPassword}>
-                Forgot password?
-              </a>
             </div>
             <input
               type="password"
@@ -89,8 +98,8 @@ export default function Login() {
           {passwordError && <div className="input-error">{passwordError}</div>}
 
           <div className="login-btn-wrapper">
-            <button type="submit" className="btn-primary">
-              Sign In
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
         </form>

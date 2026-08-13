@@ -5,42 +5,42 @@ import TechnicianModal from '../components/TechnicianModal';
 import Pagination from '../components/Pagination';
 import type { Technician } from '../types';
 import Swal from 'sweetalert2';
+import API from '../services/api';
 import './ManageTechnicians.css';
 
 export default function ManageTechnicians() {
-  const [technicians, setTechnicians] = useState<Technician[]>([
-    {
-      id: 'TECH0001',
-      name: 'admin',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      address: '',
-      location: 'Hyderabad',
-      status: 'Active'
-    },
-    {
-      id: 'TECH0002',
-      name: 'admin',
-      mobile: '9988776655',
-      email: 'admin2@nainatechnologies.in',
-      address: '',
-      location: 'Bangalore',
-      status: 'Active'
-    },
-    {
-      id: 'TECH0003',
-      name: 'admin3',
-      mobile: '9988776655',
-      email: 'admin3@nainatechnologies.in',
-      address: '',
-      location: 'Chennai',
-      status: 'Active'
-    }
-  ]);
+  const [technicians, setTechnicians] = useState<Technician[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const fetchTechnicians = async () => {
+    try {
+      const response = await API.get('/admin/technicians');
+      if (response.data.success) {
+        const mappedTechs: Technician[] = response.data.data.map((t: any) => ({
+          id: t.id,
+          display_id: t.display_id,
+          name: t.full_name,
+          mobile: t.mobile,
+          email: t.email,
+          address: t.address || '',
+          location: Array.isArray(t.service_pincodes) ? t.service_pincodes.join(', ') : '',
+          services: Array.isArray(t.services_provided) ? t.services_provided : [],
+          status: t.is_active ? 'Active' : 'Inactive'
+        }));
+        setTechnicians(mappedTechs);
+      }
+    } catch (error) {
+      console.error('Failed to fetch technicians:', error);
+      Swal.fire('Error', 'Failed to load technicians', 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchTechnicians();
+  }, []);
 
   const filteredTechnicians = useMemo(() => {
     const query = searchQuery.toLowerCase();
@@ -66,23 +66,28 @@ export default function ManageTechnicians() {
     currentPage * itemsPerPage
   );
 
-  const handleAddTechnician = (newTechData: Omit<Technician, 'id' | 'status'>) => {
-    const newTech: Technician = {
-      ...newTechData,
-      id: `TECH000${technicians.length + 1}`,
-      status: 'Active'
-    };
-
-    setTechnicians(prev => [...prev, newTech]);
-    setIsModalOpen(false);
-    Swal.fire({
-      title: 'Added!',
-      text: 'New technician added successfully.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-      timer: 2000,
-      showConfirmButton: false
-    });
+  const handleAddTechnician = async (newTechData: Omit<Technician, 'id' | 'status'>) => {
+    try {
+      const payload = {
+        email: newTechData.email,
+        mobile: newTechData.mobile,
+        password: newTechData.password || 'TempPass123!',
+        full_name: newTechData.name,
+        address: newTechData.address,
+        service_pincodes: newTechData.location ? newTechData.location.split(',').map(s => s.trim()) : [],
+        services_provided: newTechData.services || []
+      };
+      
+      const response = await API.post('/admin/technicians', payload);
+      if (response.data.success) {
+        Swal.fire('Added!', 'New technician added successfully.', 'success');
+        fetchTechnicians();
+        setIsModalOpen(false);
+      }
+    } catch (error: any) {
+      console.error('Create technician error:', error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to create technician', 'error');
+    }
   };
 
   const handleUpdateTechnician = (updatedTech: Technician) => {

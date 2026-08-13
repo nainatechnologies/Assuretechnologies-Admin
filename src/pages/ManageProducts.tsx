@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import API from '../services/api';
 import ProductForm from '../components/ProductForm';
 import ProductTable from '../components/ProductTable';
 import EditProductModal from '../components/EditProductModal';
@@ -7,28 +8,7 @@ import Swal from 'sweetalert2';
 import './ManageProducts.css';
 
 export default function ManageProducts() {
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: '1',
-      name: 'High-Speed Wireless Router',
-      category: 'Networking',
-      price: '₹299.00',
-      banner: '',
-      bannerName: 'router.png',
-      description: 'High-quality dual-band wireless router with gigabit speeds.',
-      status: 'In Stock'
-    },
-    {
-      id: '2',
-      name: 'Smart Home Automation Hub',
-      category: 'Automation',
-      price: '₹89.00',
-      banner: '',
-      bannerName: 'hub.jpg',
-      description: 'Modern smart automation controller for connected devices.',
-      status: 'In Stock'
-    }
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -36,23 +16,63 @@ export default function ManageProducts() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const handleAddProduct = (newProductData: Omit<Product, 'id' | 'status'>) => {
-    const newProduct: Product = {
-      ...newProductData,
-      id: Math.random().toString(36).substring(2, 9),
-      status: 'In Stock'
-    };
+  const fetchProducts = async () => {
+    try {
+      const response = await API.get('/admin/products');
+      const fetchedProducts = response.data.map((p: any) => ({
+        id: p.id,
+        display_id: p.display_id,
+        name: p.name,
+        category: p.category,
+        price: `₹${p.base_price}`,
+        discount: p.discount,
+        description: p.description,
+        banner: p.banner || '',
+        bannerName: p.banner ? p.banner.split('/').pop() : 'No image',
+        status: p.status,
+        stock: p.stock
+      }));
+      setProducts(fetchedProducts);
+    } catch (error) {
+      console.error('Failed to fetch products', error);
+      Swal.fire('Error', 'Failed to fetch products', 'error');
+    }
+  };
 
-    setProducts(prevProducts => [...prevProducts, newProduct]);
-    setIsAdding(false);
-    Swal.fire({
-      title: 'Added!',
-      text: 'New product added successfully.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-      timer: 2000,
-      showConfirmButton: false
-    });
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleAddProduct = async (newProductData: Omit<Product, 'id' | 'status'>) => {
+    try {
+      const payload = {
+        name: newProductData.name,
+        category: newProductData.category,
+        base_price: parseFloat(newProductData.price.replace(/[^0-9.]/g, '')),
+        discount: Number(newProductData.discount) || 0,
+        description: newProductData.description,
+        stock: 0,
+        banner: typeof newProductData.banner === 'string' ? newProductData.banner : '',
+        status: 'In Stock'
+      };
+      
+      await API.post('/admin/products', payload);
+      
+      setIsAdding(false);
+      fetchProducts();
+      
+      Swal.fire({
+        title: 'Added!',
+        text: 'New product added successfully.',
+        icon: 'success',
+        confirmButtonColor: '#4F46E5',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Failed to add product', error);
+      Swal.fire('Error', 'Failed to add product', 'error');
+    }
   };
 
   const handleEditProduct = (id: string) => {
@@ -62,19 +82,34 @@ export default function ManageProducts() {
     }
   };
 
-  const handleUpdateProduct = (updatedProduct: Product) => {
-    setProducts(prevProducts =>
-      prevProducts.map(p => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
-    setEditingProduct(null);
-    Swal.fire({
-      title: 'Updated!',
-      text: 'Product has been updated successfully in the table.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-      timer: 2000,
-      showConfirmButton: false
-    });
+  const handleUpdateProduct = async (updatedProduct: Product) => {
+    try {
+      const payload = {
+        name: updatedProduct.name,
+        category: updatedProduct.category,
+        base_price: parseFloat(updatedProduct.price.replace(/[^0-9.]/g, '')),
+        discount: Number(updatedProduct.discount) || 0,
+        description: updatedProduct.description,
+        status: updatedProduct.status
+      };
+      
+      await API.put(`/admin/products/${updatedProduct.id}`, payload);
+      
+      setEditingProduct(null);
+      fetchProducts();
+      
+      Swal.fire({
+        title: 'Updated!',
+        text: 'Product has been updated successfully.',
+        icon: 'success',
+        confirmButtonColor: '#4F46E5',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Failed to update product', error);
+      Swal.fire('Error', 'Failed to update product', 'error');
+    }
   };
 
   const handleDeleteProduct = (id: string) => {
@@ -86,19 +121,43 @@ export default function ManageProducts() {
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#64748b',
       confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setProducts(prevProducts => prevProducts.filter(p => p.id !== id));
-        Swal.fire({
-          title: 'Deleted!',
-          text: 'Product removed successfully.',
-          icon: 'success',
-          confirmButtonColor: '#4F46E5',
-          timer: 1500,
-          showConfirmButton: false
-        });
+        try {
+          await API.delete(`/admin/products/${id}`);
+          fetchProducts();
+          Swal.fire({
+            title: 'Deleted!',
+            text: 'Product removed successfully.',
+            icon: 'success',
+            confirmButtonColor: '#4F46E5',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } catch (error) {
+          console.error('Failed to delete product', error);
+          Swal.fire('Error', 'Failed to delete product', 'error');
+        }
       }
     });
+  };
+
+  const handleToggleStatus = async (product: Product) => {
+    try {
+      const newStatus = product.vendor_id ? (product.status === 'Active' ? 'Inactive' : 'Active') : (product.status === 'In Stock' ? 'Out of Stock' : 'In Stock');
+      await API.put(`/admin/products/${product.id}`, { status: newStatus });
+      fetchProducts();
+      Swal.fire({
+        title: 'Status Updated!',
+        text: 'Product status changed successfully.',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Failed to update product status', error);
+      Swal.fire('Error', 'Failed to update product status', 'error');
+    }
   };
 
   const filteredProducts = useMemo(() => {
@@ -179,6 +238,7 @@ export default function ManageProducts() {
         products={paginatedProducts}
         onEditProduct={handleEditProduct}
         onDeleteProduct={handleDeleteProduct}
+        onToggleStatus={handleToggleStatus}
       />
 
       {/* Pagination Controls */}
@@ -228,3 +288,6 @@ export default function ManageProducts() {
     </div>
   );
 }
+
+
+

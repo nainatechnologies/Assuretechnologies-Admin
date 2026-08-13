@@ -6,6 +6,7 @@ interface ProductTableProps {
   products: Product[];
   onEditProduct: (id: string) => void;
   onDeleteProduct: (id: string) => void;
+  onToggleStatus?: (product: Product) => void;
 }
 
 function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
@@ -29,7 +30,7 @@ function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
   return <img src={url} alt={alt} style={{ height: '40px', width: 'auto', borderRadius: '4px', objectFit: 'cover' }} />;
 }
 
-export default function ProductTable({ products, onEditProduct, onDeleteProduct }: ProductTableProps) {
+export default function ProductTable({ products, onEditProduct, onDeleteProduct, onToggleStatus }: ProductTableProps) {
   if (products.length === 0) {
     return (
       <div className="glass-panel product-table-empty">
@@ -49,15 +50,21 @@ export default function ProductTable({ products, onEditProduct, onDeleteProduct 
               <th>Category</th>
               <th>Banner</th>
               <th>Price</th>
+              <th>Status</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product) => (
               <tr key={product.id}>
-                <td className="product-id">#{product.id}</td>
+                <td className="product-id" title={product.id}>
+                  {product.display_id || product.id}
+                </td>
                 <td>
-                  <div className="product-name">{product.name}</div>
+                  <div className="product-name">
+                    {product.name} 
+                    {product.vendor_id && <span style={{fontSize: '10px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', marginLeft: '8px', color: '#475569'}}>Vendor</span>}
+                  </div>
                   <div className="product-desc">{product.description}</div>
                 </td>
                 <td>
@@ -70,7 +77,22 @@ export default function ProductTable({ products, onEditProduct, onDeleteProduct 
                 </td>
                 <td className="product-price">{product.price}</td>
                 <td>
-                  <div className="product-actions">
+                  <span className={`product-status-badge ${product.status === 'In Stock' || product.status === 'Active' ? 'product-status-success' : 'product-status-warning'}`}>
+                    {product.status}
+                  </span>
+                </td>
+                <td>
+                  <div className="product-actions" style={{display: 'flex', alignItems: 'center'}}>
+                    {onToggleStatus && (
+                      <label className="switch" title="Toggle Status" style={{ marginRight: '10px', marginBottom: '0' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={product.status === 'In Stock' || product.status === 'Active'}
+                          onChange={() => onToggleStatus(product)}
+                        />
+                        <span className="slider round"></span>
+                      </label>
+                    )}
                     <button
                       onClick={() => onEditProduct(product.id)}
                       className="action-btn edit-btn"

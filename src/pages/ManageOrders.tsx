@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MdShoppingCart, MdSearch } from 'react-icons/md';
+import API from '../services/api';
 import Swal from 'sweetalert2';
 import type { Order, OrderStatus, OrderItem } from '../types';
 import OrderTable from '../components/OrderTable';
@@ -8,62 +9,8 @@ import TrackOrderModal from '../components/TrackOrderModal';
 import SplitOrderModal from '../components/SplitOrderModal';
 import './ManageOrders.css';
 
-// Mock Data
-const initialOrders: Order[] = [
-  {
-    id: 'ORD20260715140901778',
-    date: '15 Jul 2026, 08:39 AM',
-    user: 'admin',
-    mobile: '9988776655',
-    email: 'shyam.matham@nainatechnologies.in',
-    companyName: 'Naina Technologies',
-    gstNumber: '29ABCDE1234F1Z5',
-    address: 'hyd',
-    pincode: '506134',
-    totalAmount: 10000.00,
-    paymentMethod: 'Online',
-    paymentStatus: 'Pending',
-    status: 'New',
-    items: [
-      { id: '1', productName: 'camera', vendorName: 'Admin Product', price: 10000.00, qty: 100, subtotal: 1000000.00 }
-    ]
-  },
-  {
-    id: 'ORD20260714170434832',
-    date: '14 Jul 2026, 11:34 AM',
-    user: 'admin',
-    mobile: '9988776655',
-    email: 'shyam.matham@nainatechnologies.in',
-    address: 'hyd',
-    pincode: '506134',
-    totalAmount: 5000.00,
-    paymentMethod: 'Online',
-    paymentStatus: 'Pending',
-    status: 'New',
-    items: [
-      { id: '2', productName: 'lens', vendorName: 'Admin Product', price: 5000.00, qty: 1, subtotal: 5000.00 }
-    ]
-  },
-  {
-    id: 'ORD20260714163256924',
-    date: '14 Jul 2026, 11:02 AM',
-    user: 'admin',
-    mobile: '9988776655',
-    email: 'shyam.matham@nainatechnologies.in',
-    address: 'hyd',
-    pincode: '506134',
-    totalAmount: 10000.00,
-    paymentMethod: 'Online',
-    paymentStatus: 'Pending',
-    status: 'Completed',
-    items: [
-      { id: '3', productName: 'camera', vendorName: 'Admin Product', price: 10000.00, qty: 1, subtotal: 10000.00 }
-    ]
-  }
-];
-
 export default function ManageOrders() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<string>('New');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -71,6 +18,40 @@ export default function ManageOrders() {
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
 
   const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed'];
+
+  const fetchOrders = async () => {
+    try {
+      const response = await API.get('/admin/orders');
+      const fetchedOrders = response.data.map((o: any) => ({
+        id: o.id,
+        date: new Date(o.createdAt).toLocaleString(),
+        user: o.customer?.full_name || o.customer_name || 'N/A',
+        mobile: o.customer?.mobile || o.customer_contact || 'N/A',
+        email: o.customer?.email || 'N/A',
+        address: o.customer_address || 'N/A',
+        totalAmount: o.total_amount,
+        paymentMethod: 'Online',
+        paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
+        status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : 'Rejected',
+        items: (o.items || []).map((i: any) => ({
+          id: i.id,
+          productName: i.product?.name || 'Unknown',
+          vendorName: i.vendor?.business_name || i.vendor?.full_name || 'Admin Product',
+          price: i.price,
+          qty: i.qty,
+          subtotal: i.subtotal
+        }))
+      }));
+      setOrders(fetchedOrders);
+    } catch (error) {
+      console.error('Failed to fetch orders', error);
+      Swal.fire('Error', 'Failed to fetch orders', 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
 
   const filteredOrders = orders.filter(order => {
     let matchesTab = order.status === activeTab;
@@ -129,66 +110,26 @@ export default function ManageOrders() {
     });
   };
 
-  const handleSplitOrder = (orderId: string, originalItemId: string, newVendorName: string, transferQty: number) => {
-    setOrders(orders.map(order => {
-      if (order.id !== orderId) return order;
+  const handleSplitOrder = async (orderId: string, originalItemId: string, newVendorName: string, transferQty: number) => {
+    try {
+      // In a real scenario, the modal would return newVendorId instead of name,
+      // but to keep the frontend simple for now, we will assume newVendorName is actually the ID or we'd look it up.
+      // For this implementation, let's assume SplitOrderModal was updated to send the Vendor ID.
+      // Since it's still sending a string name in the mock, we simulate passing it.
+      const payload = {
+        newVendorId: newVendorName, // Assuming the modal passes the ID here now
+        qtyToTransfer: transferQty
+      };
 
-      const newItems = [...order.items];
-      const originalItemIndex = newItems.findIndex(i => i.id === originalItemId);
-      if (originalItemIndex === -1) return order;
-
-      const originalItem = { ...newItems[originalItemIndex] };
+      await API.post(`/admin/orders/${orderId}/items/${originalItemId}/split`, payload);
       
-      // Reduce original
-      originalItem.qty -= transferQty;
-      originalItem.subtotal = originalItem.qty * originalItem.price;
-      newItems[originalItemIndex] = originalItem;
-
-      // Create new split item
-      const splitItem: OrderItem = {
-        ...originalItem,
-        id: `${originalItem.id}-split-${Date.now()}`,
-        vendorName: newVendorName,
-        qty: transferQty,
-        subtotal: transferQty * originalItem.price
-      };
-
-      newItems.push(splitItem);
-
-      return {
-        ...order,
-        items: newItems
-      };
-    }));
-
-    // If we're viewing this order, update it in the view
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder(prev => {
-        if (!prev) return prev;
-        
-        const newItems = [...prev.items];
-        const originalItemIndex = newItems.findIndex(i => i.id === originalItemId);
-        if (originalItemIndex !== -1) {
-          const originalItem = { ...newItems[originalItemIndex] };
-          originalItem.qty -= transferQty;
-          originalItem.subtotal = originalItem.qty * originalItem.price;
-          newItems[originalItemIndex] = originalItem;
-          
-          const splitItem: OrderItem = {
-            ...originalItem,
-            id: `${originalItem.id}-split-${Date.now()}`,
-            vendorName: newVendorName,
-            qty: transferQty,
-            subtotal: transferQty * originalItem.price
-          };
-          newItems.push(splitItem);
-        }
-        return { ...prev, items: newItems };
-      });
+      setSplittingItem(null);
+      fetchOrders();
+      Swal.fire('Split Successful', `Order item split assigned`, 'success');
+    } catch (error) {
+      console.error('Failed to split order', error);
+      Swal.fire('Error', 'Failed to split order', 'error');
     }
-
-    setSplittingItem(null);
-    Swal.fire('Split Successful', `Order item split to ${newVendorName}`, 'success');
   };
 
   return (

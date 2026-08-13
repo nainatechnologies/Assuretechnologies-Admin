@@ -32,7 +32,7 @@ export default function AdminLayout() {
           <div className="sidebar-logo-icon"></div>
           Assure Admin
         </div>
-        
+
         <nav className="sidebar-nav">
           <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
             <MdDashboard />
@@ -126,11 +126,11 @@ export default function AdminLayout() {
             Job Portal
           </NavLink>
         </nav>
-        
+
         <div className="logout-wrapper">
-          <button 
+          <button
             onClick={handleLogout}
-            className="nav-item logout-btn" 
+            className="nav-item logout-btn"
           >
             <MdLogout />
             Logout
@@ -148,7 +148,7 @@ export default function AdminLayout() {
                 A
               </div>
             </div>
-            
+
             {isProfileOpen && (
               <div className="profile-dropdown animate-fade-in">
                 <button className="dropdown-item" onClick={handleLogout}>
@@ -159,7 +159,7 @@ export default function AdminLayout() {
             )}
           </div>
         </header>
-        
+
         <div className="page-container animate-fade-in">
           <Outlet />
         </div>
@@ -167,3 +167,4 @@ export default function AdminLayout() {
     </div>
   );
 }
+
