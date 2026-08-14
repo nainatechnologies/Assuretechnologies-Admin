@@ -6,7 +6,7 @@ import './TechnicianModal.css';
 interface TechnicianModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (tech: Technician | Omit<Technician, 'id' | 'status'>) => void;
+  onSave: (tech: any) => void;
   technician?: Technician;
 }
 

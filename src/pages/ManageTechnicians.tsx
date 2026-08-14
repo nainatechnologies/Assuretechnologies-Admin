@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import TechnicianTable from '../components/TechnicianTable';
 import TechnicianModal from '../components/TechnicianModal';
@@ -10,14 +10,32 @@ import './ManageTechnicians.css';
 
 export default function ManageTechnicians() {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
+  
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const fetchTechnicians = async () => {
+    setLoading(true);
     try {
-      const response = await API.get('/admin/technicians');
+      const response = await API.get(`/admin/technicians?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(debouncedSearch)}`);
       if (response.data.success) {
         const mappedTechs: Technician[] = response.data.data.map((t: any) => ({
           id: t.id,
@@ -31,54 +49,45 @@ export default function ManageTechnicians() {
           status: t.is_active ? 'Active' : 'Inactive'
         }));
         setTechnicians(mappedTechs);
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.totalPages || 1);
+        } else {
+          setTotalPages(1);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch technicians:', error);
       Swal.fire('Error', 'Failed to load technicians', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchTechnicians();
-  }, []);
+  }, [currentPage, debouncedSearch]);
 
-  const filteredTechnicians = useMemo(() => {
-    const query = searchQuery.toLowerCase();
-    return technicians.filter(t => 
-      t.name.toLowerCase().includes(query) || 
-      t.email.toLowerCase().includes(query) ||
-      t.mobile.includes(query) ||
-      t.location.toLowerCase().includes(query)
-    );
-  }, [technicians, searchQuery]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  const totalPages = Math.ceil(filteredTechnicians.length / itemsPerPage);
-  const paginatedTechnicians = filteredTechnicians.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleAddTechnician = async (newTechData: Omit<Technician, 'id' | 'status'>) => {
+  const handleAddTechnician = async (newTechData: Omit<Technician, 'id' | 'status'> & { idFile?: File; nocFile?: File }) => {
     try {
-      const payload = {
-        email: newTechData.email,
-        mobile: newTechData.mobile,
-        password: newTechData.password || 'TempPass123!',
-        full_name: newTechData.name,
-        address: newTechData.address,
-        service_pincodes: newTechData.location ? newTechData.location.split(',').map(s => s.trim()) : [],
-        services_provided: newTechData.services || []
-      };
+      const formData = new FormData();
+      formData.append('email', newTechData.email);
+      formData.append('mobile', newTechData.mobile);
+      formData.append('password', newTechData.password || 'TempPass123!');
+      formData.append('full_name', newTechData.name);
+      formData.append('address', newTechData.address);
       
-      const response = await API.post('/admin/technicians', payload);
+      const pincodes = newTechData.location ? newTechData.location.split(',').map(s => s.trim()) : [];
+      formData.append('service_pincodes', JSON.stringify(pincodes));
+      formData.append('services_provided', JSON.stringify(newTechData.services || []));
+
+      if (newTechData.idFile) {
+        formData.append('id_proof', newTechData.idFile);
+      }
+      if (newTechData.nocFile) {
+        formData.append('noc_document', newTechData.nocFile);
+      }
+
+      const response = await API.post('/admin/technicians', formData);
       if (response.data.success) {
         Swal.fire('Added!', 'New technician added successfully.', 'success');
         fetchTechnicians();
@@ -167,12 +176,27 @@ export default function ManageTechnicians() {
         </div>
       </div>
 
-      <TechnicianTable
-        technicians={paginatedTechnicians}
-        onEditTechnician={handleEditTechnician}
-        onDeleteTechnician={handleDeleteTechnician}
-        onToggleStatus={handleToggleStatus}
-      />
+      <div style={{ position: 'relative', minHeight: '300px' }}>
+        {loading && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #4F46E5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            <style>
+              {`
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}
+            </style>
+          </div>
+        )}
+        <TechnicianTable
+          technicians={technicians}
+          onEditTechnician={handleEditTechnician}
+          onDeleteTechnician={handleDeleteTechnician}
+          onToggleStatus={handleToggleStatus}
+        />
+      </div>
 
       <Pagination 
         currentPage={currentPage}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import type { Vendor } from '../types';
 import VendorTable from '../components/VendorTable';
@@ -13,10 +13,28 @@ export default function ManageVendors() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   const fetchVendors = async () => {
+    setLoading(true);
     try {
-      const response = await API.get('/admin/vendors');
+      const response = await API.get(`/admin/vendors?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(debouncedSearch)}`);
       if (response.data.success) {
         const mappedVendors: Vendor[] = response.data.data.map((v: any) => ({
           id: v.id,
@@ -33,45 +51,26 @@ export default function ManageVendors() {
           status: v.is_active ? 'Active' : 'Inactive'
         }));
         setVendors(mappedVendors);
+        if (response.data.pagination) {
+          setTotalPages(response.data.pagination.totalPages || 1);
+        } else {
+          setTotalPages(1);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch vendors:', error);
       Swal.fire('Error', 'Failed to load vendors', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchVendors();
-  }, []);
+  }, [currentPage, debouncedSearch]);
 
-  const filteredVendors = useMemo(() => {
-    const query = searchQuery.toLowerCase();
-    return vendors.filter(v => 
-      (v.businessName || '').toLowerCase().includes(query) || 
-      (v.fullName || '').toLowerCase().includes(query) ||
-      (v.mobile || '').includes(query) ||
-      (v.email || '').toLowerCase().includes(query) ||
-      (v.pincode || '').includes(query) ||
-      (v.gstNumber || '').toLowerCase().includes(query)
-    );
-  }, [vendors, searchQuery]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Reset to first page when search changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  const totalPages = Math.ceil(filteredVendors.length / itemsPerPage);
-  const paginatedVendors = filteredVendors.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleSave = async (vendorData: Vendor | Omit<Vendor, 'id' | 'status'>) => {
-    if ('id' in vendorData) {
+  const handleSave = async (vendorData: Omit<Vendor, 'id' | 'status'> & { aadharFile?: File; panFile?: File; shopPhotoFile?: File; id?: string }) => {
+    if (vendorData.id) {
       // Edit existing
       setVendors(prev => prev.map(v => v.id === vendorData.id ? vendorData as Vendor : v));
       setIsModalOpen(false);
@@ -79,19 +78,23 @@ export default function ManageVendors() {
     } else {
       // Add new
       try {
-        const payload = {
-          email: vendorData.email,
-          mobile: vendorData.mobile,
-          password: vendorData.password || 'TempPass123!',
-          full_name: vendorData.fullName,
-          business_name: vendorData.businessName,
-          address: vendorData.fullAddress,
-          gst_number: vendorData.gstNumber,
-          pincode: vendorData.pincode,
-          business_description: vendorData.businessDescription,
-          bank_account_details: vendorData.bankAccountDetails
-        };
-        const response = await API.post('/admin/vendors', payload);
+        const formData = new FormData();
+        formData.append('email', vendorData.email);
+        formData.append('mobile', vendorData.mobile);
+        formData.append('password', vendorData.password || 'TempPass123!');
+        formData.append('full_name', vendorData.fullName);
+        formData.append('business_name', vendorData.businessName);
+        formData.append('address', vendorData.fullAddress);
+        formData.append('gst_number', vendorData.gstNumber);
+        formData.append('pincode', vendorData.pincode);
+        if (vendorData.businessDescription) formData.append('business_description', vendorData.businessDescription);
+        if (vendorData.bankAccountDetails) formData.append('bank_account_details', vendorData.bankAccountDetails);
+
+        if (vendorData.aadharFile) formData.append('aadhar_proof', vendorData.aadharFile);
+        if (vendorData.panFile) formData.append('pan_proof', vendorData.panFile);
+        if (vendorData.shopPhotoFile) formData.append('shop_photo', vendorData.shopPhotoFile);
+
+        const response = await API.post('/admin/vendors', formData);
         if (response.data.success) {
           Swal.fire('Added!', 'Vendor has been added.', 'success');
           fetchVendors();
@@ -165,12 +168,27 @@ export default function ManageVendors() {
         </div>
       </div>
 
-      <VendorTable 
-        vendors={paginatedVendors} 
-        onEdit={handleEdit} 
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
-      />
+      <div style={{ position: 'relative', minHeight: '300px' }}>
+        {loading && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10 }}>
+            <div style={{ width: '40px', height: '40px', border: '4px solid #f3f3f3', borderTop: '4px solid #4F46E5', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+            <style>
+              {`
+                @keyframes spin {
+                  0% { transform: rotate(0deg); }
+                  100% { transform: rotate(360deg); }
+                }
+              `}
+            </style>
+          </div>
+        )}
+        <VendorTable 
+          vendors={vendors} 
+          onEdit={handleEdit} 
+          onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
+        />
+      </div>
 
       <Pagination 
         currentPage={currentPage}

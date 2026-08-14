@@ -1,34 +1,47 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import type { Product } from '../types';
 import './ManageStock.css';
 import { createPortal } from 'react-dom';
-import API from '../services/api';
+import API, { BASE_URL } from '../services/api';
+import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 
 export default function ManageStock() {
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchProducts();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [currentPage, searchQuery]);
 
   const fetchProducts = async () => {
     try {
-      const response = await API.get('/admin/products');
-      setProducts(response.data);
+      setIsLoading(true);
+      const response = await API.get('/admin/products', {
+        params: { page: currentPage, limit: itemsPerPage, search: searchQuery }
+      });
+      setProducts(response.data.data);
+      setTotalPages(response.data.pagination.totalPages);
     } catch (error) {
       console.error('Failed to fetch products:', error);
       Swal.fire('Error', 'Failed to load products.', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [products, searchQuery]);
+
 
   const handleAddStock = (product: Product) => {
     setSelectedProduct(product);
@@ -122,7 +135,7 @@ export default function ManageStock() {
             placeholder="Search products..."
             className="stock-search-input"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
           />
         </div>
       </div>
@@ -138,12 +151,12 @@ export default function ManageStock() {
             </tr>
           </thead>
           <tbody>
-            {filteredProducts.map(product => (
+            {isLoading ? <tr><td colSpan={4}><Loading /></td></tr> : products.map(product => (
               <tr key={product.id}>
                 <td>
                   <div className="stock-img-container">
                     <img
-                      src={typeof product.banner === 'string' ? product.banner : 'https://via.placeholder.com/50'}
+                      src={typeof product.banner === 'string' ? (product.banner.startsWith('/uploads/') ? `${BASE_URL}${product.banner}` : product.banner) : 'https://via.placeholder.com/50'}
                       alt={product.name}
                     />
                   </div>
@@ -157,7 +170,7 @@ export default function ManageStock() {
                 </td>
               </tr>
             ))}
-            {filteredProducts.length === 0 && (
+            {!isLoading && products.length === 0 && (
               <tr>
                 <td colSpan={4} className="empty-state">No products found.</td>
               </tr>
@@ -165,6 +178,12 @@ export default function ManageStock() {
           </tbody>
         </table>
       </div>
+
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={setCurrentPage} 
+      />
 
       {renderModal()}
     </div>

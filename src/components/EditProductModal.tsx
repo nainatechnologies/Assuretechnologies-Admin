@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Product } from '../types';
 import { CATEGORIES } from './ProductForm';
+import { BASE_URL } from '../services/api';
 import { MdClose } from 'react-icons/md';
 import './EditProductModal.css';
 

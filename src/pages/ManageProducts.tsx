@@ -1,8 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import API from '../services/api';
 import ProductForm from '../components/ProductForm';
 import ProductTable from '../components/ProductTable';
 import EditProductModal from '../components/EditProductModal';
+import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 import type { Product } from '../types';
 import Swal from 'sweetalert2';
 import './ManageProducts.css';
@@ -14,12 +16,17 @@ export default function ManageProducts() {
   const [isAdding, setIsAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const itemsPerPage = 1;
 
   const fetchProducts = async () => {
     try {
-      const response = await API.get('/admin/products');
-      const fetchedProducts = response.data.map((p: any) => ({
+      setIsLoading(true);
+      const response = await API.get('/admin/products', {
+        params: { page: currentPage, limit: itemsPerPage, search: searchQuery }
+      });
+      const fetchedProducts = response.data.data.map((p: any) => ({
         id: p.id,
         display_id: p.display_id,
         name: p.name,
@@ -33,30 +40,40 @@ export default function ManageProducts() {
         stock: p.stock
       }));
       setProducts(fetchedProducts);
+      setTotalPages(response.data.pagination.totalPages);
     } catch (error) {
       console.error('Failed to fetch products', error);
       Swal.fire('Error', 'Failed to fetch products', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchProducts();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [currentPage, searchQuery]);
 
   const handleAddProduct = async (newProductData: Omit<Product, 'id' | 'status'>) => {
     try {
-      const payload = {
-        name: newProductData.name,
-        category: newProductData.category,
-        base_price: parseFloat(newProductData.price.replace(/[^0-9.]/g, '')),
-        discount: Number(newProductData.discount) || 0,
-        description: newProductData.description,
-        stock: 0,
-        banner: typeof newProductData.banner === 'string' ? newProductData.banner : '',
-        status: 'In Stock'
-      };
+      const formData = new FormData();
+      formData.append('name', newProductData.name);
+      formData.append('category', newProductData.category);
+      formData.append('base_price', parseFloat(newProductData.price.replace(/[^0-9.]/g, '')).toString());
+      formData.append('discount', (Number(newProductData.discount) || 0).toString());
+      formData.append('description', newProductData.description);
+      formData.append('stock', '0');
+      formData.append('status', 'In Stock');
+      if (newProductData.banner instanceof File) {
+        formData.append('banner', newProductData.banner);
+      } else if (typeof newProductData.banner === 'string') {
+        formData.append('banner', newProductData.banner);
+      }
       
-      await API.post('/admin/products', payload);
+      await API.post('/admin/products', formData, {
+        });
       
       setIsAdding(false);
       fetchProducts();
@@ -84,16 +101,21 @@ export default function ManageProducts() {
 
   const handleUpdateProduct = async (updatedProduct: Product) => {
     try {
-      const payload = {
-        name: updatedProduct.name,
-        category: updatedProduct.category,
-        base_price: parseFloat(updatedProduct.price.replace(/[^0-9.]/g, '')),
-        discount: Number(updatedProduct.discount) || 0,
-        description: updatedProduct.description,
-        status: updatedProduct.status
-      };
+      const formData = new FormData();
+      formData.append('name', updatedProduct.name);
+      formData.append('category', updatedProduct.category);
+      formData.append('base_price', parseFloat(updatedProduct.price.replace(/[^0-9.]/g, '')).toString());
+      formData.append('discount', (Number(updatedProduct.discount) || 0).toString());
+      formData.append('description', updatedProduct.description);
+      formData.append('status', updatedProduct.status);
+      if (updatedProduct.banner instanceof File) {
+        formData.append('banner', updatedProduct.banner);
+      } else if (typeof updatedProduct.banner === 'string') {
+        formData.append('banner', updatedProduct.banner);
+      }
       
-      await API.put(`/admin/products/${updatedProduct.id}`, payload);
+      await API.put(`/admin/products/${updatedProduct.id}`, formData, {
+        });
       
       setEditingProduct(null);
       fetchProducts();
@@ -144,8 +166,9 @@ export default function ManageProducts() {
 
   const handleToggleStatus = async (product: Product) => {
     try {
-      const newStatus = product.vendor_id ? (product.status === 'Active' ? 'Inactive' : 'Active') : (product.status === 'In Stock' ? 'Out of Stock' : 'In Stock');
-      await API.put(`/admin/products/${product.id}`, { status: newStatus });
+      const newStatusUI = product.vendor_id ? (product.status === 'Active' ? 'Inactive' : 'Active') : (product.status === 'In Stock' ? 'Out of Stock' : 'In Stock');
+      const newStatusDB = (newStatusUI === 'Active' || newStatusUI === 'In Stock') ? 'In Stock' : 'Out of Stock';
+      await API.put(`/admin/products/${product.id}`, { status: newStatusDB });
       fetchProducts();
       Swal.fire({
         title: 'Status Updated!',
@@ -160,20 +183,7 @@ export default function ManageProducts() {
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    const query = searchQuery.toLowerCase();
-    return products.filter(p => 
-      p.name.toLowerCase().includes(query) ||
-      p.category.toLowerCase().includes(query) ||
-      p.description.toLowerCase().includes(query)
-    );
-  }, [products, searchQuery]);
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
     <div>
@@ -234,47 +244,23 @@ export default function ManageProducts() {
       )}
 
       {/* Product Table Component */}
+      {isLoading ? (
+        <Loading />
+      ) : (
       <ProductTable
-        products={paginatedProducts}
+        products={products}
         onEditProduct={handleEditProduct}
         onDeleteProduct={handleDeleteProduct}
         onToggleStatus={handleToggleStatus}
       />
+      )}
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', gap: '10px', alignItems: 'center' }}>
-          <button 
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => p - 1)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: '1px solid #ccc',
-              background: currentPage === 1 ? '#f1f5f9' : 'white',
-              cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
-            }}
-          >
-            Previous
-          </button>
-          <span style={{ padding: '8px 15px', background: 'white', borderRadius: '6px', border: '1px solid #ccc', fontWeight: 500 }}>
-            Page {currentPage} of {totalPages}
-          </span>
-          <button 
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => p + 1)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '6px',
-              border: '1px solid #ccc',
-              background: currentPage === totalPages ? '#f1f5f9' : 'white',
-              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
-            }}
-          >
-            Next
-          </button>
-        </div>
-      )}
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={setCurrentPage} 
+      />
 
       {/* Edit Product Modal */}
       {editingProduct && (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { Product } from '../types';
 import './ProductTable.css';
+import { BASE_URL } from '../services/api';
 
 interface ProductTableProps {
   products: Product[];
@@ -22,7 +23,11 @@ function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
       setUrl(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
     } else if (typeof image === 'string') {
-      setUrl(image);
+      if (image.startsWith('/uploads/')) {
+        setUrl(`${BASE_URL}${image}`);
+      } else {
+        setUrl(image);
+      }
     }
   }, [image]);
 

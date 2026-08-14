@@ -7,7 +7,7 @@ import './VendorModal.css';
 interface VendorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (vendor: Vendor | Omit<Vendor, 'id' | 'status'>) => void;
+  onSave: (vendor: any) => void;
   vendor?: Vendor;
 }
 
