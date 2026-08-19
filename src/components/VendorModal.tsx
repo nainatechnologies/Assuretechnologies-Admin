@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { FiUploadCloud } from 'react-icons/fi';
 import type { Vendor } from '../types';
@@ -7,7 +7,7 @@ import './VendorModal.css';
 interface VendorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (vendor: any) => void;
+  onSave: (vendor: any) => Promise<void>;
   vendor?: Vendor;
 }
 
@@ -342,3 +342,4 @@ export default function VendorModal({ isOpen, onClose, onSave, vendor }: VendorM
 
   return createPortal(modalContent, document.body);
 }
+

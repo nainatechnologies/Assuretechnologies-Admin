@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import API from '../services/api';
 import { MdClose, MdVisibility, MdDownload } from 'react-icons/md';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -26,29 +27,49 @@ const mockSRs: MockSR[] = [
 
 export default function ManageInvoices() {
   const [activeTab, setActiveTab] = useState<'vendor_invoices' | 'service_invoices' | 'form' | 'view'>('vendor_invoices');
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: 'inv_1',
-      invoiceNumber: 'INV-7842',
-      customerName: 'admin',
-      mobile: '9988776655',
-      email: 'shyam.matham@nainatechnologies.in',
-      address: 'hyd, 506134',
-      items: [
-        { id: 'i1', description: 'CC Camera Cable', qty: 2, rate: 5000.00, amount: 10000.00, warranty: '1 Year', modelNumber: 'CC-CAB-001', hsnCode: '8544', serialNumbers: ['SN-CC-101', 'SN-CC-102'] },
-        { id: 'i2', description: 'Camera Lens', qty: 1, rate: 5000.00, amount: 5000.00, warranty: '6 Months', modelNumber: 'LEN-50MM', hsnCode: '9002', serialNumbers: ['SN-LEN-001'] }
-      ],
-      additionalChargesDesc: '',
-      additionalCharges: 0,
-      gstPercent: 18,
-      grandTotal: 17700.00, // (15000 + 18%)
-      date: '15 Jul 2026',
-      status: 'Paid',
-      serviceName: 'Vendor Product Order',
-      vendorBusinessName: 'Super CCTV Vendors',
-      orderId: 'ORD20260715140901778'
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const fetchInvoices = async () => {
+    try {
+      const response = await API.get('/invoices/admin');
+      const fetchedInvoices = response.data.map((inv: any) => ({
+        id: inv.id,
+        invoiceNumber: inv.invoice_number,
+        customerName: inv.customer_name,
+        mobile: inv.mobile,
+        email: inv.email,
+        address: inv.address,
+        items: inv.items.map((i: any) => ({
+          id: i.id,
+          description: i.description,
+          qty: i.qty,
+          rate: i.rate,
+          amount: i.amount,
+          warranty: i.warranty,
+          modelNumber: i.model_number,
+          hsnCode: i.hsn_code,
+          serialNumbers: i.serial_numbers || []
+        })),
+        additionalChargesDesc: inv.additional_charges_desc,
+        additionalCharges: parseFloat(inv.additional_charges),
+        gstPercent: parseFloat(inv.gst_percent),
+        grandTotal: parseFloat(inv.grand_total),
+        date: new Date(inv.createdAt).toLocaleString(),
+        status: inv.status,
+        serviceName: inv.type === 'VENDOR' ? 'Vendor Product Order' : 'Service',
+        vendorBusinessName: inv.vendor?.business_name || inv.vendor?.full_name || '',
+        orderId: inv.order_id
+      }));
+      setInvoices(fetchedInvoices);
+    } catch (err) {
+      console.error('Failed to fetch invoices', err);
     }
-  ]);
+  };
+
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [selectedSR, setSelectedSR] = useState<MockSR | null>(null);
 

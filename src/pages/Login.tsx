@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import API from '../services/api';
@@ -86,7 +86,7 @@ export default function Login() {
               type="password"
               id="password"
               className="input-field"
-              placeholder="••••••••"
+              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -107,3 +107,4 @@ export default function Login() {
     </div>
   );
 }
+

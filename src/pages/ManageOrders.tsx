@@ -22,27 +22,38 @@ export default function ManageOrders() {
   const fetchOrders = async () => {
     try {
       const response = await API.get('/admin/orders');
-      const fetchedOrders = response.data.map((o: any) => ({
-        id: o.id,
-        date: new Date(o.createdAt).toLocaleString(),
-        user: o.customer?.full_name || o.customer_name || 'N/A',
-        mobile: o.customer?.mobile || o.customer_contact || 'N/A',
-        email: o.customer?.email || 'N/A',
-        address: o.customer_address || 'N/A',
-        totalAmount: o.total_amount,
-        paymentMethod: 'Online',
-        paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
-        status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : 'Rejected',
-        items: (o.items || []).map((i: any) => ({
-          id: i.id,
-          productName: i.product?.name || 'Unknown',
-          vendorName: i.vendor?.business_name || i.vendor?.full_name || 'Admin Product',
-          price: i.price,
-          qty: i.qty,
-          subtotal: i.subtotal
-        }))
-      }));
-      setOrders(fetchedOrders);
+      const adminOrders: any[] = [];
+      
+      response.data.forEach((o: any) => {
+        const adminItems = (o.items || []).filter((i: any) => !i.vendor);
+        
+        if (adminItems.length > 0) {
+          const adminTotal = adminItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
+          
+          adminOrders.push({
+            id: o.order_number || o.id,
+            date: new Date(o.createdAt).toLocaleString(),
+            user: o.customer?.full_name || o.customer_name || 'N/A',
+            mobile: o.customer?.mobile || o.customer_contact || 'N/A',
+            email: o.customer?.email || 'N/A',
+            address: o.customer_address || 'N/A',
+            totalAmount: adminTotal,
+            paymentMethod: 'Online',
+            paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
+            status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : 'Rejected',
+            items: adminItems.map((i: any) => ({
+              id: i.id,
+              productName: i.product?.name || 'Unknown',
+              vendorName: 'Admin Product',
+              price: parseFloat(i.price) || 0,
+              qty: parseInt(i.qty, 10) || 0,
+              subtotal: parseFloat(i.subtotal) || 0
+            }))
+          });
+        }
+      });
+      
+      setOrders(adminOrders);
     } catch (error) {
       console.error('Failed to fetch orders', error);
       Swal.fire('Error', 'Failed to fetch orders', 'error');

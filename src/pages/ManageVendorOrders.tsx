@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import API from '../services/api';
 import { MdShoppingCart, MdSearch } from 'react-icons/md';
 import Swal from 'sweetalert2';
 import type { Order, OrderStatus, OrderItem } from '../types';
@@ -8,61 +9,53 @@ import TrackOrderModal from '../components/TrackOrderModal';
 import SplitOrderModal from '../components/SplitOrderModal';
 import './ManageOrders.css';
 
-// Mock Data
-const initialOrders: Order[] = [
-  {
-    id: 'ORD20260715140901778',
-    date: '15 Jul 2026, 08:39 AM',
-    user: 'admin',
-    mobile: '9988776655',
-    email: 'shyam.matham@nainatechnologies.in',
-    address: 'hyd',
-    pincode: '506134',
-    totalAmount: 10000.00,
-    paymentMethod: 'Online',
-    paymentStatus: 'Pending',
-    status: 'New',
-    items: [
-      { id: '1', productName: 'camera', vendorName: 'Admin Product', price: 10000.00, qty: 100, subtotal: 1000000.00 }
-    ]
-  },
-  {
-    id: 'ORD20260714170434832',
-    date: '14 Jul 2026, 11:34 AM',
-    user: 'admin',
-    mobile: '9988776655',
-    email: 'shyam.matham@nainatechnologies.in',
-    address: 'hyd',
-    pincode: '506134',
-    totalAmount: 5000.00,
-    adminCommission: 500.00,
-    paymentMethod: 'Online',
-    paymentStatus: 'Pending',
-    status: 'New',
-    items: [
-      { id: '2', productName: 'lens', vendorName: 'Assure Vendor', price: 5000.00, qty: 1, subtotal: 5000.00 }
-    ]
-  },
-  {
-    id: 'ORD20260714163256924',
-    date: '14 Jul 2026, 11:02 AM',
-    user: 'admin',
-    mobile: '9988776655',
-    email: 'shyam.matham@nainatechnologies.in',
-    address: 'hyd',
-    pincode: '506134',
-    totalAmount: 10000.00,
-    paymentMethod: 'Online',
-    paymentStatus: 'Pending',
-    status: 'Completed',
-    items: [
-      { id: '3', productName: 'camera', vendorName: 'Admin', price: 10000.00, qty: 1, subtotal: 10000.00 }
-    ]
-  }
-];
+
 
 export default function ManageVendorOrders() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await API.get('/admin/orders');
+      const vendorOrdersFetched: any[] = [];
+      
+      response.data.forEach((o: any) => {
+        const vendorItems = (o.items || []).filter((i: any) => i.vendor);
+        
+        if (vendorItems.length > 0) {
+          vendorOrdersFetched.push({
+            id: o.order_number || o.id,
+            date: new Date(o.createdAt).toLocaleString(),
+            user: o.customer?.full_name || o.customer_name || 'N/A',
+            mobile: o.customer?.mobile || o.customer_contact || 'N/A',
+            email: o.customer?.email || 'N/A',
+            address: o.customer_address || 'N/A',
+            totalAmount: parseFloat(o.total_amount) || 0,
+            paymentMethod: 'Online',
+            paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
+            status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : 'Rejected',
+            items: vendorItems.map((i: any) => ({
+              id: i.id,
+              productName: i.product?.name || 'Unknown',
+              vendorName: i.vendor?.business_name || i.vendor?.full_name || 'Vendor Product',
+              price: parseFloat(i.price) || 0,
+              qty: parseInt(i.qty, 10) || 0,
+              subtotal: parseFloat(i.subtotal) || 0
+            }))
+          });
+        }
+      });
+      
+      setOrders(vendorOrdersFetched);
+    } catch (error) {
+      console.error('Failed to fetch orders', error);
+      Swal.fire('Error', 'Failed to fetch vendor orders', 'error');
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
   const [activeTab, setActiveTab] = useState<string>('New');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -255,7 +248,7 @@ export default function ManageVendorOrders() {
         onActionOrder={handleActionOrder} 
         onTrackOrder={setTrackingOrder}
         showVendor={true}
-        hideActions={false}
+        hideActions={true}
       />
 
       {selectedOrder && (

@@ -10,9 +10,10 @@ interface OrderTableProps {
   onTrackOrder?: (order: Order) => void;
   showVendor?: boolean;
   hideActions?: boolean;
+  hideAcceptReject?: boolean;
 }
 
-export default function OrderTable({ orders, currentTab, onViewOrder, onActionOrder, onTrackOrder, showVendor, hideActions }: OrderTableProps) {
+export default function OrderTable({ orders, currentTab, onViewOrder, onActionOrder, onTrackOrder, showVendor, hideActions, hideAcceptReject }: OrderTableProps) {
   if (orders.length === 0) {
     return (
       <div className="order-table-container">
@@ -111,11 +112,14 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
               {!hideActions && (
                 <td>
                   <div className="order-action-buttons">
-                    {currentTab === 'New' && (
+                    {currentTab === 'New' && !hideAcceptReject && (
                       <>
                         <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept')}>Accept</button>
                         <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject')}>Reject</button>
                       </>
+                    )}
+                    {currentTab === 'New' && hideAcceptReject && (
+                      <span className="order-status-badge">Waiting for Vendor</span>
                     )}
                     {currentTab === 'Accepted' && (
                       <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery')}>Out for Delivery</button>

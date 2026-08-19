@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import type { Vendor } from '../types';
 import VendorTable from '../components/VendorTable';
@@ -103,7 +103,7 @@ export default function ManageVendors() {
         }
       } catch (error: any) {
         console.error('Create vendor error:', error);
-        Swal.fire('Error', error.response?.data?.message || 'Failed to create vendor', 'error');
+        throw error;
       }
     }
   };
@@ -207,3 +207,4 @@ export default function ManageVendors() {
     </div>
   );
 }
+
