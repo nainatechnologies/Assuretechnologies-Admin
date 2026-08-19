@@ -36,7 +36,7 @@ export default function ManageInvoices() {
   const fetchInvoices = async () => {
     try {
       const response = await API.get('/invoices/admin');
-      const fetchedInvoices = response.data.map((inv: any) => ({
+      const fetchedInvoices = response.data.data.map((inv: any) => ({
         id: inv.id,
         invoiceNumber: inv.invoice_number,
         customerName: inv.customer_name,
@@ -47,17 +47,28 @@ export default function ManageInvoices() {
           id: i.id,
           description: i.description,
           qty: i.qty,
-          rate: i.rate,
-          amount: i.amount,
+          rate: parseFloat(i.rate) || 0,
+          amount: parseFloat(i.amount) || 0,
           warranty: i.warranty,
           modelNumber: i.model_number,
           hsnCode: i.hsn_code,
-          serialNumbers: i.serial_numbers || []
+          serialNumbers: (() => {
+            let sn = i.serial_numbers;
+            if (typeof sn === 'string') {
+              try {
+                const parsed = JSON.parse(sn);
+                sn = parsed;
+              } catch(e) {
+                sn = sn.split(',').map((s: string) => s.trim()).filter(Boolean);
+              }
+            }
+            return Array.isArray(sn) ? sn : (typeof sn === 'string' ? [sn] : []);
+          })()
         })),
         additionalChargesDesc: inv.additional_charges_desc,
-        additionalCharges: parseFloat(inv.additional_charges),
-        gstPercent: parseFloat(inv.gst_percent),
-        grandTotal: parseFloat(inv.grand_total),
+        additionalCharges: parseFloat(inv.additional_charges) || 0,
+        gstPercent: parseFloat(inv.gst_percent) || 0,
+        grandTotal: parseFloat(inv.grand_total) || 0,
         date: new Date(inv.createdAt).toLocaleString(),
         status: inv.status,
         serviceName: inv.type === 'VENDOR' ? 'Vendor Product Order' : 'Service',
@@ -193,8 +204,17 @@ export default function ManageInvoices() {
     setItems(newItems);
   };
 
-  const handleDeleteInvoice = (id: string) => {
-    setInvoices(invoices.filter(i => i.id !== id));
+  const handleDeleteInvoice = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      await API.delete(`/invoices/admin/${id}`);
+      setInvoices(invoices.filter(i => i.id !== id));
+    } catch (err) {
+      console.error('Failed to delete invoice', err);
+      alert('Failed to delete invoice. Please try again.');
+    }
   };
 
   const handleDownloadPDF = async (invoiceNumber: string) => {

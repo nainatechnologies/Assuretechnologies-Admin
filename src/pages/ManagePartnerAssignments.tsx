@@ -17,7 +17,7 @@ const MOCK_PARTNERS: DronePartner[] = [
     location: '522201, 522202, 500001',
     equipmentTypes: ['Standard Spray Drone (10L)', 'Heavy Lift (30L)'],
     status: 'Active',
-    partnerType: 'Drone'
+    partnerType: 'Drone', totalAmount: 1500
   },
   {
     id: 'DP2',
@@ -27,7 +27,7 @@ const MOCK_PARTNERS: DronePartner[] = [
     location: '506001, 506015, 500001',
     equipmentTypes: ['High-Capacity Drone (20L)'],
     status: 'Active',
-    partnerType: 'Drone'
+    partnerType: 'Drone', totalAmount: 1500
   },
   {
     id: 'TP1',
@@ -37,7 +37,7 @@ const MOCK_PARTNERS: DronePartner[] = [
     location: '522201, 522202',
     equipmentTypes: ['Mini Tractor (Below 20 HP)', 'Tractor with Rotavator'],
     status: 'Active',
-    partnerType: 'Tractor'
+    partnerType: 'Tractor', totalAmount: 2500
   }
 ];
 
@@ -56,7 +56,7 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
     date: '24 Jul 2026',
     time: '2 PM - 4 PM',
     status: 'Pending',
-    partnerType: 'Drone'
+    partnerType: 'Drone', totalAmount: 1500
   },
   {
     id: 'PB-102',
@@ -72,7 +72,7 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
     date: '25 Jul 2026',
     time: '9 AM - 12 PM',
     status: 'Accepted',
-    partnerType: 'Tractor'
+    partnerType: 'Tractor', totalAmount: 2500
   }
 ];
 
