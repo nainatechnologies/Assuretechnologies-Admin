@@ -79,7 +79,7 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
               <td>
                 <div className="order-address-info">
                   <span>{order.address}</span>
-                  <span className="order-address-pincode">{order.pincode}</span>
+                  {order.pincode && order.pincode !== 'N/A' && <span className="order-address-pincode">{order.pincode}</span>}
                 </div>
               </td>
               <td>

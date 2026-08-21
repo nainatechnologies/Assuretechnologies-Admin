@@ -101,15 +101,13 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
                     <td>₹{item.subtotal.toFixed(2)}</td>
                     {onSplitClick && (
                       <td>
-                        {item.qty > 1 && (
-                          <button
-                            className="order-item-split-btn"
-                            onClick={() => onSplitClick(item)}
-                            title="Split order quantity to another vendor"
-                          >
-                            Split
-                          </button>
-                        )}
+                        <button
+                          className="order-item-split-btn"
+                          onClick={() => onSplitClick(item)}
+                          title="Split order item to another vendor"
+                        >
+                          Split
+                        </button>
                       </td>
                     )}
                   </tr>

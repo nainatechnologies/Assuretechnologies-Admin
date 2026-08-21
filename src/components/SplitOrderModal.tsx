@@ -3,30 +3,49 @@ import { MdClose, MdSearch } from 'react-icons/md';
 import type { OrderItem } from '../types';
 import './SplitOrderModal.css';
 
-// Mock list of vendors for the dropdown
-const AVAILABLE_VENDORS = [
-  { id: 'VEND0001', fullName: 'admin', businessName: 'Naina-tech' },
-  { id: 'VEND0002', fullName: 'admin2', businessName: 'Naina-tech2' },
-  { id: 'VEND0003', fullName: 'admin3', businessName: 'Naina-tech3' },
-  { id: 'VEND0004', fullName: 'John Doe', businessName: 'Vendor D' },
-  { id: 'VEND0005', fullName: 'Jane Smith', businessName: 'Vendor E' }
-];
+import API from '../services/api';
 
 interface SplitOrderModalProps {
   orderId: string;
   item: OrderItem;
   onClose: () => void;
-  onSplit: (orderId: string, originalItemId: string, newVendorName: string, transferQty: number) => void;
+  onSplit: (orderId: string, originalItemId: string, newVendorName: string | null, transferQty: number) => void;
 }
 
 export default function SplitOrderModal({ orderId, item, onClose, onSplit }: SplitOrderModalProps) {
   const [splitQty, setSplitQty] = useState<number | string>(1);
+  const [availableVendors, setAvailableVendors] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState<{id: string, businessName: string} | null>(null);
+  const [selectedVendor, setSelectedVendor] = useState<{id: string | null, businessName: string} | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const maxQty = item.qty; // Can split or reassign the entire quantity
+
+  // Fetch vendors on mount
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await API.get('/admin/vendors');
+        if (response.data && response.data.data) {
+          const vendorsList = response.data.data.map((v: any) => ({
+            id: v.id,
+            fullName: v.full_name || '',
+            businessName: v.business_name || ''
+          }));
+          vendorsList.unshift({
+            id: null, // Admin product
+            fullName: 'Admin',
+            businessName: 'Admin Product'
+          });
+          setAvailableVendors(vendorsList);
+        }
+      } catch (err) {
+        console.error('Failed to fetch vendors for split', err);
+      }
+    };
+    fetchVendors();
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -39,18 +58,18 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredVendors = AVAILABLE_VENDORS.filter(v => 
+  const filteredVendors = availableVendors.filter(v => 
     v.businessName !== item.vendorName && // Exclude current vendor
     (
-      v.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      v.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+      (v.businessName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (v.fullName || '').toLowerCase().includes(searchQuery.toLowerCase())
     )
   );
 
   const handleSubmit = () => {
     const qty = typeof splitQty === 'string' ? parseInt(splitQty) : splitQty;
     if (!isNaN(qty) && qty > 0 && qty <= maxQty && selectedVendor) {
-      onSplit(orderId, item.id, selectedVendor.businessName, qty);
+      onSplit(orderId, item.id, selectedVendor.id, qty);
     }
   };
 
@@ -67,7 +86,7 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
         <div className="split-modal-body">
           <div className="split-item-info">
             <p><strong>Product:</strong> {item.productName}</p>
-            <p><strong>Current Vendor:</strong> {item.vendorName}</p>
+            <p><strong>Current Vendor:</strong> {item.vendorName || 'Admin Product'}</p>
             <p><strong>Total Quantity:</strong> {item.qty}</p>
           </div>
 
@@ -111,7 +130,7 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
                   {filteredVendors.length > 0 ? (
                     filteredVendors.map(vendor => (
                       <div 
-                        key={vendor.id} 
+                        key={vendor.id || 'admin'} 
                         className="split-vendor-option"
                         onClick={() => {
                           setSelectedVendor(vendor);

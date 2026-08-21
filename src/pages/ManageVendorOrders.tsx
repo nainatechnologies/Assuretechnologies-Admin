@@ -23,6 +23,8 @@ export default function ManageVendorOrders() {
         const vendorItems = (o.items || []).filter((i: any) => i.vendor);
         
         if (vendorItems.length > 0) {
+          const itemWithTracking = vendorItems.find((i: any) => i.tracking_id);
+
           vendorOrdersFetched.push({
             id: o.order_number || o.id,
             date: new Date(o.createdAt).toLocaleString(),
@@ -33,7 +35,10 @@ export default function ManageVendorOrders() {
             totalAmount: parseFloat(o.total_amount) || 0,
             paymentMethod: 'Online',
             paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
-            status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : 'Rejected',
+            status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : o.status === 'CANCELLED' ? 'Cancelled' : 'Rejected',
+            transportName: itemWithTracking?.transport_name || o.transport_name || undefined,
+            trackingId: itemWithTracking?.tracking_id || o.tracking_id || undefined,
+            trackUrl: itemWithTracking?.tracking_url || o.tracking_url || undefined,
             items: vendorItems.map((i: any) => ({
               id: i.id,
               productName: i.product?.name || 'Unknown',
@@ -62,7 +67,7 @@ export default function ManageVendorOrders() {
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
 
-  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed'];
+  const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Cancelled'];
 
   const filteredOrders = orders.filter(order => {
     let matchesTab = order.status === activeTab;
@@ -126,14 +131,31 @@ export default function ManageVendorOrders() {
       confirmButtonColor: action === 'Reject' ? '#ef4444' : '#10b981',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        if (action === 'MarkPaid') {
-          setOrders(orders.map(o => o.id === orderId ? { ...o, paymentStatus: 'Paid' } : o));
-        } else {
-          setOrders(orders.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
+        try {
+          let payload = {};
+          if (action === 'MarkPaid') {
+            payload = { payment_status: 'PAID' };
+          } else {
+            const dbStatus = nextStatus === 'Rejected' ? 'CANCELLED' :
+                             nextStatus === 'Accepted' ? 'ACCEPTED' :
+                             nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
+                             nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
+            payload = { status: dbStatus };
+          }
+          await API.put(`/admin/orders/${orderId}/status`, payload);
+          
+          if (action === 'MarkPaid') {
+            setOrders(orders.map(o => o.id === orderId ? { ...o, paymentStatus: 'Paid' } : o));
+          } else {
+            setOrders(orders.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
+          }
+          Swal.fire('Updated!', successText, 'success');
+        } catch (error) {
+          console.error('Failed to update order status', error);
+          Swal.fire('Error', 'Failed to update order status. Please try again.', 'error');
         }
-        Swal.fire('Updated!', successText, 'success');
       }
     });
   };
@@ -272,10 +294,16 @@ export default function ManageVendorOrders() {
         <TrackOrderModal
           order={trackingOrder}
           onClose={() => setTrackingOrder(null)}
-          onSubmit={(transportName, trackingId, trackUrl) => {
-            setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId, trackUrl } : o));
-            Swal.fire('Saved!', `Tracking info saved for order ${trackingOrder.id}.`, 'success');
-            setTrackingOrder(null);
+          onSubmit={async (transportName, trackingId, trackUrl) => {
+            try {
+              await API.put(`/admin/orders/${trackingOrder.id}/tracking`, { transportName, trackingId, trackUrl: trackUrl });
+              setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId, trackUrl } : o));
+              Swal.fire('Saved!', `Tracking info saved for order ${trackingOrder.id}.`, 'success');
+              setTrackingOrder(null);
+            } catch (error) {
+              console.error('Failed to save tracking', error);
+              Swal.fire('Error', 'Failed to save tracking information.', 'error');
+            }
           }}
         />
       )}
