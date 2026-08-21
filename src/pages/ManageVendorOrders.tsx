@@ -7,6 +7,7 @@ import OrderTable from '../components/OrderTable';
 import OrderModal from '../components/OrderModal';
 import TrackOrderModal from '../components/TrackOrderModal';
 import SplitOrderModal from '../components/SplitOrderModal';
+import { mapApiOrderToOrder } from '../utils/orderMapper';
 import './ManageOrders.css';
 
 
@@ -25,29 +26,17 @@ export default function ManageVendorOrders() {
         if (vendorItems.length > 0) {
           const itemWithTracking = vendorItems.find((i: any) => i.tracking_id);
 
-          vendorOrdersFetched.push({
-            id: o.order_number || o.id,
-            date: new Date(o.createdAt).toLocaleString(),
-            user: o.customer?.full_name || o.customer_name || 'N/A',
-            mobile: o.customer?.mobile || o.customer_contact || 'N/A',
-            email: o.customer?.email || 'N/A',
-            address: o.customer_address || 'N/A',
-            totalAmount: parseFloat(o.total_amount) || 0,
-            paymentMethod: 'Online',
-            paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
-            status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : o.status === 'CANCELLED' ? 'Cancelled' : 'Rejected',
-            transportName: itemWithTracking?.transport_name || o.transport_name || undefined,
-            trackingId: itemWithTracking?.tracking_id || o.tracking_id || undefined,
-            trackUrl: itemWithTracking?.tracking_url || o.tracking_url || undefined,
-            items: vendorItems.map((i: any) => ({
-              id: i.id,
-              productName: i.product?.name || 'Unknown',
-              vendorName: i.vendor?.business_name || i.vendor?.full_name || 'Vendor Product',
-              price: parseFloat(i.price) || 0,
-              qty: parseInt(i.qty, 10) || 0,
-              subtotal: parseFloat(i.subtotal) || 0
-            }))
-          });
+          vendorOrdersFetched.push(mapApiOrderToOrder(
+            o, 
+            vendorItems, 
+            parseFloat(o.total_amount) || 0, 
+            (i: any) => i.vendor?.business_name || i.vendor?.full_name || 'Vendor Product',
+            {
+              transportName: itemWithTracking?.transport_name,
+              trackingId: itemWithTracking?.tracking_id,
+              trackUrl: itemWithTracking?.tracking_url
+            }
+          ));
         }
       });
       
@@ -105,7 +94,7 @@ export default function ManageVendorOrders() {
     if (action === 'Reject') {
       actionText = 'reject this order';
       successText = 'The order has been rejected.';
-      nextStatus = 'Rejected';
+      nextStatus = 'Cancelled';
     } else if (action === 'Accept') {
       actionText = 'accept this order';
       successText = 'Order status updated to Accepted.';
@@ -138,7 +127,7 @@ export default function ManageVendorOrders() {
           if (action === 'MarkPaid') {
             payload = { payment_status: 'PAID' };
           } else {
-            const dbStatus = nextStatus === 'Rejected' ? 'CANCELLED' :
+            const dbStatus = nextStatus === 'Cancelled' ? 'CANCELLED' :
                              nextStatus === 'Accepted' ? 'ACCEPTED' :
                              nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
                              nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';

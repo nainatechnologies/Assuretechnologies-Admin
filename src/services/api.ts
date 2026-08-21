@@ -4,8 +4,9 @@ import { logoutUser } from "./auth";
 export const BASE_URL = "http://localhost:5000";
 
 const API = axios.create({
-  baseURL: `${BASE_URL}/api`,
-  withCredentials: true, // This ensures HttpOnly cookies are sent with every request
+  baseURL: 'http://localhost:5000/api',
+  withCredentials: true,
+  headers: { 'X-Client-Type': 'admin' }
 });
 
 API.interceptors.request.use((config) => {
@@ -32,3 +33,6 @@ API.interceptors.response.use(
 );
 
 export default API;
+
+
+
