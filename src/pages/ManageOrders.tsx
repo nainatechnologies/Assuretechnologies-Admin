@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { MdShoppingCart, MdSearch } from 'react-icons/md';
-import API from '../services/api';
+import { MdShoppingCart, MdSearch, MdFilterList, MdFileDownload, MdClose } from 'react-icons/md';
+import { API } from '../config';
 import Swal from 'sweetalert2';
 import type { Order, OrderStatus, OrderItem } from '../types';
 import OrderTable from '../components/OrderTable';
 import OrderModal from '../components/OrderModal';
+import { mapApiOrderToOrder } from '../utils/orderMapper';
 import TrackOrderModal from '../components/TrackOrderModal';
 import SplitOrderModal from '../components/SplitOrderModal';
 import './ManageOrders.css';
@@ -25,34 +26,15 @@ export default function ManageOrders() {
       const adminOrders: any[] = [];
       
       response.data.forEach((o: any) => {
-        const adminItems = (o.items || []).filter((i: any) => !i.vendor);
-        
+        // Admin orders only include items assigned to the main platform
+        const adminItems = o.items?.filter((i: any) => !i.vendorId) || [];
         if (adminItems.length > 0) {
           const adminTotal = adminItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
-          
-          adminOrders.push({
-            id: o.order_number || o.id,
-            date: new Date(o.createdAt).toLocaleString(),
-            user: o.customer?.full_name || o.customer_name || 'N/A',
-            mobile: o.customer?.mobile || o.customer_contact || 'N/A',
-            email: o.customer?.email || 'N/A',
-            address: o.customer_address || 'N/A',
-            totalAmount: adminTotal,
-            paymentMethod: 'Online',
-            paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
-            status: o.status === 'NEW' ? 'New' : o.status === 'ACCEPTED' ? 'Accepted' : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' : o.status === 'COMPLETED' ? 'Completed' : o.status === 'CANCELLED' ? 'Cancelled' : 'Rejected',
-            transportName: o.transport_name || undefined,
-            trackingId: o.tracking_id || undefined,
-            trackUrl: o.tracking_url || undefined,
-            items: adminItems.map((i: any) => ({
-              id: i.id,
-              productName: i.product?.name || 'Unknown',
-              vendorName: 'Admin Product',
-              price: parseFloat(i.price) || 0,
-              qty: parseInt(i.qty, 10) || 0,
-              subtotal: parseFloat(i.subtotal) || 0
-            }))
-          });
+          adminOrders.push(mapApiOrderToOrder(o, adminItems, adminTotal, () => 'Admin Product'));
+        } else if (!o.isVendorOrder) {
+          // All items belong to admin
+          const adminTotal = o.items.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
+          adminOrders.push(mapApiOrderToOrder(o, o.items, adminTotal, () => 'Admin Product'));
         }
       });
       
@@ -86,7 +68,7 @@ export default function ManageOrders() {
     if (action === 'Reject') {
       actionText = 'reject this order';
       successText = 'The order has been rejected.';
-      nextStatus = 'Rejected';
+      nextStatus = 'Cancelled';
     } else if (action === 'Accept') {
       actionText = 'accept this order';
       successText = 'Order status updated to Accepted.';
@@ -119,7 +101,7 @@ export default function ManageOrders() {
           if (action === 'MarkPaid') {
             payload = { payment_status: 'PAID' };
           } else {
-            const dbStatus = nextStatus === 'Rejected' ? 'CANCELLED' :
+            const dbStatus = nextStatus === 'Cancelled' ? 'CANCELLED' :
                              nextStatus === 'Accepted' ? 'ACCEPTED' :
                              nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
                              nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
