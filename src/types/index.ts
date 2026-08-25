@@ -94,7 +94,7 @@ export interface OrderItem {
   subtotal: number;
 }
 
-export type OrderStatus = 'New' | 'Accepted' | 'Out for Delivery' | 'Completed' | 'Rejected';
+export type OrderStatus = 'New' | 'Accepted' | 'Out for Delivery' | 'Completed' | 'Rejected' | 'Cancelled';
 
 export interface Order {
   id: string;

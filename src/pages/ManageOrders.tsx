@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MdShoppingCart, MdSearch, MdFilterList, MdFileDownload, MdClose } from 'react-icons/md';
-import { API } from '../config';
+import API from '../services/api';
 import Swal from 'sweetalert2';
 import type { Order, OrderStatus, OrderItem } from '../types';
 import OrderTable from '../components/OrderTable';
@@ -27,7 +27,7 @@ export default function ManageOrders() {
       
       response.data.forEach((o: any) => {
         // Admin orders only include items assigned to the main platform
-        const adminItems = o.items?.filter((i: any) => !i.vendorId) || [];
+        const adminItems = o.items?.filter((i: any) => !i.vendor_id) || [];
         if (adminItems.length > 0) {
           const adminTotal = adminItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
           adminOrders.push(mapApiOrderToOrder(o, adminItems, adminTotal, () => 'Admin Product'));
