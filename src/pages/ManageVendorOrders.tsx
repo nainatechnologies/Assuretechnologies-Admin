@@ -149,7 +149,7 @@ export default function ManageVendorOrders() {
     });
   };
 
-  const handleSplitOrder = (orderId: string, originalItemId: string, newVendorName: string, transferQty: number) => {
+  const handleSplitOrder = (orderId: string, originalItemId: string, newVendorName: string | null, transferQty: number) => {
     setOrders(orders.map(order => {
       if (order.id !== orderId) return order;
 
@@ -173,7 +173,7 @@ export default function ManageVendorOrders() {
       const splitItem: OrderItem = {
         ...originalItem,
         id: `${originalItem.id}-split-${Date.now()}`,
-        vendorName: newVendorName,
+        vendorName: newVendorName || 'Unknown Vendor',
         qty: transferQty,
         subtotal: transferQty * originalItem.price
       };
@@ -207,7 +207,7 @@ export default function ManageVendorOrders() {
           const splitItem: OrderItem = {
             ...originalItem,
             id: `${originalItem.id}-split-${Date.now()}`,
-            vendorName: newVendorName,
+            vendorName: newVendorName || 'Unknown Vendor',
             qty: transferQty,
             subtotal: transferQty * originalItem.price
           };
@@ -299,3 +299,4 @@ export default function ManageVendorOrders() {
     </div>
   );
 }
+

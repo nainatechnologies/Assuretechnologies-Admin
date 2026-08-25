@@ -1,4 +1,4 @@
-import { Order } from '../types';
+import type { Order } from '../types';
 
 export const mapApiOrderToOrder = (
   o: any, 
@@ -26,13 +26,17 @@ export const mapApiOrderToOrder = (
           : o.status === 'COMPLETED' ? 'Completed' 
           : o.status === 'CANCELLED' ? 'Cancelled' 
           : 'Rejected',
-    transportName: extraTransportData?.transportName || o.transport_name || undefined,
-    trackingId: extraTransportData?.trackingId || o.tracking_id || undefined,
-    trackUrl: extraTransportData?.trackUrl || o.tracking_url || undefined,
+    transportName: extraTransportData !== undefined ? extraTransportData.transportName : (o.transport_name || undefined),
+    trackingId: extraTransportData !== undefined ? extraTransportData.trackingId : (o.tracking_id || undefined),
+    trackUrl: extraTransportData !== undefined ? extraTransportData.trackUrl : (o.tracking_url || undefined),
     items: items.map((i: any) => ({
       id: i.id,
       productName: i.product?.name || 'Unknown',
       vendorName: mapItemVendorName(i),
+      vendorId: i.vendor_id,
+      trackingId: i.tracking_id,
+      transportName: i.transport_name,
+      trackUrl: i.tracking_url,
       price: parseFloat(i.price) || 0,
       qty: parseInt(i.qty, 10) || 0,
       subtotal: parseFloat(i.subtotal) || 0
