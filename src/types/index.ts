@@ -76,12 +76,17 @@ export interface CustomField {
 
 export interface Service {
   id: string;
-  category: string;
-  subCategory: string;
+  display_id?: string;
+  category_id: string;
+  category?: string;
+  subCategory?: string;
+  name?: string;
   image?: string | File;
   imageName?: string;
   customFields?: CustomField[];
+  custom_fields?: CustomField[];
   prebookingCharge?: number;
+  prebooking_charge?: number | string;
   status?: 'Active' | 'Inactive';
 }
 
@@ -223,6 +228,10 @@ export interface PartnerCustomField {
 export interface PartnerType {
   id: string;
   name: string; // e.g. "Drone", "Tractor"
+  category_id?: string;
+  category?: { name: string };
+  description?: string;
+  is_active?: boolean;
   customFields: PartnerCustomField[];
 }
 
@@ -230,17 +239,25 @@ export interface PricingType {
   id: string;
   name: string; // e.g. "Per Acre", "Per Hour", "Per Liter"
   label: string; // e.g. "Number of Acres", "Number of Hours"
+  is_active?: boolean;
 }
 
 export interface PartnerService {
   id: string;
-  category: string;
+  display_id?: string;
+  category_id: string;
+  category?: string;
   serviceName: string;
+  name?: string; // from backend response
   pricingTypeId: string; // reference to PricingType
+  pricingType?: { id: string; name: string; label: string }; // from backend response
+  required_partner_type_id?: string;
   rate: number;
+  price?: number; // from backend response
   image?: string | File;
   imageName?: string;
   customFields?: CustomField[]; // fields required during booking this service
+  custom_fields?: CustomField[]; // from backend response
   status?: 'Active' | 'Inactive';
 }
 

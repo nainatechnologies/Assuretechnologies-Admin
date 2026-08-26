@@ -1,45 +1,20 @@
-import { useState, useEffect } from 'react';
 import type { PartnerService } from '../types';
-import { MdEdit, MdDelete } from 'react-icons/md';
-import { usePartnerContext } from '../context/PartnerContext';
+import { MdEdit } from 'react-icons/md';
 import './ProductTable.css'; 
 
 interface PartnerServiceTableProps {
   services: PartnerService[];
   onEditService: (id: string) => void;
-  onDeleteService: (id: string) => void;
+
   onToggleStatus?: (id: string) => void;
-}
-
-function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!image) {
-      setUrl(null);
-      return;
-    }
-    if (image instanceof File) {
-      const objectUrl = URL.createObjectURL(image);
-      setUrl(objectUrl);
-      return () => URL.revokeObjectURL(objectUrl);
-    } else if (typeof image === 'string') {
-      setUrl(image);
-    }
-  }, [image]);
-
-  if (!url) return <span className="product-banner-text">{alt}</span>;
-  return <img src={url} alt={alt} style={{ height: '40px', width: 'auto', borderRadius: '4px', objectFit: 'cover' }} />;
 }
 
 export default function PartnerServiceTable({
   services,
   onEditService,
-  onDeleteService,
+
   onToggleStatus
 }: PartnerServiceTableProps) {
-  const { pricingTypes } = usePartnerContext();
-
   if (services.length === 0) {
     return (
       <div className="glass-panel product-table-empty">
@@ -64,26 +39,31 @@ export default function PartnerServiceTable({
           </thead>
           <tbody>
             {services.map((service) => {
-              const pType = pricingTypes.find(pt => pt.id === service.pricingTypeId);
               return (
                 <tr key={service.id}>
                   <td>
-                    <span className="product-id">#{service.id}</span>
+                    <span className="product-id">#{service.display_id || service.id}</span>
                   </td>
                   <td>
-                    <span className="product-category-badge">{service.category}</span>
+                    <span className="product-category-badge">
+                      {typeof service.category === 'object' ? (service.category as any).name : service.category}
+                    </span>
                   </td>
                   <td>
-                    <div className="product-name">{service.serviceName}</div>
+                    <div className="product-name">{service.name || service.serviceName}</div>
                   </td>
                   <td>
                     <div className="product-price">
-                      <span>₹{service.rate} / {pType ? pType.name : 'Unknown Unit'}</span>
+                      <span>₹ {service.price !== undefined ? service.price : service.rate} / {service.pricingType?.label || 'Unknown Unit'}</span>
                     </div>
                   </td>
                 <td>
-                  <div className="product-banner" title={service.imageName}>
-                    <ImageCell image={service.image} alt={service.imageName || 'Service Image'} />
+                  <div className="product-banner" title={service.name || service.serviceName}>
+                    {service.image ? (
+                      <img src={typeof service.image === 'string' ? service.image : URL.createObjectURL(service.image as File)} alt="Service Image" style={{ height: '40px', width: 'auto', borderRadius: '4px', objectFit: 'cover' }} />
+                    ) : (
+                      <span className="product-banner-text">No Image</span>
+                    )}
                   </div>
                 </td>
                 <td>
@@ -92,7 +72,7 @@ export default function PartnerServiceTable({
                       <label className="switch" title="Toggle Status" style={{ marginRight: '8px' }}>
                         <input 
                           type="checkbox" 
-                          checked={service.status === 'Active'}
+                          checked={service.status === 'Active' || (service as any).is_active === true}
                           onChange={() => onToggleStatus(service.id)}
                         />
                         <span className="slider round"></span>
@@ -106,14 +86,7 @@ export default function PartnerServiceTable({
                     >
                       <MdEdit size={20} />
                     </button>
-                    <button
-                      className="icon-btn delete-icon"
-                      onClick={() => onDeleteService(service.id)}
-                      title="Delete Service"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                      <MdDelete size={20} />
-                    </button>
+
                   </div>
                 </td>
               </tr>

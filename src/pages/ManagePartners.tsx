@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { MdEdit, MdDelete, MdSearch } from 'react-icons/md';
-import type { Partner, PartnerType, PartnerService } from '../types';
+import type { Partner, PartnerType } from '../types';
 import Swal from 'sweetalert2';
 import PartnerModal from '../components/PartnerModal';
 import API from '../services/api';
@@ -8,7 +8,6 @@ import API from '../services/api';
 export default function ManagePartners() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
-  const [partnerServices] = useState<PartnerService[]>([]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<Partner | undefined>(undefined);
@@ -105,7 +104,7 @@ export default function ManagePartners() {
           partner_type_id: data.partnerTypeId,
           custom_field_values: data.customFieldValues,
           services_provided: data.services,
-          coverage_areas: []
+          coverage_areas: data.coverage_areas
         };
         const response = await API.post('/admin/partners', payload);
         if (response.data.success) {
@@ -268,7 +267,6 @@ export default function ManagePartners() {
         onSave={handleSave}
         partner={editingPartner}
         partnerTypes={partnerTypes}
-        partnerServices={partnerServices}
       />
     </div>
   );

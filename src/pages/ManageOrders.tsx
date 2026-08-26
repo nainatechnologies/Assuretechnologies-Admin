@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MdShoppingCart, MdSearch, MdFilterList, MdFileDownload, MdClose } from 'react-icons/md';
+import { MdShoppingCart, MdSearch } from 'react-icons/md';
 import API from '../services/api';
 import Swal from 'sweetalert2';
 import type { Order, OrderStatus, OrderItem } from '../types';
@@ -24,7 +24,7 @@ export default function ManageOrders() {
     try {
       const response = await API.get('/admin/orders');
       const adminOrders: any[] = [];
-      
+
       response.data.forEach((o: any) => {
         // Admin orders only include items assigned to the main platform
         const adminItems = o.items?.filter((i: any) => !i.vendor_id) || [];
@@ -37,7 +37,7 @@ export default function ManageOrders() {
           adminOrders.push(mapApiOrderToOrder(o, o.items, adminTotal, () => 'Admin Product'));
         }
       });
-      
+
       setOrders(adminOrders);
     } catch (error) {
       console.error('Failed to fetch orders', error);
@@ -52,7 +52,7 @@ export default function ManageOrders() {
   const filteredOrders = orders.filter(order => {
     let matchesTab = order.status === activeTab;
     const query = searchQuery.toLowerCase();
-    const matchesSearch = query === '' || 
+    const matchesSearch = query === '' ||
       order.id.toLowerCase().includes(query) ||
       order.user.toLowerCase().includes(query) ||
       order.mobile.includes(query) ||
@@ -102,13 +102,13 @@ export default function ManageOrders() {
             payload = { payment_status: 'PAID' };
           } else {
             const dbStatus = nextStatus === 'Cancelled' ? 'CANCELLED' :
-                             nextStatus === 'Accepted' ? 'ACCEPTED' :
-                             nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
-                             nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
+              nextStatus === 'Accepted' ? 'ACCEPTED' :
+                nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
+                  nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
             payload = { status: dbStatus };
           }
           await API.put(`/admin/orders/${orderId}/status`, payload);
-          
+
           if (action === 'MarkPaid') {
             setOrders(orders.map(o => o.id === orderId ? { ...o, paymentStatus: 'Paid' } : o));
           } else {
@@ -135,7 +135,7 @@ export default function ManageOrders() {
       };
 
       await API.post(`/admin/orders/${orderId}/items/${originalItemId}/split`, payload);
-      
+
       setSplittingItem(null);
       fetchOrders();
       Swal.fire('Split Successful', `Order item split assigned`, 'success');
@@ -166,29 +166,29 @@ export default function ManageOrders() {
         </div>
         <div className="orders-search-container">
           <MdSearch className="orders-search-icon" size={20} />
-          <input 
-            type="text" 
-            className="orders-search-input" 
-            placeholder="Search by ID, name, email or phone..." 
+          <input
+            type="text"
+            className="orders-search-input"
+            placeholder="Search by ID, name, email or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
 
-      <OrderTable 
-        orders={filteredOrders} 
+      <OrderTable
+        orders={filteredOrders}
         currentTab={activeTab}
-        hideActions={false} 
-        onViewOrder={setSelectedOrder} 
-        onActionOrder={handleActionOrder} 
+        hideActions={false}
+        onViewOrder={setSelectedOrder}
+        onActionOrder={handleActionOrder}
         onTrackOrder={setTrackingOrder}
       />
 
       {selectedOrder && (
-        <OrderModal 
-          order={selectedOrder} 
-          onClose={() => setSelectedOrder(null)} 
+        <OrderModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
           onSplitClick={(item) => setSplittingItem({ orderId: selectedOrder.id, item })}
         />
       )}
