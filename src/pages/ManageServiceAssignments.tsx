@@ -1,151 +1,60 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback } from 'react';
 import ServiceRequestTable from '../components/ServiceRequestTable';
 import Pagination from '../components/Pagination';
 import AssignTechnicianModal from '../components/AssignTechnicianModal';
 import ServiceRequestDetailsModal from '../components/ServiceRequestDetailsModal';
-import type { ServiceRequest, Technician } from '../types';
+import type { ServiceRequest } from '../types';
+import useAssignmentPage from '../hooks/useAssignmentPage';
 import './ManageServiceAssignments.css';
-import Swal from 'sweetalert2';
 
-// Mock Data
-const MOCK_TECHNICIANS: Technician[] = [
-  {
-    id: 'T1',
-    name: 'Venkatesh',
-    mobile: '9876543210',
-    email: 'venkat@example.com',
-    address: 'srnagar',
-    location: '500001, 500002',
-    status: 'Active'
-  },
-  {
-    id: 'T2',
-    name: 'Suresh',
-    mobile: '9876543211',
-    email: 'suresh@example.com',
-    address: 'ameerpet',
-    location: '500032, 500033',
-    status: 'Active'
+const mapServiceBooking = (b: any): ServiceRequest => {
+  let parsedAddress = 'N/A';
+  let pincode = '';
+  if (b.address) {
+    try {
+      const obj = typeof b.address === 'string' ? JSON.parse(b.address) : b.address;
+      parsedAddress = [obj.line1, obj.line2, obj.city, obj.state, obj.pincode].filter(Boolean).join(', ');
+      pincode = obj.pincode || b.pincode;
+    } catch (e) {
+      parsedAddress = String(b.address);
+      pincode = b.pincode;
+    }
+  } else {
+    pincode = b.pincode;
   }
-];
 
-const INITIAL_REQUESTS: ServiceRequest[] = [
-  {
-    id: 'SR-41',
-    userId: 'U1',
-    userName: 'Venkatesh Marripelly',
-    userMobile: '9701712335',
-    userEmail: 'venkatakrishnadandu@gmail.com',
-    userAddress: 'srnagar',
-    serviceName: 'Baofeng Walkie Talkie BF-888S Pack of 2 with Earphone',
-    date: '16 Jun 2026',
-    time: '10 AM - 12 PM',
-    status: 'Pending'
-  },
-  {
-    id: 'SR-42',
-    userId: 'U2',
-    userName: 'Siri',
-    userMobile: '9505261283',
-    userEmail: 'siri@gmail.com',
-    userAddress: 'srnagar',
-    serviceName: 'Biometric device',
-    date: '16 Jun 2026',
-    time: '2 PM - 4 PM',
-    status: 'Accepted',
-    technicianId: 'T1',
-    startDescription: 'Arrived on site, checking biometric machine power supply.',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1'],
-    completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+1']
-  }
-];
+  return {
+    id: b.id,
+    displayId: b.Order?.order_number || 'N/A',
+    userId: b.Order?.customer_id || '',
+    userName: b.Order?.customer_name || 'N/A',
+    userMobile: b.Order?.customer_contact || 'N/A',
+    userEmail: b.Order?.customer?.email || 'N/A',
+    userAddress: parsedAddress,
+    pincode,
+    serviceName: b.Service?.name || 'Unknown',
+    date: b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
+    time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+    status: b.status,
+    technicianId: b.assigned_technician_id,
+  };
+};
 
 export default function ManageServiceAssignments() {
-  const [activeTab, setActiveTab] = useState<'pending' | 'accepted'>('pending');
-  const [requests, setRequests] = useState<ServiceRequest[]>(INITIAL_REQUESTS);
-  const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
-  
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+  const mapBooking = useCallback(mapServiceBooking, []);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab]);
-
-  const filteredRequests = useMemo(() => {
-    return requests.filter(r => 
-      activeTab === 'pending' ? r.status === 'Pending' : r.status === 'Accepted'
-    );
-  }, [requests, activeTab]);
-
-  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
-  const paginatedRequests = filteredRequests.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const handleAccept = (id: string) => {
-    Swal.fire({
-      title: 'Accept Request?',
-      text: "Are you sure you want to accept this service request?",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#10b981',
-      confirmButtonText: 'Yes, Accept'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setRequests(prev => prev.map(req => 
-          req.id === id ? { ...req, status: 'Accepted' } : req
-        ));
-        Swal.fire('Accepted!', 'The request has been accepted.', 'success');
-      }
-    });
-  };
-
-  const handleReject = (id: string) => {
-    Swal.fire({
-      title: 'Reject Request?',
-      text: "Are you sure you want to reject this request?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, Reject'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setRequests(prev => prev.map(req => 
-          req.id === id ? { ...req, status: 'Cancelled' } : req
-        ));
-        Swal.fire('Rejected!', 'The request has been rejected.', 'success');
-      }
-    });
-  };
-
-  const openAssignModal = (id: string) => {
-    const req = requests.find(r => r.id === id);
-    if (req) {
-      setSelectedRequest(req);
-      setAssignModalOpen(true);
-    }
-  };
-
-  const handleView = (id: string) => {
-    const req = requests.find(r => r.id === id);
-    if (req) {
-      setSelectedRequest(req);
-      setViewModalOpen(true);
-    }
-  };
-
-  const handleAssign = (requestId: string, technicianId: string) => {
-    setRequests(prev => prev.map(req => 
-      req.id === requestId ? { ...req, status: 'Assigned', technicianId } : req
-    ));
-    setAssignModalOpen(false);
-    setSelectedRequest(null);
-    Swal.fire('Assigned!', 'Technician has been assigned successfully.', 'success');
-  };
+  const {
+    statuses, activeTab, setActiveTab,
+    items: requests, currentPage, totalPages, setCurrentPage,
+    assignModalOpen, viewModalOpen, selectedItem,
+    handleAccept, handleReject, openAssignModal, handleView,
+    handleAssignSuccess, closeAssignModal, closeViewModal,
+  } = useAssignmentPage<ServiceRequest>({
+    ownerType: 'ADMIN',
+    mapBooking,
+    entityLabel: 'request',
+    assigneeLabel: 'Technician',
+  });
 
   return (
     <div className="manage-assignments-page">
@@ -155,61 +64,56 @@ export default function ManageServiceAssignments() {
       
       <div className="content-card">
         <div className="tabs-container">
-          <button 
-            className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
-            onClick={() => setActiveTab('pending')}
-          >
-            Pending Requests
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'accepted' ? 'active' : ''}`}
-            onClick={() => setActiveTab('accepted')}
-          >
-            Accepted (Assign Technician)
-          </button>
+          {statuses.map(status => {
+            let label = status.replace('_', ' ');
+            if (status === 'NEW') label = 'Pending Requests';
+            if (status === 'ACCEPTED') label = 'Accepted (Assign Technician)';
+            
+            return (
+              <button 
+                key={status}
+                className={`tab-btn ${activeTab === status ? 'active' : ''}`}
+                onClick={() => setActiveTab(status)}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="tab-content">
-          {activeTab === 'pending' && (
-            <ServiceRequestTable 
-              requests={paginatedRequests}
-              viewType="assignments-new"
-              onAccept={handleAccept}
-              onReject={handleReject}
-              onView={handleView}
-            />
-          )}
-          
-          {activeTab === 'accepted' && (
-            <ServiceRequestTable 
-              requests={paginatedRequests}
-              viewType="assignments-accepted"
-              onAssign={openAssignModal}
-            />
-          )}
-
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
+          <ServiceRequestTable 
+            requests={requests}
+            viewType={['NEW'].includes(activeTab) ? "assignments-new" : "assignments-accepted"}
+            onAccept={handleAccept}
+            onReject={handleReject}
+            onView={handleView}
+            onAssign={openAssignModal}
           />
+
+          {totalPages > 1 && (
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
       </div>
 
-      {assignModalOpen && selectedRequest && (
+      {assignModalOpen && selectedItem && (
         <AssignTechnicianModal 
-          request={selectedRequest}
-          technicians={MOCK_TECHNICIANS}
-          onClose={() => setAssignModalOpen(false)}
-          onAssign={handleAssign}
+          request={selectedItem}
+          onClose={closeAssignModal}
+          onAssignSuccess={handleAssignSuccess}
         />
       )}
 
-      {viewModalOpen && selectedRequest && (
+      {viewModalOpen && selectedItem && (
         <ServiceRequestDetailsModal 
-          request={selectedRequest}
-          technician={selectedRequest.technicianId ? MOCK_TECHNICIANS.find(t => t.id === selectedRequest.technicianId) : undefined}
-          onClose={() => setViewModalOpen(false)}
+          request={selectedItem}
+          technician={undefined}
+          onClose={closeViewModal}
         />
       )}
     </div>

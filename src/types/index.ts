@@ -140,11 +140,13 @@ export type ProgressUpdate = {
 
 export interface ServiceRequest {
   id: string;
+  displayId?: string;
   userId: string;
   userName: string;
   userMobile: string;
   userEmail: string;
   userAddress: string;
+  pincode?: string;
   serviceName: string;
   date: string;
   time: string;
@@ -155,7 +157,7 @@ export interface ServiceRequest {
   completeWorkPhotos?: string[];
   progressUpdates?: ProgressUpdate[];
   customFieldResponses?: Record<string, string>;
-  paymentStatus?: 'Prebooking Paid' | 'Pending';
+  paymentStatus?: 'Prebooking Paid' | 'Pending' | 'Paid in Full';
   prebookingAmountPaid?: number;
 }
 
@@ -286,6 +288,7 @@ export type PartnerBookingStatus =
 
 export interface PartnerBooking {
   id: string;
+  displayId?: string;
   userId: string;
   userName: string;
   userMobile: string;

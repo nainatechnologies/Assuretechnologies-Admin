@@ -24,7 +24,7 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: #6b7280;
+  color: #9ca3af; /* lighter gray for inactive */
   font-weight: 500;
   font-size: 0.95rem;
   cursor: pointer;
@@ -32,10 +32,10 @@
 }
 
 .tab-btn:hover {
-  color: #374151;
+  color: #6b7280;
 }
 
 .tab-btn.active {
-  color: #2563eb;
-  border-bottom-color: #2563eb;
+  color: #7c3aed; /* purple-ish from screenshot */
+  border-bottom-color: #7c3aed;
 }

@@ -31,7 +31,7 @@ export default function ManageOrders() {
         if (adminItems.length > 0) {
           const adminTotal = adminItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
           adminOrders.push(mapApiOrderToOrder(o, adminItems, adminTotal, () => 'Admin Product'));
-        } else if (!o.isVendorOrder) {
+        } else if (!o.isVendorOrder && (!o.order_number || !o.order_number.startsWith('SBK'))) {
           // All items belong to admin
           const adminTotal = o.items.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
           adminOrders.push(mapApiOrderToOrder(o, o.items, adminTotal, () => 'Admin Product'));
