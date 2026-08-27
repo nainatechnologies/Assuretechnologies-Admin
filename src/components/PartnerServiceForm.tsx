@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import type { PartnerService, CustomField, PricingType } from '../types';
+import { useState, useRef, useEffect } from 'react';
+import type { PartnerService, CustomField } from '../types';
 import { MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 
 import { CATEGORIES } from './ProductForm';
@@ -23,7 +23,7 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialData) {
       setCategory(initialData.category);
       setServiceName(initialData.serviceName);
@@ -200,7 +200,7 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
               <p style={{ fontSize: '14px', color: '#64748b', fontStyle: 'italic', background: '#f8fafc', padding: '15px', borderRadius: '6px', textAlign: 'center' }}>No custom fields added. The default booking form fields will be used.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {customFields.map((field, index) => (
+                {customFields.map((field) => (
                   <div key={field.id} style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', position: 'relative' }}>
                     <button 
                       type="button" 

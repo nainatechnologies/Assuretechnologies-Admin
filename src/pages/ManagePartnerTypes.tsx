@@ -222,7 +222,7 @@ export default function ManagePartnerTypes() {
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {customFields.map((field, index) => (
+                    {customFields.map((field) => (
                       <div key={field.id} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

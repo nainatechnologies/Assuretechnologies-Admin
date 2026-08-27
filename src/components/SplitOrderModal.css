@@ -20,6 +20,7 @@
   flex-direction: column;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  transform: translateY(-10vh); /* Moves it up 25% of viewport height from center */
 }
 
 .split-modal-header {
@@ -120,21 +121,24 @@
   top: 100%;
   left: 0;
   right: 0;
-  margin-top: 4px;
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  max-height: 200px;
+  margin-top: 6px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Roughly 3 items visible at a time */
+  max-height: 230px; 
   overflow-y: auto;
   z-index: 10;
 }
 
 .split-vendor-option {
-  padding: 10px 12px;
-  cursor: pointer;
-  border-bottom: 1px solid #f3f4f6;
-  transition: background-color 0.15s ease;
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s ease;
 }
 
 .split-vendor-option:last-child {
@@ -142,27 +146,50 @@
 }
 
 .split-vendor-option:hover {
-  background-color: #f9fafb;
+  background-color: #f8fafc;
+}
+
+.split-vendor-info {
+  display: flex;
+  flex-direction: column;
 }
 
 .split-vendor-business {
-  font-weight: 500;
-  color: #111827;
-  font-size: 0.875rem;
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.95rem;
 }
 
 .split-vendor-name {
-  color: #6b7280;
-  font-size: 0.75rem;
-  margin-top: 2px;
+  color: #64748b;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.split-vendor-select-btn {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 9999px; /* Pill shape */
+  padding: 6px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.split-vendor-select-btn:hover {
+  background-color: #059669;
 }
 
 .split-vendor-empty {
-  padding: 12px;
-  color: #6b7280;
-  font-size: 0.875rem;
+  padding: 20px;
+  color: #64748b;
+  font-size: 0.9rem;
   text-align: center;
 }
+
+
 
 .split-selected-vendor {
   margin-top: 8px;

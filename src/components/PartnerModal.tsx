@@ -11,7 +11,7 @@ interface PartnerModalProps {
   partnerServices: PartnerService[];
 }
 
-export default function PartnerModal({ isOpen, onClose, onSave, partner, partnerTypes, partnerServices }: PartnerModalProps) {
+export default function PartnerModal({ isOpen, onClose, onSave, partner, partnerTypes }: PartnerModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',

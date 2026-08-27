@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MdEdit, MdDelete, MdAdd, MdClose, MdSave } from 'react-icons/md';
+import { MdEdit, MdDelete, MdClose, MdSave } from 'react-icons/md';
 import type { PricingType } from '../types';
 import Swal from 'sweetalert2';
 import API from '../services/api';
