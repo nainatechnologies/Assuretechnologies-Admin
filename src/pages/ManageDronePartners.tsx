@@ -180,7 +180,7 @@ export default function ManageDronePartners() {
                 </td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>{dronePartner.location}</td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>
-                  {dronePartner.equipmentTypes.map((type: string, i: number) => (
+                  {(dronePartner.equipmentTypes || []).map((type: string, i: number) => (
                     <span key={i} style={{ display: 'inline-block', backgroundColor: '#eff6ff', color: '#2563eb', fontSize: '12px', padding: '4px 8px', borderRadius: '4px', marginRight: '4px', marginBottom: '4px' }}>
                       {type}
                     </span>

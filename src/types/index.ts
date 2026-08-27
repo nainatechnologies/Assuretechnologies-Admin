@@ -1,5 +1,6 @@
 export interface Product {
   id: string;
+  display_id?: string;
   vendor_id?: string;
   name: string;
   category: string;
@@ -42,6 +43,16 @@ export interface DronePartner {
   partnerType?: string;
   coverageAreas?: string;
   equipmentTypes?: string[];
+  totalAmount?: number;
+  vehicleNumber?: string;
+  idFileName?: string;
+  idFile?: string | File;
+  licenseFileName?: string;
+  licenseFile?: string | File;
+  driverLicenseFileName?: string;
+  driverLicenseFile?: string | File;
+  rcFileName?: string;
+  rcFile?: string | File;
 }
 
 export interface Vendor {
@@ -70,7 +81,7 @@ export interface CustomField {
   id: string;
   label: string;
   type: 'text' | 'number' | 'dropdown';
-  options?: string[]; // Used when type is 'dropdown'
+  options?: string[];
   required: boolean;
 }
 
@@ -313,4 +324,110 @@ export interface PartnerBooking {
   paymentStatus?: 'Paid' | 'Pending';
 }
 
+
+
+export interface CustomerAddressItem {
+  id: string;
+  fullName: string;
+  mobileNumber: string;
+  pincode: string;
+  addressLine1: string;
+  addressLine2?: string;
+  landmark?: string;
+  city: string;
+  state: string;
+}
+
+export interface CustomerOrderSummary {
+  id: string;
+  order_number: string;
+  total_amount: string | number;
+  status: string;
+  payment_status?: string;
+  createdAt: string;
+}
+
+export interface Customer {
+  id: string;
+  display_id?: string;
+  fullName: string;
+  mobile: string;
+  email?: string;
+  fullAddress?: string;
+  pincode?: string;
+  stateName?: string;
+  isMobileVerified?: boolean;
+  status: 'Active' | 'Inactive';
+  ordersCount?: number;
+  totalSpent?: number;
+  createdAt?: string;
+  addresses?: CustomerAddressItem[];
+  orders?: CustomerOrderSummary[];
+}
+
+export interface PaymentSummary {
+  totalRevenue: number;
+  totalPayouts: number;
+  netBalance: number;
+  pendingPayoutsCount: number;
+  pendingPayoutAmount: number;
+}
+
+export type PaymentType = 'incoming' | 'outgoing';
+export type PaymentStatus = 'completed' | 'pending' | 'failed';
+
+export interface PaymentTransaction {
+  id: string;
+  date: string;
+  type: PaymentType;
+  referenceId: string;
+  party: string;
+  amount: number;
+  method: string;
+  status: PaymentStatus;
+  proof_image?: string | null;
+  notes?: string;
+}
+
+export interface PendingVendorPayoutItem {
+  id: string;
+  orderId: string;
+  orderNumber: string;
+  vendorId: string;
+  vendorName: string;
+  vendorMobile?: string;
+  bankDetails?: string;
+  productName: string;
+  qty: number;
+  date: string;
+  amount: number;
+  adminCommission: number;
+  netPayable: number;
+  customerPaid: boolean;
+  vendorPaid: boolean;
+  paymentMethod: 'online' | 'cod';
+}
+
+export interface VendorLedgerOrder {
+  id: string;
+  orderNumber: string;
+  productName: string;
+  qty: number;
+  date: string;
+  amount: number;
+  adminCommission: number;
+  customerPaid: boolean;
+}
+
+export interface VendorLedgerItem {
+  vendorId: string;
+  vendorName: string;
+  mobile: string;
+  bankDetails?: string;
+  unpaidCount: number;
+  pendingPayoutCount: number;
+  totalPendingCustomerPaid: number;
+  totalPendingCustomerUnpaid: number;
+  orders: VendorLedgerOrder[];
+}
 

@@ -40,7 +40,7 @@ export default function DronePartnerModal({ isOpen, onClose, onSave, dronePartne
         location: dronePartner.location || '',
         equipmentTypes: dronePartner.equipmentTypes ? dronePartner.equipmentTypes.join(', ') : '',
         password: dronePartner.password || '',
-        partnerType: dronePartner.partnerType || 'Drone',
+        partnerType: (dronePartner.partnerType as any) || 'Drone',
         vehicleNumber: dronePartner.vehicleNumber || ''
       });
       if (dronePartner.location) {

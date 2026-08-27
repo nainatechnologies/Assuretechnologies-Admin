@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
 import Dashboard from './pages/Dashboard';
 import ManageProducts from './pages/ManageProducts';
+import ManageUsers from './pages/ManageUsers';
 import ManageOrders from './pages/ManageOrders';
 import ManageVendorOrders from './pages/ManageVendorOrders';
 import ManageTechnicians from './pages/ManageTechnicians';
@@ -39,6 +40,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="users" element={<ManageUsers />} />
               <Route path="products" element={<ManageProducts />} />
               <Route path="orders" element={<ManageOrders />} />
               <Route path="vendor-orders" element={<ManageVendorOrders />} />

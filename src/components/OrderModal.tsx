@@ -58,7 +58,6 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
               </div>
               <div className="order-card-content">
                 <p>{order.address}</p>
-                <p className="bold-text">Pincode: {order.pincode}</p>
                 <span className="saved-address-badge">Saved Address</span>
               </div>
             </div>

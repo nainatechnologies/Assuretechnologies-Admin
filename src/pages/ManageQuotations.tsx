@@ -4,6 +4,8 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { Quotation, QuotationService } from '../types';
 import './ManageQuotations.css';
+import { Toast } from '../utils/errorHandler';
+
 
 export default function ManageQuotations() {
   const [activeTab, setActiveTab] = useState<'table' | 'form' | 'view'>('table');
@@ -61,7 +63,7 @@ export default function ManageQuotations() {
 
   const handleSaveQuotation = () => {
     if (!customerName || !mobile) {
-      alert("Please fill in the required customer details (Name, Mobile).");
+      Toast.fire({ icon: 'warning', title: "Please fill in the required customer details (Name, Mobile)." });
       return;
     }
 
