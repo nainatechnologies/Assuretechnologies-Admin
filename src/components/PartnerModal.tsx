@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Partner, PartnerType, PartnerService } from '../types';
+import type { Partner, PartnerType } from '../types';
 import './TechnicianModal.css';
 
 interface PartnerModalProps {
@@ -8,7 +8,6 @@ interface PartnerModalProps {
   onSave: (partner: Partner | Omit<Partner, 'id' | 'status'>) => void;
   partner?: Partner;
   partnerTypes: PartnerType[];
-  partnerServices: PartnerService[];
 }
 
 export default function PartnerModal({ isOpen, onClose, onSave, partner, partnerTypes }: PartnerModalProps) {
@@ -182,7 +181,8 @@ export default function PartnerModal({ isOpen, onClose, onSave, partner, partner
       password: formData.password,
       partnerTypeId: formData.partnerTypeId,
       services: formData.services,
-      customFieldValues
+      customFieldValues,
+      coverage_areas: pincodesList
     };
 
     if (partner) {

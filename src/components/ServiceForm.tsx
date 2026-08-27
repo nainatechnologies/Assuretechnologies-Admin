@@ -1,18 +1,19 @@
 import React, { useState, useRef } from 'react';
 import type { Service, CustomField } from '../types';
-import { CATEGORIES } from './ProductForm';
 import { MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 
 interface ServiceFormProps {
   onAddService: (service: Omit<Service, 'id'>) => void;
+  categories: { id?: string; _id?: string; name: string }[];
+  initialData?: any;
 }
 
-export default function ServiceForm({ onAddService }: ServiceFormProps) {
-  const [category, setCategory] = useState('');
-  const [subCategory, setSubCategory] = useState('');
+export default function ServiceForm({ onAddService, categories, initialData }: ServiceFormProps) {
+  const [category_id, setCategoryId] = useState(initialData?.category_id || '');
+  const [subCategory, setSubCategory] = useState(initialData?.subCategory || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [customFields, setCustomFields] = useState<CustomField[]>([]);
-  const [prebookingCharge, setPrebookingCharge] = useState<number | undefined>(undefined);
+  const [customFields, setCustomFields] = useState<CustomField[]>(initialData?.custom_fields || initialData?.customFields || []);
+  const [prebookingCharge, setPrebookingCharge] = useState<number | undefined>(initialData?.prebookingCharge || undefined);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -21,7 +22,7 @@ export default function ServiceForm({ onAddService }: ServiceFormProps) {
     if (!subCategory) return;
 
     onAddService({
-      category,
+      category_id,
       subCategory,
       image: imageFile || '',
       imageName: imageFile ? imageFile.name : 'No file chosen',
@@ -31,16 +32,6 @@ export default function ServiceForm({ onAddService }: ServiceFormProps) {
         options: cf.type === 'dropdown' ? (cf.options?.map(s => s.trim()).filter(s => s) || []) : undefined
       }))
     });
-
-    // Reset form
-    setCategory('');
-    setSubCategory('');
-    setImageFile(null);
-    setCustomFields([]);
-    setPrebookingCharge(undefined);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,16 +71,16 @@ export default function ServiceForm({ onAddService }: ServiceFormProps) {
                 id="serviceCategory"
                 className="input-field category-select colorful-input"
                 style={{ width: '100%', paddingRight: '40px' }}
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={category_id}
+                onChange={(e) => setCategoryId(e.target.value)}
                 required
               >
                 <option value="" disabled hidden>Select Category...</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categories.map(cat => (
+                  <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
                 ))}
               </select>
-              {category && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
+              {category_id && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
             </div>
           </div>
 

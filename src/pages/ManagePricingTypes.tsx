@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MdEdit, MdDelete, MdClose, MdSave } from 'react-icons/md';
+
 import type { PricingType } from '../types';
 import Swal from 'sweetalert2';
 import API from '../services/api';
@@ -43,20 +44,19 @@ export default function ManagePricingTypes() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteType = (id: string) => {
-    Swal.fire({
-      title: 'Delete Pricing Type?',
-      text: 'Are you sure you want to delete this pricing type? It may affect existing services.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setPricingTypes(prev => prev.filter(t => t.id !== id));
-        Swal.fire('Deleted!', 'Pricing Type deleted.', 'success');
-      }
-    });
+  const handleToggleStatus = async (type: PricingType) => {
+    try {
+      const newStatus = !(type.is_active ?? true);
+      // TODO: Replace with actual PATCH API once backend is built
+      // const response = await API.patch(`/admin/pricing-types/${type.id}/status`, { is_active: newStatus });
+      // if (response.data.success) { ... }
+      
+      setPricingTypes(prev => prev.map(t => t.id === type.id ? { ...t, is_active: newStatus } : t));
+      Swal.fire('Updated!', `Pricing Type is now ${newStatus ? 'Active' : 'Inactive'}.`, 'success');
+    } catch (error: any) {
+      console.error(error);
+      Swal.fire('Error', 'Failed to update status', 'error');
+    }
   };
 
   const handleSave = async () => {
@@ -96,9 +96,9 @@ export default function ManagePricingTypes() {
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
             <tr>
-              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>ID</th>
               <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>NAME</th>
               <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>FRONTEND LABEL</th>
+              <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px' }}>IS ACTIVE</th>
               <th style={{ padding: '16px', fontWeight: 600, color: '#4b5563', fontSize: '13px', textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
@@ -112,9 +112,28 @@ export default function ManagePricingTypes() {
             ) : (
               pricingTypes.map(type => (
                 <tr key={type.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '16px', color: '#6b7280', fontSize: '14px' }}>{type.id}</td>
                   <td style={{ padding: '16px', fontWeight: 500, color: '#111827' }}>{type.name}</td>
                   <td style={{ padding: '16px', color: '#4b5563' }}>{type.label}</td>
+                  <td style={{ padding: '16px' }}>
+                    <label className="switch" title="Toggle Status" style={{ margin: 0, position: 'relative', display: 'inline-block', width: '40px', height: '24px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={type.is_active ?? true}
+                        onChange={() => handleToggleStatus(type)}
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span className="slider round" style={{ 
+                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
+                        backgroundColor: (type.is_active ?? true) ? '#10B981' : '#ccc', transition: '.4s', borderRadius: '24px' 
+                      }}>
+                        <span style={{
+                          position: 'absolute', content: '""', height: '16px', width: '16px', left: '4px', bottom: '4px',
+                          backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                          transform: (type.is_active ?? true) ? 'translateX(16px)' : 'translateX(0)'
+                        }}></span>
+                      </span>
+                    </label>
+                  </td>
                   <td style={{ padding: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                     <button
                       onClick={() => handleEditType(type)}
@@ -122,13 +141,6 @@ export default function ManagePricingTypes() {
                       title="Edit"
                     >
                       <MdEdit size={20} />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteType(type.id)}
-                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '4px' }}
-                      title="Delete"
-                    >
-                      <MdDelete size={20} />
                     </button>
                   </td>
                 </tr>

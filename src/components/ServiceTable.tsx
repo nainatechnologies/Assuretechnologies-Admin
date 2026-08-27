@@ -5,7 +5,7 @@ import './ProductTable.css'; // Reuse table styles
 interface ServiceTableProps {
   services: Service[];
   onEditService: (id: string) => void;
-  onDeleteService: (id: string) => void;
+
   onToggleStatus?: (id: string) => void;
 }
 
@@ -33,7 +33,7 @@ function ImageCell({ image, alt }: { image?: string | File; alt: string }) {
 export default function ServiceTable({
   services,
   onEditService,
-  onDeleteService,
+
   onToggleStatus
 }: ServiceTableProps) {
   if (services.length === 0) {
@@ -61,13 +61,15 @@ export default function ServiceTable({
             {services.map((service) => (
               <tr key={service.id}>
                 <td>
-                  <span className="product-id">#{service.id}</span>
+                  <span className="product-id">#{service.display_id || service.id}</span>
                 </td>
                 <td>
-                  <span className="product-category-badge">{service.category}</span>
+                  <span className="product-category-badge">
+                    {typeof service.category === 'object' ? (service.category as any).name : service.category}
+                  </span>
                 </td>
                 <td>
-                  <div className="product-name">{service.subCategory}</div>
+                  <div className="product-name">{service.name || service.subCategory}</div>
                 </td>
                 <td>
                   <div className="product-banner" title={service.imageName}>
@@ -80,7 +82,7 @@ export default function ServiceTable({
                       <label className="switch" title="Toggle Status" style={{ marginRight: '8px' }}>
                         <input 
                           type="checkbox" 
-                          checked={service.status === 'Active'}
+                          checked={service.status === 'Active' || (service as any).is_active === true}
                           onChange={() => onToggleStatus(service.id)}
                         />
                         <span className="slider round"></span>
@@ -93,13 +95,7 @@ export default function ServiceTable({
                     >
                       Edit
                     </button>
-                    <button
-                      className="action-btn delete-btn"
-                      onClick={() => onDeleteService(service.id)}
-                      title="Delete Service"
-                    >
-                      Delete
-                    </button>
+
                   </div>
                 </td>
               </tr>

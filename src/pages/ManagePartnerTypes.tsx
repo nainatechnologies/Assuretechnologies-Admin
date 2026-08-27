@@ -11,15 +11,22 @@ export default function ManagePartnerTypes() {
 
   // Form State
   const [typeName, setTypeName] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [description, setDescription] = useState('');
   const [customFields, setCustomFields] = useState<PartnerCustomField[]>([]);
+  const [categories, setCategories] = useState<{ _id: string; name: string }[]>([]);
 
   const fetchPartnerTypes = async () => {
     try {
       const response = await API.get('/admin/partner-types');
       if (response.data.success) {
         setPartnerTypes(response.data.data.map((pt: any) => ({
-          id: pt.id,
+          id: pt.id || pt._id,
           name: pt.name,
+          category_id: pt.category_id,
+          category: pt.category,
+          description: pt.description,
+          is_active: pt.is_active ?? true,
           customFields: pt.custom_fields || []
         })));
       }
@@ -28,13 +35,26 @@ export default function ManagePartnerTypes() {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const res = await API.get('/admin/categories');
+      const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
+
   useEffect(() => {
+    fetchCategories();
     fetchPartnerTypes();
   }, []);
 
   const handleAddType = () => {
     setEditingType(null);
     setTypeName('');
+    setCategoryId('');
+    setDescription('');
     setCustomFields([]);
     setIsModalOpen(true);
   };
@@ -42,6 +62,19 @@ export default function ManagePartnerTypes() {
   const handleEditType = (type: PartnerType) => {
     setEditingType(type);
     setTypeName(type.name);
+    
+    // Safely extract the UUID from either populated object or flat string
+    let catId = '';
+    if (typeof type.category_id === 'string') {
+      catId = type.category_id;
+    } else if (type.category) {
+      catId = (type.category as any)._id || (type.category as any).id || '';
+    } else if (typeof type.category_id === 'object' && type.category_id !== null) {
+      catId = (type.category_id as any)._id || (type.category_id as any).id || '';
+    }
+    
+    setCategoryId(catId);
+    setDescription(type.description || '');
     setCustomFields([...type.customFields]);
     setIsModalOpen(true);
   };
@@ -86,6 +119,22 @@ export default function ManagePartnerTypes() {
     setCustomFields(prev => prev.filter(f => f.id !== id));
   };
 
+  const handleToggleStatus = async (type: PartnerType) => {
+    try {
+      const newStatus = !(type.is_active ?? true);
+      const response = await API.patch(`/admin/partner-types/${type.id}/status`, {
+        is_active: newStatus
+      });
+      if (response.data.success) {
+        setPartnerTypes(prev => prev.map(t => t.id === type.id ? { ...t, is_active: newStatus } : t));
+        Swal.fire('Updated!', `Partner Type is now ${newStatus ? 'Active' : 'Inactive'}.`, 'success');
+      }
+    } catch (error: any) {
+      console.error(error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to update status', 'error');
+    }
+  };
+
   const handleSave = async () => {
     if (!typeName.trim()) {
       Swal.fire('Error', 'Partner Type Name is required', 'error');
@@ -98,14 +147,31 @@ export default function ManagePartnerTypes() {
       return;
     }
 
+    if (!categoryId) {
+      Swal.fire('Error', 'Category is required', 'error');
+      return;
+    }
+
     try {
       if (editingType) {
-        // Assume PUT API exists or will exist. For now mock local state update if it doesn't
-        setPartnerTypes(prev => prev.map(t => t.id === editingType.id ? { ...t, name: typeName, customFields } : t));
-        Swal.fire('Updated!', 'Partner Type updated successfully.', 'success');
+        const payload = {
+          name: typeName,
+          category_id: categoryId,
+          description,
+          custom_fields: customFields
+        };
+        console.log('Update Payload:', payload);
+        
+        const response = await API.put(`/admin/partner-types/${editingType.id}`, payload);
+        if (response.data.success) {
+          Swal.fire('Updated!', 'Partner Type updated successfully.', 'success');
+          fetchPartnerTypes();
+        }
       } else {
         const response = await API.post('/admin/partner-types', {
           name: typeName,
+          category_id: categoryId,
+          description,
           custom_fields: customFields
         });
         if (response.data.success) {
@@ -133,33 +199,45 @@ export default function ManagePartnerTypes() {
         <table className="w-full text-left border-collapse" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
           <thead>
             <tr className="border-b border-gray-200" style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Type Name</th>
-              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Custom Fields Count</th>
-              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Fields Required</th>
+              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Category Name</th>
+              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Partner Type</th>
+              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Is Active</th>
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px', width: '100px' }}>Action</th>
             </tr>
           </thead>
           <tbody>
-            {partnerTypes.length > 0 ? partnerTypes.map(type => (
+            {partnerTypes.length > 0 ? partnerTypes.map(type => {
+              const categoryName = type.category?.name || categories.find(c => c._id === type.category_id)?.name || 'Unknown Category';
+              return (
               <tr key={type.id} className="border-b border-gray-100 hover:bg-gray-50 transition" style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td className="py-3 px-4 text-sm font-medium" style={{ padding: '12px', color: '#111827' }}>
-                  {type.name}
-                </td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px', color: '#4b5563' }}>
-                  {type.customFields.length} Fields
+                  <span style={{ background: '#f1f5f9', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', border: '1px solid #e2e8f0', color: '#475569' }}>
+                    {categoryName}
+                  </span>
+                </td>
+                <td className="py-3 px-4 text-sm font-medium" style={{ padding: '12px', color: '#111827' }}>
+                  <div>{type.name}</div>
+                  {type.description && <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{type.description}</div>}
                 </td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {type.customFields.map(cf => (
-                      <span key={cf.id} style={{ 
-                        fontSize: '11px', padding: '2px 8px', background: '#f1f5f9', 
-                        border: '1px solid #e2e8f0', borderRadius: '12px', color: '#475569' 
-                      }}>
-                        {cf.label} {cf.required && <span style={{ color: '#ef4444' }}>*</span>}
-                      </span>
-                    ))}
-                    {type.customFields.length === 0 && <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>None</span>}
-                  </div>
+                  <label className="switch" title="Toggle Status" style={{ margin: 0, position: 'relative', display: 'inline-block', width: '40px', height: '24px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={type.is_active ?? true}
+                      onChange={() => handleToggleStatus(type)}
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span className="slider round" style={{ 
+                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, 
+                      backgroundColor: (type.is_active ?? true) ? '#10B981' : '#ccc', transition: '.4s', borderRadius: '24px' 
+                    }}>
+                      <span style={{
+                        position: 'absolute', content: '""', height: '16px', width: '16px', left: '4px', bottom: '4px',
+                        backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                        transform: (type.is_active ?? true) ? 'translateX(16px)' : 'translateX(0)'
+                      }}></span>
+                    </span>
+                  </label>
                 </td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -172,7 +250,7 @@ export default function ManagePartnerTypes() {
                   </div>
                 </td>
               </tr>
-            )) : (
+            )}) : (
               <tr>
                 <td colSpan={4} style={{ textAlign: 'center', padding: '32px', color: '#6b7280' }}>
                   No partner types found. Create one to get started.
@@ -197,14 +275,38 @@ export default function ManagePartnerTypes() {
             </div>
 
             <div style={{ padding: '24px', overflowY: 'auto' }}>
-              <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>Type Name (e.g. Drone, Tractor)</label>
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>Category *</label>
+                <select 
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontSize: '14px', backgroundColor: 'white' }}
+                >
+                  <option value="">Select Category...</option>
+                  {categories.map((cat: any) => (
+                    <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>Type Name (e.g. Drone, Tractor) *</label>
                 <input 
                   type="text" 
                   value={typeName}
                   onChange={(e) => setTypeName(e.target.value)}
                   placeholder="Enter partner type name"
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontSize: '14px' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '8px' }}>Description</label>
+                <textarea 
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Enter description (e.g. Professional drone pilot)"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', fontSize: '14px', minHeight: '80px', resize: 'vertical' }}
                 />
               </div>
 

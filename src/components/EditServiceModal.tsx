@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { Service, CustomField } from '../types';
-import { CATEGORIES } from './ProductForm';
 import { MdClose, MdAdd, MdDelete } from 'react-icons/md';
 import './EditProductModal.css'; // Reuse modal styles
 
@@ -9,13 +8,15 @@ interface EditServiceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdateService: (updatedService: Service) => void;
+  categories: { id?: string; _id?: string; name: string }[];
 }
 
 export default function EditServiceModal({
   service,
   isOpen,
   onClose,
-  onUpdateService
+  onUpdateService,
+  categories
 }: EditServiceModalProps) {
   const [category, setCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
@@ -29,12 +30,13 @@ export default function EditServiceModal({
 
   useEffect(() => {
     if (service) {
-      setCategory(service.category || '');
-      setSubCategory(service.subCategory || '');
+      setCategory(service.category_id || (typeof service.category === 'object' ? (service.category as any).id : service.category) || '');
+      setSubCategory(service.name || service.subCategory || '');
       setImageName(service.imageName || 'No file chosen');
       setImageFile(null);
-      setCustomFields(service.customFields || []);
-      setPrebookingCharge(service.prebookingCharge);
+      setCustomFields(service.custom_fields || service.customFields || []);
+      const charge = service.prebooking_charge !== undefined ? service.prebooking_charge : service.prebookingCharge;
+      setPrebookingCharge(charge !== undefined ? Number(charge) : undefined);
       
       if (service.image instanceof File) {
         setPreviewUrl(URL.createObjectURL(service.image));
@@ -127,8 +129,8 @@ export default function EditServiceModal({
                   required
                 >
                   <option value="" disabled hidden>Select Category...</option>
-                  {CATEGORIES.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {categories.map(cat => (
+                    <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
                   ))}
                 </select>
               </div>

@@ -1,40 +1,46 @@
+
 import { useState, useRef, useEffect } from 'react';
+
 import type { PartnerService, CustomField } from '../types';
 import { MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 
-import { CATEGORIES } from './ProductForm';
 import { usePartnerContext } from '../context/PartnerContext';
 
 interface PartnerServiceFormProps {
   onSaveService: (service: Omit<PartnerService, 'id'> | PartnerService) => void;
   onCancel?: () => void;
   initialData?: PartnerService | null;
+  categories: { id?: string; _id?: string; name: string }[];
+  partnerTypes: { id: string; name: string }[];
 }
 
-export default function PartnerServiceForm({ onSaveService, onCancel, initialData }: PartnerServiceFormProps) {
+export default function PartnerServiceForm({ onSaveService, onCancel, initialData, categories, partnerTypes }: PartnerServiceFormProps) {
   const { pricingTypes } = usePartnerContext();
 
-  const [category, setCategory] = useState(initialData?.category || '');
-  const [serviceName, setServiceName] = useState(initialData?.serviceName || '');
+  const [category_id, setCategoryId] = useState(initialData?.category_id || '');
+  const [serviceName, setServiceName] = useState(initialData?.name || initialData?.serviceName || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [customFields, setCustomFields] = useState<CustomField[]>(initialData?.customFields || []);
+  const [customFields, setCustomFields] = useState<CustomField[]>(initialData?.custom_fields || initialData?.customFields || []);
   const [pricingTypeId, setPricingTypeId] = useState<string>(initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
-  const [rate, setRate] = useState<number | undefined>(initialData?.rate);
+  const [required_partner_type_id, setRequiredPartnerTypeId] = useState<string>(initialData?.required_partner_type_id || '');
+  const [rate, setRate] = useState<number | undefined>(initialData?.price !== undefined ? initialData.price : initialData?.rate);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialData) {
-      setCategory(initialData.category);
-      setServiceName(initialData.serviceName);
-      setCustomFields(initialData.customFields || []);
+      setCategoryId(initialData.category_id || '');
+      setServiceName(initialData.name || initialData.serviceName || '');
+      setCustomFields(initialData.custom_fields || initialData.customFields || []);
       setPricingTypeId(initialData.pricingTypeId || '');
-      setRate(initialData.rate);
+      setRequiredPartnerTypeId(initialData.required_partner_type_id || '');
+      setRate(initialData.price !== undefined ? initialData.price : initialData.rate);
     } else {
-      setCategory('');
+      setCategoryId('');
       setServiceName('');
       setCustomFields([]);
       setPricingTypeId(pricingTypes.length > 0 ? pricingTypes[0].id : '');
+      setRequiredPartnerTypeId('');
       setRate(undefined);
     }
   }, [initialData]);
@@ -44,11 +50,12 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
     if (!serviceName) return;
 
     const submittedData = {
-      category,
+      category_id,
       serviceName,
       image: imageFile || initialData?.image || '',
       imageName: imageFile ? imageFile.name : initialData?.imageName || 'No file chosen',
       pricingTypeId,
+      required_partner_type_id,
       rate: rate || 0,
       customFields: customFields.map(cf => ({
         ...cf,
@@ -61,14 +68,6 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
     } else {
       onSaveService(submittedData);
     }
-
-    setCategory('');
-    setServiceName('');
-    setImageFile(null);
-    setCustomFields([]);
-    setPricingTypeId(pricingTypes.length > 0 ? pricingTypes[0].id : '');
-    setRate(undefined);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,16 +107,36 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
                 id="serviceCategory"
                 className="input-field category-select colorful-input"
                 style={{ width: '100%', paddingRight: '40px' }}
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={category_id}
+                onChange={(e) => setCategoryId(e.target.value)}
                 required
               >
                 <option value="" disabled hidden>Select Category...</option>
-                {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categories.map(cat => (
+                  <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
                 ))}
               </select>
-              {category && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
+              {category_id && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
+            </div>
+
+            {/* Required Partner Type */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', flex: 1 }}>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Partner Type</label>
+              <select
+                value={required_partner_type_id}
+                onChange={(e) => setRequiredPartnerTypeId(e.target.value)}
+                required
+                style={{
+                  padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#f8fafc', color: '#1e293b', fontSize: '14px',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', appearance: 'none', cursor: 'pointer'
+                }}
+              >
+                <option value="" disabled hidden>Select Partner Type...</option>
+                {partnerTypes.map(pt => (
+                  <option key={pt.id} value={pt.id}>{pt.name}</option>
+                ))}
+              </select>
+              {required_partner_type_id && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
             </div>
           </div>
 

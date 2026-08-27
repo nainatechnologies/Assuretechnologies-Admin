@@ -40,7 +40,7 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
             {viewType === 'assignments-accepted' ? (
               <>
                 <th>#</th>
-                <th>Date</th>
+                <th>Scheduled Date</th>
                 <th>SR ID</th>
                 <th>Service</th>
                 <th>User</th>
@@ -61,7 +61,7 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                 <th>Order ID</th>
                 <th>User</th>
                 <th>Service</th>
-                <th>Date</th>
+                <th>Scheduled Date</th>
                 <th>Time</th>
                 <th>Status</th>
                 <th>Payment Status</th>
@@ -77,7 +77,7 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                 <>
                   <td>{index + 1}</td>
                   <td>{req.date}</td>
-                  <td>{req.id}</td>
+                  <td>{req.displayId || req.id}</td>
                   <td>{req.serviceName}</td>
                   <td>{req.userName}</td>
                   <td>{req.userEmail}</td>
@@ -94,7 +94,7 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
               ) : viewType === 'assignments-new' ? (
                 <>
                   <td>{req.date}</td>
-                  <td>{req.id}</td>
+                  <td>{req.displayId || req.id}</td>
                   <td>
                     <div className="user-info">
                       <span className="user-name">{req.userName}</span>
@@ -112,7 +112,7 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                 </>
               ) : (
                 <>
-                  <td>{req.id}</td>
+                  <td>{req.displayId || req.id}</td>
                   <td>
                     <div className="user-info">
                       <span className="user-name">{req.userName}</span>
