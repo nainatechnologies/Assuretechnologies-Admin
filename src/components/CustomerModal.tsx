@@ -128,8 +128,8 @@ export default function CustomerModal({
           stateName: c.state_name || '',
           isMobileVerified: c.is_mobile_verified,
           status: c.is_active ? 'Active' : 'Inactive',
-          ordersCount: c.ordersCount || 0,
-          totalSpent: c.totalSpent || 0,
+          ordersCount: c.ordersCount ?? c.order_count ?? (c.orders ? c.orders.length : (customer?.ordersCount || 0)),
+          totalSpent: c.totalSpent ?? c.total_spent ?? (c.orders ? c.orders.reduce((sum: number, o: any) => sum + parseFloat(o.total_amount || 0), 0) : (customer?.totalSpent || 0)),
           createdAt: c.createdAt,
           addresses: (c.addresses || []).map((a: any) => ({
             id: a.id,
@@ -241,7 +241,7 @@ export default function CustomerModal({
               setOrdersPage(1);
             }}
           >
-            <MdShoppingBag /> Orders ({activeCustomer?.ordersCount || 0})
+            <MdShoppingBag /> Orders ({customerOrders.length || activeCustomer?.ordersCount || 0})
           </button>
           <button 
             className={`customer-tab-btn ${activeTab === 'edit' ? 'active' : ''}`}
@@ -319,7 +319,7 @@ export default function CustomerModal({
                     <h3>Activity & Store Metrics</h3>
                     <div className="customer-metrics-row">
                       <div className="metric-box">
-                        <span className="metric-num">{activeCustomer.ordersCount || 0}</span>
+                        <span className="metric-num">{customerOrders.length || activeCustomer?.ordersCount || 0}</span>
                         <span className="metric-title">Total Orders</span>
                       </div>
                       <div className="metric-box">

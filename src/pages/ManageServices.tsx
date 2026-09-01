@@ -60,9 +60,9 @@ export default function ManageServices() {
   const handleAddService = async (newServiceData: Omit<Service, 'id'>) => {
     try {
       const formData = new FormData();
-      formData.append('category_id', newServiceData.category_id);
+      formData.append('category_id', (newServiceData.category_id || newServiceData.category || ''));
       formData.append('service_owner_type', 'Admin');
-      formData.append('name', newServiceData.subCategory);
+      formData.append('name', (newServiceData.name || newServiceData.subCategory || ''));
       if (newServiceData.prebookingCharge !== undefined) {
         formData.append('prebooking_charge', String(newServiceData.prebookingCharge));
       }
@@ -103,9 +103,9 @@ export default function ManageServices() {
   const handleUpdateService = async (updatedService: Service) => {
     try {
       const formData = new FormData();
-      formData.append('category_id', updatedService.category || updatedService.category_id);
+      formData.append('category_id', (updatedService.category_id || updatedService.category || ''));
       formData.append('service_owner_type', 'Admin');
-      formData.append('name', updatedService.name || updatedService.subCategory);
+      formData.append('name', (updatedService.name || updatedService.subCategory || ''));
       if (updatedService.prebookingCharge !== undefined) {
         formData.append('prebooking_charge', String(updatedService.prebookingCharge));
       }

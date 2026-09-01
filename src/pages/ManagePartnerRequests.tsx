@@ -4,7 +4,7 @@ import Pagination from '../components/Pagination';
 import PartnerBookingDetailsModal from '../components/PartnerBookingDetailsModal';
 import AssignPartnerModal from '../components/AssignPartnerModal';
 import type { PartnerBooking, DronePartner } from '../types';
-import Swal from 'sweetalert2';
+// import Swal from 'sweetalert2';
 import './ManageServiceAssignments.css';
 
 const MOCK_PARTNERS: DronePartner[] = [
@@ -144,7 +144,7 @@ const INITIAL_BOOKINGS: PartnerBooking[] = [
 
 export default function ManagePartnerRequests() {
   const [activeTab, setActiveTab] = useState<'assigned' | 'inProgress' | 'awaiting' | 'completed' | 'cancelled'>('assigned');
-  const [bookings, setBookings] = useState<PartnerBooking[]>(INITIAL_BOOKINGS);
+  const [bookings] = useState<PartnerBooking[]>(INITIAL_BOOKINGS);
   
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<PartnerBooking | null>(null);
@@ -189,30 +189,6 @@ export default function ManagePartnerRequests() {
     setAssignModalOpen(true);
   };
 
-  const handleAssignConfirm = (_bookingId: string, partnerId: string) => {
-    if (selectedReassignId) {
-      Swal.fire({
-        title: 'Reassign Partner?',
-        text: "Are you sure you want to reassign this booking?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        confirmButtonText: 'Yes, Reassign'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setBookings(prev => prev.map(booking => 
-            booking.id === selectedReassignId 
-              ? { ...booking, partnerId, status: 'Assigned' } 
-              : booking
-          ));
-          setAssignModalOpen(false);
-          setSelectedReassignId(null);
-          setActiveTab('assigned');
-          Swal.fire('Reassigned!', 'Partner has been reassigned successfully.', 'success');
-        }
-      });
-    }
-  };
 
   return (
     <div className="manage-assignments-page">
@@ -280,15 +256,15 @@ export default function ManagePartnerRequests() {
       {assignModalOpen && selectedReassignId && (
         <AssignPartnerModal 
           booking={bookings.find(b => b.id === selectedReassignId)!}
-          dronePartners={MOCK_PARTNERS.filter(p => {
-             const booking = bookings.find(b => b.id === selectedReassignId);
-             return booking && (p.partnerType === booking.partnerType || (!p.partnerType && booking.partnerType === 'Drone'));
-          })}
           onClose={() => {
             setAssignModalOpen(false);
             setSelectedReassignId(null);
           }}
-          onAssign={handleAssignConfirm}
+          onAssignSuccess={() => {
+            setAssignModalOpen(false);
+            setSelectedReassignId(null);
+            setActiveTab('assigned');
+          }}
         />
       )}
     </div>

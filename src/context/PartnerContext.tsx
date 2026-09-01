@@ -31,9 +31,9 @@ const INITIAL_PRICING_TYPES: PricingType[] = [
 ];
 
 const INITIAL_SERVICES: PartnerService[] = [
-  { id: 'ps1', category: 'Agritech', serviceName: '10L Drone Spraying', pricingTypeId: 'prt1', rate: 400 },
-  { id: 'ps2', category: 'Agritech', serviceName: 'Tractor Plowing', pricingTypeId: 'prt2', rate: 500 },
-  { id: 'ps3', category: 'Agriculture', serviceName: 'Harvesting Machine', pricingTypeId: 'prt1', rate: 800 }
+  { id: 'ps1', category: 'Agritech', category_id: 'cat1', serviceName: '10L Drone Spraying', pricingTypeId: 'prt1', rate: 400 },
+  { id: 'ps2', category: 'Agritech', category_id: 'cat1', serviceName: 'Tractor Plowing', pricingTypeId: 'prt2', rate: 500 },
+  { id: 'ps3', category: 'Agriculture', category_id: 'cat2', serviceName: 'Harvesting Machine', pricingTypeId: 'prt1', rate: 800 }
 ];
 
 const INITIAL_PARTNERS: Partner[] = [
