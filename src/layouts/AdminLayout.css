@@ -108,3 +108,10 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}

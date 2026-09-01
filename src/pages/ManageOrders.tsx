@@ -1,3 +1,5 @@
+import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 import { useState, useEffect } from 'react';
 import { MdShoppingCart, MdSearch } from 'react-icons/md';
 import API from '../services/api';
@@ -17,11 +19,14 @@ export default function ManageOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Cancelled'];
 
   const fetchOrders = async () => {
     try {
+      setIsLoading(true);
       const response = await API.get('/admin/orders');
       const adminOrders: any[] = [];
 
@@ -42,6 +47,8 @@ export default function ManageOrders() {
     } catch (error) {
       console.error('Failed to fetch orders', error);
       Swal.fire('Error', 'Failed to fetch orders', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,6 +66,10 @@ export default function ManageOrders() {
       order.email.toLowerCase().includes(query);
     return matchesTab && matchesSearch;
   });
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage) || 1;
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => {
     let actionText = '';
@@ -176,14 +187,26 @@ export default function ManageOrders() {
         </div>
       </div>
 
-      <OrderTable
-        orders={filteredOrders}
-        currentTab={activeTab}
-        hideActions={false}
-        onViewOrder={setSelectedOrder}
-        onActionOrder={handleActionOrder}
-        onTrackOrder={setTrackingOrder}
-      />
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <>
+          <OrderTable
+            orders={paginatedOrders}
+            currentTab={activeTab}
+            hideActions={false}
+            onViewOrder={setSelectedOrder}
+            onActionOrder={handleActionOrder}
+            onTrackOrder={setTrackingOrder}
+          />
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </>
+      )}
 
       {selectedOrder && (
         <OrderModal

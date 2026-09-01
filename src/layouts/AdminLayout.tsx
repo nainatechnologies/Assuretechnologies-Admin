@@ -1,3 +1,4 @@
+import NotificationsDropdown from '../components/NotificationsDropdown';
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt, MdAttachMoney, MdWork, MdPeople } from 'react-icons/md';
@@ -145,22 +146,25 @@ export default function AdminLayout() {
       {/* Main Content Area */}
       <main className="main-content">
         <header className="topbar">
-          <div className="profile-container">
-            <div className="topbar-user" onClick={() => setIsProfileOpen(!isProfileOpen)}>
-              <span className="topbar-username">Admin User</span>
-              <div className="topbar-avatar">
-                A
+          <div className="topbar-actions">
+            <NotificationsDropdown />
+            <div className="profile-container">
+              <div className="topbar-user" onClick={() => setIsProfileOpen(!isProfileOpen)}>
+                <span className="topbar-username">Admin User</span>
+                <div className="topbar-avatar">
+                  A
+                </div>
               </div>
-            </div>
 
-            {isProfileOpen && (
-              <div className="profile-dropdown animate-fade-in">
-                <button className="dropdown-item" onClick={handleLogout}>
-                  <MdLogout />
-                  Logout
-                </button>
-              </div>
-            )}
+              {isProfileOpen && (
+                <div className="profile-dropdown animate-fade-in">
+                  <button className="dropdown-item" onClick={handleLogout}>
+                    <MdLogout />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -171,4 +175,3 @@ export default function AdminLayout() {
     </div>
   );
 }
-
