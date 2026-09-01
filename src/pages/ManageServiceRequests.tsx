@@ -1,133 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ServiceRequestTable from '../components/ServiceRequestTable';
 import Pagination from '../components/Pagination';
 import ServiceRequestDetailsModal from '../components/ServiceRequestDetailsModal';
 import AssignTechnicianModal from '../components/AssignTechnicianModal';
-import type { ServiceRequest, Technician } from '../types';
+import type { ServiceRequest, ServiceRequestStatus } from '../types';
+import API from '../services/api';
 import Swal from 'sweetalert2';
 import './ManageServiceAssignments.css';
 
-const MOCK_TECHNICIANS: Technician[] = [
-  {
-    id: 'T1',
-    name: 'Venkatesh',
-    mobile: '9876543210',
-    email: 'venkat@example.com',
-    address: 'srnagar',
-    location: '500001, 500002',
-    status: 'Active'
-  },
-  {
-    id: 'T2',
-    name: 'Suresh',
-    mobile: '9876543211',
-    email: 'suresh@example.com',
-    address: 'ameerpet',
-    location: '500032, 500033',
-    status: 'Active'
-  }
-];
-
-const INITIAL_REQUESTS: ServiceRequest[] = [
-  {
-    id: 'SR1784871293',
-    userId: 'U1',
-    userName: 'admin',
-    userMobile: '9988776655',
-    userEmail: 'admin@example.com',
-    userAddress: 'srnagar',
-    serviceName: 'agricture',
-    date: '24 Jul 2026',
-    time: '2 PM - 4 PM',
-    status: 'Assigned',
-    technicianId: 'T1'
-  },
-  {
-    id: 'SR1777906629',
-    userId: 'U2',
-    userName: 'Venkatesh Marripelly',
-    userMobile: '9701712335',
-    userEmail: 'venkatakrishnadandu@gmail.com',
-    userAddress: 'srnagar',
-    serviceName: 'walkie talkies',
-    date: '06 May 2026',
-    time: '9 AM - 11 AM',
-    status: 'Assigned',
-    technicianId: 'T2',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2'],
-    customFieldResponses: {
-      'Number of Devices': '12',
-      'Preferred Brand': 'Motorola'
-    },
-    paymentStatus: 'Prebooking Paid',
-    prebookingAmountPaid: 500
-  },
-  {
-    id: 'SR1767504918',
-    userId: 'U3',
-    userName: 'siri',
-    userMobile: '9505261283',
-    userEmail: 'siri@gmail.com',
-    userAddress: 'srnagar',
-    serviceName: 'Cctv installation',
-    date: '06 Jan 2026',
-    time: '9 AM - 11 AM',
-    status: 'Assigned', // Let's keep it as Assigned but simulate awaiting approval data
-    technicianId: 'T2'
-  },
-  {
-    id: 'SR1767504955',
-    userId: 'U3',
-    userName: 'siri',
-    userMobile: '9505261283',
-    userEmail: 'siri@gmail.com',
-    userAddress: 'srnagar',
-    serviceName: 'Router installation',
-    date: '10 Jan 2026',
-    time: '2 PM - 4 PM',
-    status: 'In Progress',
-    technicianId: 'T1',
-    progressUpdates: [
-      {
-        id: 'PRG1',
-        date: '2026-07-25 10:00:00',
-        description: 'Installed the main router, testing signal strength across rooms.',
-        photos: ['https://placehold.co/150x150/e2e8f0/64748b?text=Progress+1'] // Added mock photo
-      }
-    ]
-  },
-  {
-    id: 'SR1784884394',
-    userId: 'U1',
-    userName: 'admin',
-    userMobile: '9988776655',
-    userEmail: 'admin@example.com',
-    userAddress: 'srnagar',
-    serviceName: 'agricture',
-    date: '24 Jul 2026',
-    time: '4 PM - 6 PM',
-    status: 'Pending'
-  },
-  {
-    id: 'SR1784889999',
-    userId: 'U4',
-    userName: 'Ravi',
-    userMobile: '9123456780',
-    userEmail: 'ravi@example.com',
-    userAddress: 'kondapur',
-    serviceName: 'Plumbing Repair',
-    date: '20 Jul 2026',
-    time: '10 AM - 12 PM',
-    status: 'Completed',
-    technicianId: 'T1',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+Pipe+Leak'],
-    completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+Fixed+Pipe']
-  }
-];
-
 export default function ManageServiceRequests() {
   const [activeTab, setActiveTab] = useState<'assigned' | 'inProgress' | 'awaiting' | 'completed' | 'cancelled'>('assigned');
-  const [requests, setRequests] = useState<ServiceRequest[]>(INITIAL_REQUESTS);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [loading, setLoading] = useState(false);
   
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
@@ -136,28 +20,126 @@ export default function ManageServiceRequests() {
   const [selectedReassignId, setSelectedReassignId] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab]);
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      let backendStatus = 'ASSIGNED';
+      if (activeTab === 'assigned') backendStatus = 'ASSIGNED';
+      else if (activeTab === 'inProgress') backendStatus = 'IN_PROGRESS';
+      else if (activeTab === 'awaiting') backendStatus = 'AWAITING_APPROVAL';
+      else if (activeTab === 'completed') backendStatus = 'COMPLETED';
+      else if (activeTab === 'cancelled') backendStatus = 'CANCELLED';
 
-  const filteredRequests = useMemo(() => {
-    switch(activeTab) {
-      case 'assigned': return requests.filter(r => r.status === 'Assigned');
-      case 'inProgress': return requests.filter(r => r.status === 'In Progress');
-      case 'awaiting': return requests.filter(r => r.status === 'Awaiting Approval');
-      case 'completed': return requests.filter(r => r.status === 'Completed');
-      case 'cancelled': return requests.filter(r => r.status === 'Cancelled');
-      default: return [];
+      const response = await API.get(`/admin/service-bookings?status=${backendStatus}&page=${currentPage}&limit=${ITEMS_PER_PAGE}`);
+      if (response.data && response.data.success) {
+        const payload = response.data.data;
+        const rawData = Array.isArray(payload) ? payload : (payload?.data || []);
+        const totalP = payload?.totalPages || 1;
+        setTotalPages(totalP);
+
+        const mapped: ServiceRequest[] = rawData.map((raw: any) => {
+          let status: ServiceRequestStatus = 'Assigned';
+          if (raw.status === 'NEW' || raw.status === 'ACCEPTED') status = 'Pending';
+          else if (raw.status === 'ASSIGNED') status = 'Assigned';
+          else if (raw.status === 'IN_PROGRESS') status = 'In Progress';
+          else if (raw.status === 'AWAITING_APPROVAL') status = 'Awaiting Approval';
+          else if (raw.status === 'COMPLETED') status = 'Completed';
+          else if (raw.status === 'CANCELLED') status = 'Cancelled';
+
+          let formattedAddress = 'Address not provided';
+          if (raw.address) {
+            try {
+              const parsed = typeof raw.address === 'string' ? JSON.parse(raw.address) : raw.address;
+              const parts = [parsed.line1, parsed.line2, parsed.city, parsed.state, parsed.country].filter(Boolean);
+              if (parts.length > 0) {
+                formattedAddress = parts.join(', ');
+              } else {
+                formattedAddress = typeof raw.address === 'string' ? raw.address : JSON.stringify(raw.address);
+              }
+            } catch (e) {
+              formattedAddress = raw.address;
+            }
+          }
+
+          let formattedDate = 'N/A';
+          if (raw.scheduled_date) {
+            const d = new Date(raw.scheduled_date);
+            formattedDate = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          }
+
+          let paymentStatus: 'Prebooking Paid' | 'Pending' | 'Paid in Full' = 'Pending';
+          if (raw.Order?.payment_status === 'PAID') {
+            paymentStatus = 'Paid in Full';
+          } else if (raw.prebooking_paid) {
+            paymentStatus = 'Prebooking Paid';
+          }
+
+          const startPhotos = raw.progress_updates
+            ? raw.progress_updates.filter((p: any) => p.update_type === 'START').flatMap((p: any) => p.photos || [])
+            : [];
+
+          const completePhotos = raw.progress_updates
+            ? raw.progress_updates.filter((p: any) => p.update_type === 'COMPLETE').flatMap((p: any) => p.photos || [])
+            : [];
+
+          const mappedProgress = raw.progress_updates ? raw.progress_updates.map((p: any) => ({
+            id: p.id,
+            date: new Date(p.createdAt).toLocaleString(),
+            description: p.description,
+            photos: p.photos || []
+          })) : [];
+
+          return {
+            id: raw.id,
+            displayId: raw.display_id || raw.id,
+            userId: raw.Order?.customer_id || 'U1',
+            userName: raw.Order?.customer_name || 'Customer',
+            userMobile: raw.Order?.customer_contact || 'N/A',
+            userEmail: raw.Order?.customer?.email || 'N/A',
+            userAddress: formattedAddress,
+            pincode: raw.pincode || '',
+            serviceName: raw.Service?.name || 'Service Request',
+            date: formattedDate,
+            time: raw.scheduled_time_slot || (raw.scheduled_date ? new Date(raw.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'),
+            status: status,
+            technicianId: raw.assigned_technician_id || undefined,
+            technician: raw.assigned_technician ? {
+              id: raw.assigned_technician.id,
+              name: raw.assigned_technician.full_name || raw.assigned_technician.name || 'Technician',
+              mobile: raw.assigned_technician.mobile,
+              email: raw.assigned_technician.email,
+              address: '',
+              location: '',
+              status: 'Active'
+            } : undefined,
+            paymentStatus: paymentStatus,
+            prebookingAmountPaid: raw.prebooking_paid ? Number(raw.Service?.prebooking_charge || 0) : 0,
+            customFieldResponses: raw.metadata?.custom_field_responses || raw.metadata?.custom_fields || raw.metadata || {},
+            startWorkPhotos: startPhotos,
+            completeWorkPhotos: completePhotos,
+            progressUpdates: mappedProgress
+          };
+        });
+        setRequests(mapped);
+      }
+    } catch (error) {
+      console.error('Failed to fetch service requests:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [requests, activeTab]);
+  }, [activeTab, currentPage]);
 
-  const totalPages = Math.ceil(filteredRequests.length / ITEMS_PER_PAGE);
-  const paginatedRequests = filteredRequests.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const handleTabClick = (tab: 'assigned' | 'inProgress' | 'awaiting' | 'completed' | 'cancelled') => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
 
   const handleView = (id: string) => {
     const request = requests.find(r => r.id === id);
@@ -167,26 +149,51 @@ export default function ManageServiceRequests() {
     }
   };
 
+
+  const handleApproveWork = (id: string) => {
+    Swal.fire({
+      title: 'Approve Work?',
+      text: "Do you want to approve this work and mark the service as completed?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4f46e5',
+      confirmButtonText: 'Yes, Approve'
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await API.patch(`/admin/service-bookings/${id}/status`, { status: 'COMPLETED' });
+          await fetchRequests();
+          if (selectedRequest?.id === id) {
+            setViewModalOpen(false);
+          }
+          Swal.fire('Success', 'Service work approved and marked as Completed.', 'success');
+        } catch (err: any) {
+          Swal.fire('Error', err.response?.data?.message || 'Failed to approve work', 'error');
+        }
+      }
+    });
+  };
+
   const handleMarkAsPaid = (id: string) => {
     Swal.fire({
-      title: 'Mark as Paid?',
-      text: "Has the client completed the manual payment?",
+      title: 'Approve & Mark as Completed?',
+      text: "Do you want to approve this completed service and mark it complete?",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
-      confirmButtonText: 'Yes, Mark Paid'
-    }).then((result) => {
+      confirmButtonText: 'Yes, Approve'
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        setRequests(prev => prev.map(req => 
-          req.id === id 
-            ? { ...req, paymentStatus: 'Paid in Full' } 
-            : req
-        ));
-        
-        // Update selected request so modal reflects changes immediately
-        setSelectedRequest(prev => prev?.id === id ? { ...prev, paymentStatus: 'Paid in Full' } : prev);
-        
-        Swal.fire('Success', 'Payment marked as paid.', 'success');
+        try {
+          await API.patch(`/admin/service-bookings/${id}/status`, { status: 'COMPLETED' });
+          await fetchRequests();
+          if (selectedRequest?.id === id) {
+            setViewModalOpen(false);
+          }
+          Swal.fire('Success', 'Service marked as Completed.', 'success');
+        } catch (err: any) {
+          Swal.fire('Error', err.response?.data?.message || 'Failed to update status', 'error');
+        }
       }
     });
   };
@@ -194,31 +201,6 @@ export default function ManageServiceRequests() {
   const handleReassign = (id: string) => {
     setSelectedReassignId(id);
     setAssignModalOpen(true);
-  };
-
-  const handleAssignConfirm = (_requestId: string, technicianId: string) => {
-    if (selectedReassignId) {
-      Swal.fire({
-        title: 'Reassign Technician?',
-        text: "Are you sure you want to reassign this request?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        confirmButtonText: 'Yes, Reassign'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setRequests(prev => prev.map(req => 
-            req.id === selectedReassignId 
-              ? { ...req, technicianId, status: 'Assigned' } 
-              : req
-          ));
-          setAssignModalOpen(false);
-          setSelectedReassignId(null);
-          setActiveTab('assigned');
-          Swal.fire('Reassigned!', 'Technician has been reassigned successfully.', 'success');
-        }
-      });
-    }
   };
 
   return (
@@ -231,56 +213,65 @@ export default function ManageServiceRequests() {
         <div className="tabs-container overflow-x-auto">
           <button 
             className={`tab-btn whitespace-nowrap ${activeTab === 'assigned' ? 'active' : ''}`}
-            onClick={() => setActiveTab('assigned')}
+            onClick={() => handleTabClick('assigned')}
           >
             Assigned
           </button>
           <button 
             className={`tab-btn whitespace-nowrap ${activeTab === 'inProgress' ? 'active' : ''}`}
-            onClick={() => setActiveTab('inProgress')}
+            onClick={() => handleTabClick('inProgress')}
           >
             In Progress
           </button>
           <button 
             className={`tab-btn whitespace-nowrap ${activeTab === 'awaiting' ? 'active' : ''}`}
-            onClick={() => setActiveTab('awaiting')}
+            onClick={() => handleTabClick('awaiting')}
           >
             Awaiting Approval
           </button>
           <button 
             className={`tab-btn whitespace-nowrap ${activeTab === 'completed' ? 'active' : ''}`}
-            onClick={() => setActiveTab('completed')}
+            onClick={() => handleTabClick('completed')}
           >
             Completed
           </button>
           <button 
             className={`tab-btn whitespace-nowrap ${activeTab === 'cancelled' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cancelled')}
+            onClick={() => handleTabClick('cancelled')}
           >
             Cancelled
           </button>
         </div>
 
         <div className="tab-content">
-          <ServiceRequestTable 
-            requests={paginatedRequests}
-            viewType="requests"
-            onView={handleView}
-            onReassign={handleReassign}
-            onMarkAsPaid={handleMarkAsPaid}
-          />
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {loading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#6b7280' }}>
+              Loading service requests...
+            </div>
+          ) : (
+            <ServiceRequestTable 
+              requests={requests}
+              viewType="requests"
+              onView={handleView}
+              onReassign={handleReassign}
+              onMarkAsPaid={handleMarkAsPaid}
+              onApprove={handleApproveWork}
+            />
+          )}
+          {totalPages > 1 && (
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          )}
         </div>
       </div>
 
       {viewModalOpen && selectedRequest && (
         <ServiceRequestDetailsModal 
           request={selectedRequest}
-          technician={selectedRequest.technicianId ? MOCK_TECHNICIANS.find(t => t.id === selectedRequest.technicianId) : undefined}
+          technician={selectedRequest.technician}
           onClose={() => setViewModalOpen(false)}
           onMarkAsPaid={handleMarkAsPaid}
         />
@@ -289,12 +280,15 @@ export default function ManageServiceRequests() {
       {assignModalOpen && selectedReassignId && (
         <AssignTechnicianModal 
           request={requests.find(r => r.id === selectedReassignId)!}
-          technicians={MOCK_TECHNICIANS}
           onClose={() => {
             setAssignModalOpen(false);
             setSelectedReassignId(null);
           }}
-          onAssign={handleAssignConfirm}
+          onAssignSuccess={() => {
+            setAssignModalOpen(false);
+            setSelectedReassignId(null);
+            fetchRequests();
+          }}
         />
       )}
     </div>

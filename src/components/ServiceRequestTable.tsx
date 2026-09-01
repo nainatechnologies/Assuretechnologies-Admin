@@ -9,10 +9,11 @@ interface Props {
   onView?: (id: string) => void;
   onAssign?: (id: string) => void;
   onReassign?: (id: string) => void;
+  onApprove?: (id: string) => void;
   onMarkAsPaid?: (id: string) => void;
 }
 
-export default function ServiceRequestTable({ requests, viewType, onAccept, onReject, onView, onAssign, onReassign, onMarkAsPaid }: Props) {
+export default function ServiceRequestTable({ requests, viewType, onAccept, onReject, onView, onAssign, onReassign, onApprove, onMarkAsPaid }: Props) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'New Request':
@@ -140,6 +141,15 @@ export default function ServiceRequestTable({ requests, viewType, onAccept, onRe
                       {req.status === 'In Progress' && onReassign && (
                         <button className="btn-assign" onClick={() => onReassign(req.id)}>
                           Reassign
+                        </button>
+                      )}
+                      {(req.status === 'Awaiting Approval') && onApprove && (
+                        <button 
+                          className="btn-assign" 
+                          style={{ backgroundColor: '#4f46e5' }} 
+                          onClick={() => onApprove(req.id)}
+                        >
+                          Approve
                         </button>
                       )}
                       {req.status === 'Completed' && req.paymentStatus !== 'Paid in Full' && onMarkAsPaid && (

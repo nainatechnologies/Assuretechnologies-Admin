@@ -10,7 +10,7 @@ interface ServiceRequestDetailsModalProps {
   onMarkAsPaid?: (id: string) => void;
 }
 
-export default function ServiceRequestDetailsModal({ request, technician, onClose, onMarkAsPaid }: ServiceRequestDetailsModalProps) {
+export default function ServiceRequestDetailsModal({ request, technician, onClose }: ServiceRequestDetailsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -74,16 +74,6 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
             </div>
           </div>
 
-          {request.customFieldResponses && Object.keys(request.customFieldResponses).length > 0 && (
-            <div className="details-card">
-              Additional Information <br/><br/>
-              {Object.entries(request.customFieldResponses).map(([key, value]) => (
-                <div className="details-row" key={key}>
-                  <strong>{key}:</strong> {value}
-                </div>
-              ))}
-            </div>
-          )}
 
           <div className="details-card">
             Technician <br/><br/>

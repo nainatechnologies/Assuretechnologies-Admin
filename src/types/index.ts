@@ -152,6 +152,7 @@ export interface ServiceRequest {
   time: string;
   status: ServiceRequestStatus;
   technicianId?: string;
+  technician?: Technician;
   startDescription?: string;
   startWorkPhotos?: string[];
   completeWorkPhotos?: string[];
