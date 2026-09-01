@@ -82,11 +82,11 @@ export default function ManageVendors() {
         formData.append('email', vendorData.email);
         formData.append('mobile', vendorData.mobile);
         formData.append('password', vendorData.password || 'TempPass123!');
-        formData.append('full_name', vendorData.fullName);
-        formData.append('business_name', vendorData.businessName);
-        formData.append('address', vendorData.fullAddress);
-        formData.append('gst_number', vendorData.gstNumber);
-        formData.append('pincode', vendorData.pincode);
+        formData.append('full_name', vendorData.fullName || '');
+        formData.append('business_name', vendorData.businessName || '');
+        formData.append('address', vendorData.fullAddress || '');
+        formData.append('gst_number', vendorData.gstNumber || '');
+        formData.append('pincode', vendorData.pincode || '');
         if (vendorData.businessDescription) formData.append('business_description', vendorData.businessDescription);
         if (vendorData.bankAccountDetails) formData.append('bank_account_details', vendorData.bankAccountDetails);
 

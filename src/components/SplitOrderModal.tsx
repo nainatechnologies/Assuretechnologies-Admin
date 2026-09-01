@@ -14,38 +14,56 @@ interface SplitOrderModalProps {
 
 export default function SplitOrderModal({ orderId, item, onClose, onSplit }: SplitOrderModalProps) {
   const [splitQty, setSplitQty] = useState<number | string>(1);
-  const [availableVendors, setAvailableVendors] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<{id: string | null, businessName: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<any>(null);
 
   const maxQty = item.qty; // Can split or reassign the entire quantity
 
-  // Fetch vendors on mount
+  // Debounced search when searchQuery changes
   useEffect(() => {
-    const fetchVendors = async () => {
-      try {
-        const response = await API.get('/admin/vendors');
-        if (response.data && response.data.data) {
-          const vendorsList = response.data.data.map((v: any) => ({
+    if (searchQuery.length > 0) {
+      setIsLoading(true);
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const response = await API.get(`/admin/vendors?search=${searchQuery}&limit=10`);
+          const vendorData = response.data?.vendors || response.data?.data || [];
+          let vendorsList = vendorData.map((v: any) => ({
             id: v.id,
-            fullName: v.full_name || '',
-            businessName: v.business_name || ''
+            fullName: v.full_name || v.fullName || '',
+            businessName: v.business_name || v.businessName || '',
+            pincode: v.pincode || ''
           }));
-          vendorsList.unshift({
-            id: null, // Admin product
-            fullName: 'Admin',
-            businessName: 'Admin Product'
-          });
-          setAvailableVendors(vendorsList);
+          
+          // Optionally add Admin Product if it matches search
+          if ('admin product'.includes(searchQuery.toLowerCase())) {
+            vendorsList.unshift({
+              id: null,
+              fullName: 'Admin',
+              businessName: 'Admin Product'
+            });
+          }
+          
+          setVendors(vendorsList);
+        } catch (err) {
+          console.error('Failed to search vendors', err);
+        } finally {
+          setIsLoading(false);
         }
-      } catch (err) {
-        console.error('Failed to fetch vendors for split', err);
-      }
+      }, 400); // 400ms debounce
+    } else {
+      setVendors([]);
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    }
+    return () => {
+      if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
     };
-    fetchVendors();
-  }, []);
+  }, [searchQuery]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,13 +76,8 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredVendors = availableVendors.filter(v => 
-    v.businessName !== item.vendorName && // Exclude current vendor
-    (
-      (v.businessName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (v.fullName || '').toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  );
+  // Filter out the current vendor from backend results
+  const filteredVendors = vendors.filter(v => v.businessName !== item.vendorName);
 
   const handleSubmit = () => {
     const qty = typeof splitQty === 'string' ? parseInt(splitQty) : splitQty;
@@ -125,25 +138,34 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
                 onFocus={() => setIsDropdownOpen(true)}
               />
 
-              {isDropdownOpen && (
+              {isDropdownOpen && searchQuery.length > 0 && (
                 <div className="split-vendor-dropdown">
-                  {filteredVendors.length > 0 ? (
+                  {isLoading ? (
+                    <div className="split-vendor-empty">Searching...</div>
+                  ) : filteredVendors.length > 0 ? (
                     filteredVendors.map(vendor => (
-                      <div 
-                        key={vendor.id || 'admin'} 
-                        className="split-vendor-option"
-                        onClick={() => {
-                          setSelectedVendor(vendor);
-                          setSearchQuery(vendor.businessName);
-                          setIsDropdownOpen(false);
-                        }}
-                      >
-                        <div className="split-vendor-business">{vendor.businessName}</div>
-                        <div className="split-vendor-name">{vendor.fullName}</div>
+                      <div key={vendor.id || 'admin'} className="split-vendor-option">
+                        <div className="split-vendor-info">
+                          <div className="split-vendor-business">
+                            {vendor.businessName} {vendor.pincode ? `- ${vendor.pincode}` : ''}
+                          </div>
+                          <div className="split-vendor-name">{vendor.fullName}</div>
+                        </div>
+                        <button
+                          type="button"
+                          className="split-vendor-select-btn"
+                          onClick={() => {
+                            setSelectedVendor(vendor);
+                            setSearchQuery(vendor.businessName);
+                            setIsDropdownOpen(false);
+                          }}
+                        >
+                          Select
+                        </button>
                       </div>
                     ))
                   ) : (
-                    <div className="split-vendor-empty">No vendors found matching "{searchQuery}"</div>
+                    <div className="split-vendor-empty">No vendors found</div>
                   )}
                 </div>
               )}

@@ -1,114 +1,208 @@
-import React, { useState, useMemo } from 'react';
-import { FiDollarSign, FiPlus, FiX, FiArrowDownRight, FiArrowUpRight, FiTrendingUp, FiCheckCircle, FiSearch, FiUsers } from 'react-icons/fi';
+import { useState, useEffect, useMemo } from 'react';
+import { 
+  FiX, 
+  FiArrowDownRight, 
+  FiArrowUpRight, 
+  FiTrendingUp, 
+  FiCheckCircle, 
+  FiSearch, 
+  FiUsers, 
+  FiExternalLink,
+  FiClock,
+  FiPhone,
+  FiCreditCard
+} from 'react-icons/fi';
 import Swal from 'sweetalert2';
+import API, { BASE_URL } from '../services/api';
+import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
+import { Toast, getErrorMessage } from '../utils/errorHandler';
+import type { 
+  PaymentSummary, 
+  PaymentTransaction, 
+  PendingVendorPayoutItem, 
+  VendorLedgerItem 
+} from '../types';
 import './ManagePayments.css';
-
-type PaymentType = 'incoming' | 'outgoing';
-type PaymentStatus = 'completed' | 'pending' | 'failed';
-
-interface Payment {
-  id: string;
-  date: string;
-  type: PaymentType;
-  referenceId: string;
-  party: string;
-  amount: number;
-  method: string;
-  status: PaymentStatus;
-  notes?: string;
-}
-
-interface VendorOrderInfo {
-  id: string;
-  vendorName: string;
-  date: string;
-  amount: number;
-  adminCommission?: number;
-  customerPaid: boolean;
-  vendorPaid: boolean;
-  paymentMethod: 'online' | 'cod';
-}
-
-const initialPayments: Payment[] = [
-  { id: 'PAY-1001', date: '2026-07-28', type: 'incoming', referenceId: 'INV-202607-001', party: 'John Doe', amount: 1500, method: 'UPI', status: 'completed' },
-  { id: 'PAY-1002', date: '2026-07-29', type: 'outgoing', referenceId: 'VO-202607-001', party: 'TechSupplies Inc.', amount: 4500, method: 'Bank Transfer', status: 'completed' },
-  { id: 'PAY-1003', date: '2026-07-30', type: 'incoming', referenceId: '221we244444', party: 'SN Solutions', amount: 10000, method: 'UPI', status: 'completed' }
-];
-
-const mockVendorOrders: VendorOrderInfo[] = [
-  { id: 'VO-202607-002', vendorName: 'TechSupplies Inc.', date: '2026-07-28', amount: 3000, adminCommission: 300, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
-  { id: 'VO-202607-003', vendorName: 'TechSupplies Inc.', date: '2026-07-29', amount: 1200, adminCommission: 120, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
-  { id: 'VO-202607-004', vendorName: 'Metro Hardware', date: '2026-07-29', amount: 800, adminCommission: 80, customerPaid: true, vendorPaid: false, paymentMethod: 'online' },
-  { id: 'VO-202607-005', vendorName: 'Metro Hardware', date: '2026-07-30', amount: 2100, adminCommission: 210, customerPaid: false, vendorPaid: false, paymentMethod: 'cod' },
-  { id: 'VO-202607-006', vendorName: 'City Electronics', date: '2026-07-30', amount: 1500, adminCommission: 150, customerPaid: false, vendorPaid: false, paymentMethod: 'cod' }
-];
 
 export default function ManagePayments() {
   const [activeTab, setActiveTab] = useState<'transactions' | 'payouts' | 'ledger'>('transactions');
-  const [payments, setPayments] = useState<Payment[]>(initialPayments);
-  const [vendorOrders, setVendorOrders] = useState<VendorOrderInfo[]>(mockVendorOrders);
-  
+  const [loading, setLoading] = useState<boolean>(true);
+  const [tabLoading, setTabLoading] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
+
+  // Summary State
+  const [summary, setSummary] = useState<PaymentSummary>({
+    totalRevenue: 0,
+    totalPayouts: 0,
+    netBalance: 0,
+    pendingPayoutsCount: 0,
+    pendingPayoutAmount: 0
+  });
+
+  // Tab 1: All Transactions State
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const itemsPerPage = 10;
+
+  // Tab 2: Pending Payouts State
+  const [pendingPayouts, setPendingPayouts] = useState<PendingVendorPayoutItem[]>([]);
+
+  // Tab 3: Ledger State
+  const [ledgerVendors, setLedgerVendors] = useState<VendorLedgerItem[]>([]);
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
+
+  // Search & Filter State
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearch, setDebouncedSearch] = useState<string>('');
+  const [vendorSearch, setVendorSearch] = useState<string>('');
+
+  // Payment Proof Modal State
   const [paymentProofState, setPaymentProofState] = useState<{
     isOpen: boolean;
     type: 'single' | 'bulk';
+    vendorId: string;
     vendorName: string;
-    orderId?: string;
+    itemIds: string[];
     amount: number;
     referenceNote: string;
+    file: File | null;
     fileName?: string;
   }>({
     isOpen: false,
     type: 'single',
+    vendorId: '',
     vendorName: '',
+    itemIds: [],
     amount: 0,
     referenceNote: '',
+    file: null,
     fileName: ''
   });
 
-  // Search State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [vendorSearch, setVendorSearch] = useState('');
+  // Debounce search query
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
-  // Ledger State
-  const [selectedVendor, setSelectedVendor] = useState<string | null>(null);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
-  // Computations
-  const totalRevenue = payments.filter(p => p.type === 'incoming' && p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
-  const totalPayouts = payments.filter(p => p.type === 'outgoing' && p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
-  const netBalance = totalRevenue - totalPayouts;
+  // Initial load
+  useEffect(() => {
+    fetchAllData();
+  }, []);
 
-  const pendingPayouts = vendorOrders.filter(vo => vo.customerPaid && !vo.vendorPaid);
-  
-  // Vendors List for Ledger
-  const uniqueVendors = Array.from(new Set(vendorOrders.map(vo => vo.vendorName)));
+  // Tab or search changes
+  useEffect(() => {
+    if (activeTab === 'transactions') {
+      fetchTransactions();
+    } else if (activeTab === 'payouts') {
+      fetchPendingPayouts();
+    } else if (activeTab === 'ledger') {
+      fetchLedger();
+    }
+  }, [activeTab, currentPage, debouncedSearch]);
 
-  // Filtered vendors for sidebar search
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      await Promise.all([
+        fetchSummary(),
+        fetchTransactions(),
+        fetchPendingPayouts(),
+        fetchLedger()
+      ]);
+    } catch (err) {
+      console.error('Failed to load payments data:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSummary = async () => {
+    try {
+      const res = await API.get('/admin/payments/summary');
+      if (res.data.success) {
+        setSummary(res.data.data);
+      }
+    } catch (err) {
+      console.error('Error fetching payment summary:', err);
+    }
+  };
+
+  const fetchTransactions = async () => {
+    setTabLoading(true);
+    try {
+      const res = await API.get(
+        `/admin/payments/transactions?page=${currentPage}&limit=${itemsPerPage}&search=${encodeURIComponent(debouncedSearch)}`
+      );
+      if (res.data.success) {
+        setTransactions(res.data.data || []);
+        if (res.data.pagination) {
+          setTotalPages(res.data.pagination.totalPages || 1);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    } finally {
+      setTabLoading(false);
+    }
+  };
+
+  const fetchPendingPayouts = async () => {
+    setTabLoading(true);
+    try {
+      const res = await API.get(
+        `/admin/payments/pending-payouts?search=${encodeURIComponent(debouncedSearch)}`
+      );
+      if (res.data.success) {
+        setPendingPayouts(res.data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching pending payouts:', err);
+    } finally {
+      setTabLoading(false);
+    }
+  };
+
+  const fetchLedger = async () => {
+    setTabLoading(true);
+    try {
+      const res = await API.get(
+        `/admin/payments/vendor-ledger?search=${encodeURIComponent(vendorSearch)}`
+      );
+      if (res.data.success) {
+        const list: VendorLedgerItem[] = res.data.data || [];
+        setLedgerVendors(list);
+        if (list.length > 0 && !selectedVendorId) {
+          setSelectedVendorId(list[0].vendorId);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching vendor ledger:', err);
+    } finally {
+      setTabLoading(false);
+    }
+  };
+
+  // Filtered vendors for ledger sidebar
   const filteredVendors = useMemo(() => {
-    if (!vendorSearch.trim()) return uniqueVendors;
-    return uniqueVendors.filter(v => v.toLowerCase().includes(vendorSearch.toLowerCase()));
-  }, [uniqueVendors, vendorSearch]);
-
-  // Filtered data based on search
-  const filteredPayments = useMemo(() => {
-    if (!searchQuery.trim()) return payments;
-    const q = searchQuery.toLowerCase();
-    return payments.filter(p =>
-      p.id.toLowerCase().includes(q) ||
-      p.party.toLowerCase().includes(q) ||
-      p.referenceId.toLowerCase().includes(q) ||
-      p.method.toLowerCase().includes(q)
+    if (!vendorSearch.trim()) return ledgerVendors;
+    const q = vendorSearch.toLowerCase();
+    return ledgerVendors.filter(v => 
+      v.vendorName.toLowerCase().includes(q) || (v.mobile && v.mobile.includes(q))
     );
-  }, [payments, searchQuery]);
+  }, [ledgerVendors, vendorSearch]);
 
-  const filteredPendingPayouts = useMemo(() => {
-    const base = vendorOrders.filter(vo => vo.customerPaid && !vo.vendorPaid);
-    if (!searchQuery.trim()) return base;
-    const q = searchQuery.toLowerCase();
-    return base.filter(vo =>
-      vo.id.toLowerCase().includes(q) ||
-      vo.vendorName.toLowerCase().includes(q)
-    );
-  }, [vendorOrders, searchQuery]);
+  const selectedVendor = useMemo(() => {
+    return ledgerVendors.find(v => v.vendorId === selectedVendorId) || null;
+  }, [ledgerVendors, selectedVendorId]);
 
   // Vendor avatar color helper
   const getVendorColor = (name: string) => {
@@ -118,94 +212,101 @@ export default function ManagePayments() {
     return colors[Math.abs(hash) % colors.length];
   };
 
-  const handlePayVendorOrder = (orderId: string, vendorName: string, amount: number) => {
+  const handlePayVendorOrder = (item: PendingVendorPayoutItem) => {
     setPaymentProofState({
       isOpen: true,
       type: 'single',
-      vendorName,
-      orderId,
-      amount,
-      referenceNote: `Payment for ${orderId}`,
+      vendorId: item.vendorId,
+      vendorName: item.vendorName,
+      itemIds: [item.id],
+      amount: item.netPayable,
+      referenceNote: `Payout for Order #${item.orderNumber}`,
+      file: null,
       fileName: ''
     });
   };
 
-  const handleBulkSettle = (vendorName: string) => {
-    const unpaidForVendor = vendorOrders.filter(vo => vo.vendorName === vendorName && vo.customerPaid && !vo.vendorPaid);
-    const totalAmount = unpaidForVendor.reduce((sum, vo) => sum + vo.amount, 0);
-    
-    setPaymentProofState({
-      isOpen: true,
-      type: 'bulk',
-      vendorName,
-      amount: totalAmount,
-      referenceNote: `Bulk settlement for ${unpaidForVendor.length} orders`,
-      fileName: ''
-    });
-  };
+  const handleBulkSettle = (vendor: VendorLedgerItem) => {
+    const payableOrders = vendor.orders.filter(o => o.customerPaid);
+    const totalAmount = vendor.totalPendingCustomerPaid;
 
-  const handleConfirmPayout = () => {
-    const { type, vendorName, orderId, referenceNote, fileName } = paymentProofState;
-    
-    if (!fileName) {
-      alert("Please upload a payment proof before confirming.");
+    if (payableOrders.length === 0 || totalAmount <= 0) {
+      Toast.fire({ 
+        icon: 'info', 
+        title: 'No payable orders available for this vendor where customer has already paid.' 
+      });
       return;
     }
 
-    Swal.fire({
-      title: 'Confirm Payment',
-      text: `Are you sure you want to process this payment to ${vendorName}?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3b82f6',
-      cancelButtonColor: '#94a3b8',
-      confirmButtonText: 'Yes, Pay Now'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        if (type === 'single' && orderId) {
-          // 1-to-1 payment logic
-          const payment: Payment = {
-            id: `PAY-${Math.floor(Math.random() * 10000)}`,
-            date: new Date().toISOString().split('T')[0],
-            type: 'outgoing',
-            referenceId: orderId,
-            party: vendorName,
-            amount: paymentProofState.amount,
-            method: 'Bank Transfer',
-            status: 'completed',
-            notes: referenceNote || 'Generated from Vendor Payouts'
-          };
-          
-          setPayments(prev => [payment, ...prev]);
-          setVendorOrders(prev => prev.map(vo => vo.id === orderId ? { ...vo, vendorPaid: true } : vo));
-          Swal.fire('Success!', 'Payment proof uploaded and vendor paid successfully!', 'success');
-        } else if (type === 'bulk') {
-          const unpaidForVendor = vendorOrders.filter(vo => vo.vendorName === vendorName && vo.customerPaid && !vo.vendorPaid);
-          
-          // Strict 1-to-1 generation
-          const generatedPayments: Payment[] = unpaidForVendor.map(vo => ({
-            id: `PAY-${Math.floor(Math.random() * 10000)}`,
-            date: new Date().toISOString().split('T')[0],
-            type: 'outgoing',
-            referenceId: vo.id,
-            party: vendorName,
-            amount: vo.amount,
-            method: 'Bank Transfer',
-            status: 'completed',
-            notes: referenceNote || 'Bulk settled from Ledger'
-          }));
-
-          setPayments(prev => [...generatedPayments, ...prev]);
-          setVendorOrders(prev => prev.map(vo => (vo.vendorName === vendorName && vo.customerPaid && !vo.vendorPaid) ? { ...vo, vendorPaid: true } : vo));
-          Swal.fire('Success!', `Payment proof uploaded! Successfully generated ${generatedPayments.length} separate payment records for ${vendorName}.`, 'success');
-        }
-
-        setPaymentProofState(prev => ({ ...prev, isOpen: false }));
-      }
+    setPaymentProofState({
+      isOpen: true,
+      type: 'bulk',
+      vendorId: vendor.vendorId,
+      vendorName: vendor.vendorName,
+      itemIds: payableOrders.map(o => o.id),
+      amount: totalAmount,
+      referenceNote: `Bulk settlement for ${payableOrders.length} orders`,
+      file: null,
+      fileName: ''
     });
   };
 
+  const handleConfirmPayout = async () => {
+    const { vendorId, vendorName, itemIds, amount, referenceNote, file } = paymentProofState;
 
+    if (itemIds.length === 0) {
+      Toast.fire({ icon: 'warning', title: 'No orders selected for settlement.' });
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: 'Confirm Vendor Settlement',
+      text: `Are you sure you want to process this payment of ₹${amount.toLocaleString()} to ${vendorName}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Yes, Confirm Payout'
+    });
+
+    if (!result.isConfirmed) return;
+
+    setSubmitting(true);
+    try {
+      const formData = new FormData();
+      formData.append('vendor_id', vendorId);
+      formData.append('order_item_ids', JSON.stringify(itemIds));
+      formData.append('amount', amount.toString());
+      formData.append('payment_method', 'Bank Transfer');
+      if (referenceNote) formData.append('transaction_reference', referenceNote);
+      if (file) formData.append('proof_image', file);
+
+      const response = await API.post('/admin/payments/payout', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      if (response.data.success) {
+        Swal.fire({
+          title: 'Settlement Successful!',
+          text: `Payment of ₹${amount.toLocaleString()} to ${vendorName} has been recorded.`,
+          icon: 'success',
+          confirmButtonColor: '#4f46e5'
+        });
+
+        setPaymentProofState(prev => ({ ...prev, isOpen: false }));
+        fetchAllData();
+      }
+    } catch (err: any) {
+      Swal.fire({
+        title: 'Settlement Failed',
+        text: getErrorMessage(err),
+        icon: 'error',
+        confirmButtonColor: '#4f46e5'
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="manage-payments-container">
@@ -213,49 +314,61 @@ export default function ManagePayments() {
         <h1>Manage Payments</h1>
       </div>
 
+      {/* Top 3 Summary Cards */}
       <div className="summary-cards">
         <div className="summary-card">
           <div className="card-icon revenue"><FiArrowDownRight /></div>
           <div className="card-content">
             <h3>Total Revenue</h3>
-            <p className="amount">₹{totalRevenue.toLocaleString()}</p>
+            <p className="amount">₹{summary.totalRevenue.toLocaleString()}</p>
           </div>
         </div>
         <div className="summary-card">
           <div className="card-icon payouts"><FiArrowUpRight /></div>
           <div className="card-content">
             <h3>Total Payouts</h3>
-            <p className="amount">₹{totalPayouts.toLocaleString()}</p>
+            <p className="amount">₹{summary.totalPayouts.toLocaleString()}</p>
           </div>
         </div>
         <div className="summary-card">
           <div className="card-icon balance"><FiTrendingUp /></div>
           <div className="card-content">
             <h3>Net Balance</h3>
-            <p className="amount">₹{netBalance.toLocaleString()}</p>
+            <p className="amount">₹{summary.netBalance.toLocaleString()}</p>
           </div>
         </div>
       </div>
 
+      {/* Toolbar & Tabs */}
       <div className="payments-toolbar">
         <div className="tabs-container">
-          <button className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`} onClick={() => setActiveTab('transactions')}>
+          <button 
+            className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('transactions')}
+          >
             All Transactions
           </button>
-          <button className={`tab-btn ${activeTab === 'payouts' ? 'active' : ''}`} onClick={() => setActiveTab('payouts')}>
-            Pending Vendor Payouts <span className="badge">{pendingPayouts.length}</span>
+          <button 
+            className={`tab-btn ${activeTab === 'payouts' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('payouts')}
+          >
+            Pending Vendor Payouts <span className="badge">{summary.pendingPayoutsCount}</span>
           </button>
-          <button className={`tab-btn ${activeTab === 'ledger' ? 'active' : ''}`} onClick={() => setActiveTab('ledger')}>
+          <button 
+            className={`tab-btn ${activeTab === 'ledger' ? 'active' : ''}`} 
+            onClick={() => setActiveTab('ledger')}
+          >
             Vendor Ledger
           </button>
         </div>
+
         {activeTab !== 'ledger' && (
           <div className="payments-search-container">
             <FiSearch className="payments-search-icon" />
             <input
               type="text"
               className="payments-search-input"
-              placeholder={activeTab === 'transactions' ? 'Search transactions...' : 'Search vendors or orders...'}
+              placeholder={activeTab === 'transactions' ? 'Search by Order ID, Party, or Razorpay ID...' : 'Search pending vendor orders...'}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
@@ -263,192 +376,335 @@ export default function ManagePayments() {
         )}
       </div>
 
+      {/* Tab Content */}
       <div className="tab-content">
-        {activeTab === 'transactions' && (
-          <div className="table-container">
-            <table className="payments-table">
-              <thead>
-                <tr><th>Date</th><th>Type</th><th>Order ID</th><th>Party</th><th>Method</th><th>Status</th><th>Amount</th></tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map(payment => (
-                  <tr key={payment.id}>
-                    <td>{payment.date}</td>
-                    <td>
-                      <span className={`type-badge ${payment.type}`}>
-                        {payment.type === 'incoming' ? '↓ Incoming' : '↑ Outgoing'}
-                      </span>
-                    </td>
-                    <td>{payment.referenceId}</td>
-                    <td>{payment.party}</td>
-                    <td>{payment.method}</td>
-                    <td><span className={`status-badge ${payment.status}`}>{payment.status}</span></td>
-                    <td className={`amount-col ${payment.type === 'incoming' ? 'positive' : 'negative'}`}>
-                      {payment.type === 'incoming' ? '+' : '-'}₹{payment.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-                {filteredPayments.length === 0 && (
-                  <tr>
-                    <td colSpan={7}>
-                      <div className="payments-empty-state">
-                        <FiSearch size={32} />
-                        <p>No transactions found{searchQuery ? ` for "${searchQuery}"` : ''}.</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {loading || tabLoading ? (
+          <div style={{ padding: '60px 0' }}>
+            <Loading />
           </div>
-        )}
+        ) : (
+          <>
+            {/* TAB 1: ALL TRANSACTIONS */}
+            {activeTab === 'transactions' && (
+              <div className="table-container">
+                <table className="payments-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Reference / Order ID</th>
+                      <th>Party</th>
+                      <th>Method</th>
+                      <th>Status</th>
+                      <th>Amount</th>
+                      <th>Proof</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {transactions.map(payment => (
+                      <tr key={payment.id}>
+                        <td>{payment.date}</td>
+                        <td>
+                          <span className={`type-badge ${payment.type}`}>
+                            {payment.type === 'incoming' ? '↓ Incoming' : '↑ Outgoing'}
+                          </span>
+                        </td>
+                        <td>
+                          <strong style={{ color: '#1e293b' }}>{payment.referenceId}</strong>
+                          {payment.notes && payment.notes !== payment.referenceId && (
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>
+                              {payment.notes}
+                            </div>
+                          )}
+                        </td>
+                        <td>{payment.party}</td>
+                        <td>{payment.method}</td>
+                        <td>
+                          <span className={`status-badge ${payment.status}`}>
+                            {payment.status === 'completed' && <FiCheckCircle style={{ marginRight: '4px' }} />}
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className={`amount-col ${payment.type === 'incoming' ? 'positive' : 'negative'}`}>
+                          {payment.type === 'incoming' ? '+' : '-'}₹{payment.amount.toLocaleString()}
+                        </td>
+                        <td>
+                          {payment.proof_image ? (
+                            <a 
+                              href={`${BASE_URL}${payment.proof_image}`} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              style={{ color: '#4f46e5', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', textDecoration: 'none' }}
+                            >
+                              <FiExternalLink /> View
+                            </a>
+                          ) : (
+                            <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {transactions.length === 0 && (
+                      <tr>
+                        <td colSpan={8}>
+                          <div className="payments-empty-state">
+                            <FiSearch size={32} />
+                            <p>No transactions found{searchQuery ? ` for "${searchQuery}"` : ''}.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
 
-        {activeTab === 'payouts' && (
-          <div className="table-container">
-            <table className="payments-table">
-              <thead>
-                <tr><th>Vendor Order</th><th>Vendor Name</th><th>Order Date</th><th>Customer Status</th><th>Amount Owed</th><th>Action</th></tr>
-              </thead>
-              <tbody>
-                {filteredPendingPayouts.map(vo => (
-                  <tr key={vo.id}>
-                    <td>{vo.id}</td>
-                    <td>{vo.vendorName}</td>
-                    <td>{vo.date}</td>
-                    <td><span className="status-badge completed"><FiCheckCircle style={{marginRight: '4px'}}/>Customer Paid</span></td>
-                    <td className="amount-col">
-                      <div>₹{vo.amount.toLocaleString()}</div>
-                      {vo.adminCommission && <div style={{ fontSize: '0.75rem', color: '#64748b' }}>(Admin Comm: ₹{vo.adminCommission.toLocaleString()})</div>}
-                    </td>
-                    <td>
-                      <button className="btn-pay-action" onClick={() => handlePayVendorOrder(vo.id, vo.vendorName, vo.amount)}>
-                        Pay Vendor
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredPendingPayouts.length === 0 && (
-                  <tr>
-                    <td colSpan={6}>
-                      <div className="payments-empty-state">
-                        <FiCheckCircle size={32} />
-                        <p>{searchQuery ? `No payouts found for "${searchQuery}".` : 'No pending payouts! All vendors are settled.'}</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'ledger' && (
-          <div className="ledger-view">
-            <div className="vendor-list-sidebar">
-              <div className="vendor-sidebar-header">
-                <h3>Vendors</h3>
-                <div className="vendor-sidebar-search">
-                  <FiSearch />
-                  <input
-                    type="text"
-                    placeholder="Search vendors..."
-                    value={vendorSearch}
-                    onChange={e => setVendorSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="vendor-list-items">
-                {filteredVendors.map(vendor => {
-                  const orderCount = vendorOrders.filter(vo => vo.vendorName === vendor && !vo.vendorPaid).length;
-                  return (
-                    <div 
-                      key={vendor} 
-                      className={`vendor-list-item ${selectedVendor === vendor ? 'active' : ''}`}
-                      onClick={() => setSelectedVendor(vendor)}
-                    >
-                      <div className="vendor-avatar" style={{ background: getVendorColor(vendor) }}>
-                        {vendor.charAt(0)}
-                      </div>
-                      <div className="vendor-item-info">
-                        <span className="vendor-item-name">{vendor}</span>
-                        <span className="vendor-item-count">{orderCount} pending order{orderCount !== 1 ? 's' : ''}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-                {filteredVendors.length === 0 && (
-                  <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
-                    No vendors found.
+                {totalPages > 1 && (
+                  <div style={{ marginTop: '20px' }}>
+                    <Pagination 
+                      currentPage={currentPage} 
+                      totalPages={totalPages} 
+                      onPageChange={page => setCurrentPage(page)} 
+                    />
                   </div>
                 )}
               </div>
-            </div>
-            
-            <div className="vendor-ledger-details">
-              {selectedVendor ? (
-                <>
-                  <div className="ledger-header">
-                    <div>
-                      <h2>{selectedVendor}</h2>
-                      <span className="ledger-subtitle">Vendor Account & Settlement Overview</span>
-                    </div>
-                    <button className="btn-bulk-settle" onClick={() => handleBulkSettle(selectedVendor)}>
-                      <FiCheckCircle size={16} /> Bulk Settle Balance
-                    </button>
-                  </div>
-                  
-                  <div className="ledger-summary">
-                    <div className="ledger-stat">
-                      <span>Total Pending (Customer Paid)</span>
-                      <strong>₹{vendorOrders.filter(vo => vo.vendorName === selectedVendor && vo.customerPaid && !vo.vendorPaid).reduce((s, vo) => s + vo.amount, 0).toLocaleString()}</strong>
-                    </div>
-                    <div className="ledger-stat">
-                      <span>Awaiting Customer Payment</span>
-                      <strong style={{color: '#64748b'}}>₹{vendorOrders.filter(vo => vo.vendorName === selectedVendor && !vo.customerPaid && !vo.vendorPaid).reduce((s, vo) => s + vo.amount, 0).toLocaleString()}</strong>
-                    </div>
-                  </div>
+            )}
 
-                  <h4 className="ledger-orders-title">Unpaid Orders</h4>
-                  <div className="table-container">
-                    <table className="payments-table">
-                      <thead>
-                        <tr><th>Order ID</th><th>Date</th><th>Customer Status</th><th>Amount</th></tr>
-                      </thead>
-                      <tbody>
-                        {vendorOrders.filter(vo => vo.vendorName === selectedVendor && !vo.vendorPaid).map(vo => (
-                          <tr key={vo.id}>
-                            <td>{vo.id}</td>
-                            <td>{vo.date}</td>
-                            <td>
-                              {vo.customerPaid ? 
-                                <span className="status-badge completed">Ready to Pay</span> : 
-                                <span className="status-badge pending">Awaiting Customer</span>
-                              }
-                            </td>
-                            <td>₹{vo.amount.toLocaleString()}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+            {/* TAB 2: PENDING VENDOR PAYOUTS */}
+            {activeTab === 'payouts' && (
+              <div className="table-container">
+                <table className="payments-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Vendor Name</th>
+                      <th>Product & Qty</th>
+                      <th>Order Date</th>
+                      <th>Customer Status</th>
+                      <th>Amount Owed</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pendingPayouts.map(item => (
+                      <tr key={item.id}>
+                        <td>
+                          <strong style={{ color: '#1e293b' }}>{item.orderNumber}</strong>
+                        </td>
+                        <td>
+                          <div><strong>{item.vendorName}</strong></div>
+                          {item.vendorMobile && (
+                            <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                              <FiPhone size={11} /> {item.vendorMobile}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 500 }}>{item.productName}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Qty: {item.qty}</div>
+                        </td>
+                        <td>{item.date}</td>
+                        <td>
+                          <span className="status-badge completed">
+                            <FiCheckCircle style={{ marginRight: '4px' }} /> Customer Paid
+                          </span>
+                        </td>
+                        <td className="amount-col">
+                          <div><strong>₹{item.netPayable.toLocaleString()}</strong></div>
+                          {item.adminCommission > 0 && (
+                            <div style={{ fontSize: '0.72rem', color: '#64748b' }}>
+                              (Subtotal: ₹{item.amount.toLocaleString()} - Comm: ₹{item.adminCommission.toLocaleString()})
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <button 
+                            className="btn-pay-action" 
+                            onClick={() => handlePayVendorOrder(item)}
+                          >
+                            Pay Vendor
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {pendingPayouts.length === 0 && (
+                      <tr>
+                        <td colSpan={7}>
+                          <div className="payments-empty-state">
+                            <FiCheckCircle size={32} />
+                            <p>{searchQuery ? `No payouts found for "${searchQuery}".` : 'No pending payouts! All vendors are fully settled.'}</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* TAB 3: VENDOR LEDGER */}
+            {activeTab === 'ledger' && (
+              <div className="ledger-view">
+                <div className="vendor-list-sidebar">
+                  <div className="vendor-sidebar-header">
+                    <h3>Vendors</h3>
+                    <div className="vendor-sidebar-search">
+                      <FiSearch />
+                      <input
+                        type="text"
+                        placeholder="Search vendors..."
+                        value={vendorSearch}
+                        onChange={e => setVendorSearch(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </>
-              ) : (
-                <div className="empty-ledger">
-                  <FiUsers size={40} />
-                  <p>Select a vendor from the list to view their ledger.</p>
+                  <div className="vendor-list-items">
+                    {filteredVendors.map(vendor => (
+                      <div 
+                        key={vendor.vendorId} 
+                        className={`vendor-list-item ${selectedVendorId === vendor.vendorId ? 'active' : ''}`}
+                        onClick={() => setSelectedVendorId(vendor.vendorId)}
+                      >
+                        <div className="vendor-avatar" style={{ background: getVendorColor(vendor.vendorName) }}>
+                          {vendor.vendorName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="vendor-item-info">
+                          <span className="vendor-item-name">{vendor.vendorName}</span>
+                          <span className="vendor-item-count">
+                            {vendor.pendingPayoutCount} ready to pay ({vendor.unpaidCount} unpaid)
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredVendors.length === 0 && (
+                      <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem' }}>
+                        No vendors found.
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
+                
+                <div className="vendor-ledger-details">
+                  {selectedVendor ? (
+                    <>
+                      <div className="ledger-header">
+                        <div>
+                          <h2>{selectedVendor.vendorName}</h2>
+                          <div className="ledger-subtitle" style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
+                            {selectedVendor.mobile && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <FiPhone size={13} /> {selectedVendor.mobile}
+                              </span>
+                            )}
+                            {selectedVendor.bankDetails && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <FiCreditCard size={13} /> {selectedVendor.bankDetails}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button 
+                          className="btn-bulk-settle" 
+                          onClick={() => handleBulkSettle(selectedVendor)}
+                          disabled={selectedVendor.totalPendingCustomerPaid <= 0}
+                          style={{ opacity: selectedVendor.totalPendingCustomerPaid <= 0 ? 0.6 : 1 }}
+                        >
+                          <FiCheckCircle size={16} /> Bulk Settle Balance (₹{selectedVendor.totalPendingCustomerPaid.toLocaleString()})
+                        </button>
+                      </div>
+                      
+                      <div className="ledger-summary">
+                        <div className="ledger-stat">
+                          <span>Total Ready to Pay (Customer Paid)</span>
+                          <strong>₹{selectedVendor.totalPendingCustomerPaid.toLocaleString()}</strong>
+                        </div>
+                        <div className="ledger-stat">
+                          <span>Awaiting Customer Payment</span>
+                          <strong style={{ color: '#64748b' }}>
+                            ₹{selectedVendor.totalPendingCustomerUnpaid.toLocaleString()}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <h4 className="ledger-orders-title">Unpaid Items Breakdown</h4>
+                      <div className="table-container">
+                        <table className="payments-table">
+                          <thead>
+                            <tr>
+                              <th>Order ID</th>
+                              <th>Product & Qty</th>
+                              <th>Date</th>
+                              <th>Customer Status</th>
+                              <th>Subtotal</th>
+                              <th>Net Payable</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedVendor.orders.map(order => {
+                              const net = order.amount - (order.adminCommission || 0);
+                              return (
+                                <tr key={order.id}>
+                                  <td><strong>{order.orderNumber}</strong></td>
+                                  <td>
+                                    <div>{order.productName}</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Qty: {order.qty}</div>
+                                  </td>
+                                  <td>{order.date}</td>
+                                  <td>
+                                    {order.customerPaid ? (
+                                      <span className="status-badge completed">
+                                        <FiCheckCircle style={{ marginRight: '4px' }} /> Ready to Pay
+                                      </span>
+                                    ) : (
+                                      <span className="status-badge pending">
+                                        <FiClock style={{ marginRight: '4px' }} /> Awaiting Customer
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td>₹{order.amount.toLocaleString()}</td>
+                                  <td><strong>₹{net.toLocaleString()}</strong></td>
+                                </tr>
+                              );
+                            })}
+                            {selectedVendor.orders.length === 0 && (
+                              <tr>
+                                <td colSpan={6} style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+                                  No unpaid orders for this vendor.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="empty-ledger">
+                      <FiUsers size={40} />
+                      <p>Select a vendor from the left list to view their ledger.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
+      {/* Payment Proof & Payout Modal */}
       {paymentProofState.isOpen && (
-        <div className="payment-modal-overlay" onClick={() => setPaymentProofState(prev => ({ ...prev, isOpen: false }))}>
+        <div 
+          className="payment-modal-overlay" 
+          onClick={() => !submitting && setPaymentProofState(prev => ({ ...prev, isOpen: false }))}
+        >
           <div className="payment-modal-content" onClick={e => e.stopPropagation()}>
             <div className="payment-modal-header">
-              <h2>Upload Payment Proof</h2>
-              <button className="btn-close" onClick={() => setPaymentProofState(prev => ({ ...prev, isOpen: false }))}><FiX size={24} /></button>
+              <h2>Record Vendor Payout</h2>
+              <button 
+                className="btn-close" 
+                disabled={submitting}
+                onClick={() => setPaymentProofState(prev => ({ ...prev, isOpen: false }))}
+              >
+                <FiX size={24} />
+              </button>
             </div>
             <div className="payment-modal-body">
               <div className="form-group" style={{ marginBottom: '16px' }}>
@@ -460,22 +716,22 @@ export default function ManagePayments() {
                     ₹{paymentProofState.amount.toLocaleString()}
                   </p>
                   {paymentProofState.type === 'bulk' && (
-                    <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#10b981' }}>
-                      Auto-generating separate payment records for each selected order.
+                    <p style={{ margin: '8px 0 0 0', fontSize: '0.85rem', color: '#10b981', fontWeight: 500 }}>
+                      ✓ Bulk settling {paymentProofState.itemIds.length} orders in a single transaction.
                     </p>
                   )}
                 </div>
                 
-                <label>Upload Screenshot / Receipt</label>
+                <label>Upload Payment Receipt / Proof (Optional)</label>
                 <div 
                   onClick={() => document.getElementById('proof-upload-input')?.click()}
                   style={{ 
                     border: '2px dashed #cbd5e1', 
                     borderRadius: '8px', 
-                    padding: '32px', 
+                    padding: '24px', 
                     textAlign: 'center',
                     background: paymentProofState.fileName ? '#eff6ff' : '#f8fafc',
-                    borderColor: paymentProofState.fileName ? '#3b82f6' : '#cbd5e1',
+                    borderColor: paymentProofState.fileName ? '#4f46e5' : '#cbd5e1',
                     marginTop: '8px',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
@@ -488,37 +744,56 @@ export default function ManagePayments() {
                     accept="image/*,.pdf"
                     onChange={(e) => {
                       if (e.target.files && e.target.files.length > 0) {
-                        setPaymentProofState(prev => ({ ...prev, fileName: e.target.files![0].name }));
+                        const file = e.target.files[0];
+                        setPaymentProofState(prev => ({ 
+                          ...prev, 
+                          file, 
+                          fileName: file.name 
+                        }));
                       }
                     }}
                   />
                   {paymentProofState.fileName ? (
                     <>
-                      <FiCheckCircle size={32} color="#3b82f6" style={{ marginBottom: '8px' }} />
+                      <FiCheckCircle size={28} color="#4f46e5" style={{ marginBottom: '6px' }} />
                       <p style={{ color: '#1e293b', margin: 0, fontWeight: 500 }}>{paymentProofState.fileName}</p>
-                      <p style={{ color: '#3b82f6', fontSize: '0.8rem', marginTop: '4px' }}>Click to change file</p>
+                      <p style={{ color: '#4f46e5', fontSize: '0.8rem', marginTop: '4px' }}>Click to change file</p>
                     </>
                   ) : (
                     <>
-                      <p style={{ color: '#64748b', margin: 0 }}>Click to browse or drag and drop file here</p>
-                      <p style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: '8px' }}>PNG, JPG, PDF up to 5MB</p>
+                      <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>Click to browse or drop screenshot/receipt</p>
+                      <p style={{ color: '#94a3b8', fontSize: '0.78rem', marginTop: '6px' }}>PNG, JPG, PDF up to 10MB</p>
                     </>
                   )}
                 </div>
               </div>
+
               <div className="form-group">
-                <label>Reference Note (Optional)</label>
+                <label>Bank Reference / UTR Number / Notes</label>
                 <input 
                   type="text" 
                   className="form-input" 
+                  placeholder="e.g. UTR123456789 or IMPS reference"
                   value={paymentProofState.referenceNote} 
                   onChange={(e) => setPaymentProofState(prev => ({ ...prev, referenceNote: e.target.value }))} 
                 />
               </div>
             </div>
             <div className="payment-modal-footer">
-              <button className="btn-cancel" onClick={() => setPaymentProofState(prev => ({ ...prev, isOpen: false }))}>Cancel</button>
-              <button className="btn-save" onClick={handleConfirmPayout}>Confirm Payment</button>
+              <button 
+                className="btn-cancel" 
+                disabled={submitting}
+                onClick={() => setPaymentProofState(prev => ({ ...prev, isOpen: false }))}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn-save" 
+                disabled={submitting}
+                onClick={handleConfirmPayout}
+              >
+                {submitting ? 'Processing Payout...' : 'Confirm Settlement'}
+              </button>
             </div>
           </div>
         </div>

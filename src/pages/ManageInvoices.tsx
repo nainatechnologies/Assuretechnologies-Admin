@@ -5,6 +5,8 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import type { Invoice, InvoiceItem } from '../types';
 import './ManageInvoices.css';
+import { Toast } from '../utils/errorHandler';
+
 
 interface MockSR {
   id: string;
@@ -133,7 +135,7 @@ export default function ManageInvoices() {
 
   const handleSaveInvoice = () => {
     if (!customerName || !mobile) {
-      alert("Please fill in the required customer details (Name, Mobile).");
+      Toast.fire({ icon: 'warning', title: "Please fill in the required customer details (Name, Mobile)." });
       return;
     }
 
@@ -170,7 +172,7 @@ export default function ManageInvoices() {
     setSerialInputs({});
 
     // Switch to table
-    setActiveTab('table');
+    setActiveTab('service_invoices' as any);
   };
 
   const handleSelectSR = (sr: MockSR) => {
@@ -213,7 +215,7 @@ export default function ManageInvoices() {
       setInvoices(invoices.filter(i => i.id !== id));
     } catch (err) {
       console.error('Failed to delete invoice', err);
-      alert('Failed to delete invoice. Please try again.');
+      Toast.fire({ icon: 'error', title: 'Failed to delete invoice. Please try again.' });
     }
   };
 

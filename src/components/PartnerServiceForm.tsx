@@ -1,4 +1,6 @@
-import React, { useState, useRef } from 'react';
+
+import { useState, useRef, useEffect } from 'react';
+
 import type { PartnerService, CustomField } from '../types';
 import { MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 
@@ -25,7 +27,7 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (initialData) {
       setCategoryId(initialData.category_id || '');
       setServiceName(initialData.name || initialData.serviceName || '');

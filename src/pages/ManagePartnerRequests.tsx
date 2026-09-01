@@ -189,7 +189,7 @@ export default function ManagePartnerRequests() {
     setAssignModalOpen(true);
   };
 
-  const handleAssignConfirm = (bookingId: string, partnerId: string) => {
+  const handleAssignConfirm = (_bookingId: string, partnerId: string) => {
     if (selectedReassignId) {
       Swal.fire({
         title: 'Reassign Partner?',
