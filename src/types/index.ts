@@ -98,6 +98,8 @@ export interface Service {
   custom_fields?: CustomField[];
   prebookingCharge?: number;
   prebooking_charge?: number | string;
+  requiredPartnerType?: { id: string; name: string };
+  required_partner_type_id?: string;
   status?: 'Active' | 'Inactive';
 }
 
@@ -152,6 +154,7 @@ export type ProgressUpdate = {
 export interface ServiceRequest {
   id: string;
   displayId?: string;
+  orderNumber?: string;
   userId: string;
   userName: string;
   userMobile: string;
@@ -281,12 +284,14 @@ export interface Partner {
   name: string;
   mobile: string;
   email: string;
-  location: string; // Pincodes
+  location: string; // Pincodes / coverage areas
   status: 'Active' | 'Inactive';
   password?: string;
   partnerTypeId: string; // reference to PartnerType
   customFieldValues: Record<string, any>; // key: custom field id, value: response
-  services: string[]; // array of PartnerService IDs they provide
+  services: string[]; // array of PartnerService IDs
+  coverage_areas?: string[];
+  address?: string;
 }
 
 export type PartnerBookingStatus =
@@ -301,6 +306,7 @@ export type PartnerBookingStatus =
 export interface PartnerBooking {
   id: string;
   displayId?: string;
+  orderNumber?: string;
   userId: string;
   userName: string;
   userMobile: string;
@@ -309,6 +315,7 @@ export interface PartnerBooking {
   mandal: string;
   village: string;
   pincode: string;
+  fullAddress?: string;
   equipmentType: string;
   date: string;
   time: string;
@@ -323,9 +330,16 @@ export interface PartnerBooking {
   progressUpdates?: ProgressUpdate[];
   customFieldResponses?: Record<string, string>;
   paymentStatus?: 'Paid' | 'Pending';
+  cancelledBy?: string;
+  cancellationReason?: string;
+  assignedPartner?: {
+    id: string;
+    display_id?: string;
+    name: string;
+    mobile: string;
+    email?: string;
+  };
 }
-
-
 
 export interface CustomerAddressItem {
   id: string;
@@ -431,4 +445,3 @@ export interface VendorLedgerItem {
   totalPendingCustomerUnpaid: number;
   orders: VendorLedgerOrder[];
 }
-

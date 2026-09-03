@@ -42,7 +42,7 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
               <>
                 <th>#</th>
                 <th>Date</th>
-                <th>Order ID</th>
+                <th>Booking ID</th>
                 <th>Farmer Info</th>
                 <th>Location / Survey No.</th>
                 <th>Equipment Type</th>
@@ -51,7 +51,7 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
             ) : viewType === 'assignments-new' ? (
               <>
                 <th>Date</th>
-                <th>Order ID</th>
+                <th>Booking ID</th>
                 <th>Farmer Info</th>
                 <th>Location / Survey No.</th>
                 <th>Equipment Type</th>
@@ -59,7 +59,7 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
               </>
             ) : (
               <>
-                <th>Order ID</th>
+                <th>Booking ID</th>
                 <th>Farmer Info</th>
                 <th>Location / Survey No.</th>
                 <th>Equipment Type</th>
@@ -77,7 +77,18 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
                 <>
                   <td>{index + 1}</td>
                   <td>{booking.date}</td>
-                  <td>{booking.id}</td>
+                  <td>
+                    <div className="user-info">
+                      <span className="user-name" style={{ fontWeight: 600, color: '#1e293b' }}>
+                        {booking.displayId || booking.id}
+                      </span>
+                      {booking.orderNumber && (
+                        <span className="user-mobile" style={{ fontSize: '11px', color: '#64748b' }}>
+                          {booking.orderNumber}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td>
                     <div className="user-info">
                       <span className="user-name">{booking.userName}</span>
@@ -86,8 +97,12 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
                   </td>
                   <td>
                     <div className="user-info">
-                      <span className="user-name" style={{ color: '#4f46e5' }}>Survey: {booking.surveyNumber}</span>
-                      <span className="user-mobile">{booking.village}, {booking.district}</span>
+                      {booking.surveyNumber && booking.surveyNumber !== 'N/A' && (
+                        <span className="user-name" style={{ color: '#4f46e5' }}>Survey: {booking.surveyNumber}</span>
+                      )}
+                      <span className="user-mobile">
+                        {[booking.village, booking.mandal, booking.district, booking.pincode].filter(x => x && x !== 'N/A').join(', ') || 'Address not provided'}
+                      </span>
                     </div>
                   </td>
                   <td>{booking.equipmentType}</td>
@@ -103,7 +118,18 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
               ) : viewType === 'assignments-new' ? (
                 <>
                   <td>{booking.date}</td>
-                  <td>{booking.id}</td>
+                  <td>
+                    <div className="user-info">
+                      <span className="user-name" style={{ fontWeight: 600, color: '#1e293b' }}>
+                        {booking.displayId || booking.id}
+                      </span>
+                      {booking.orderNumber && (
+                        <span className="user-mobile" style={{ fontSize: '11px', color: '#64748b' }}>
+                          {booking.orderNumber}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td>
                     <div className="user-info">
                       <span className="user-name">{booking.userName}</span>
@@ -112,8 +138,12 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
                   </td>
                   <td>
                     <div className="user-info">
-                      <span className="user-name" style={{ color: '#4f46e5' }}>Survey: {booking.surveyNumber}</span>
-                      <span className="user-mobile">{booking.village}, {booking.district}</span>
+                      {booking.surveyNumber && booking.surveyNumber !== 'N/A' && (
+                        <span className="user-name" style={{ color: '#4f46e5' }}>Survey: {booking.surveyNumber}</span>
+                      )}
+                      <span className="user-mobile">
+                        {[booking.village, booking.mandal, booking.district, booking.pincode].filter(x => x && x !== 'N/A').join(', ') || 'Address not provided'}
+                      </span>
                     </div>
                   </td>
                   <td>{booking.equipmentType}</td>
@@ -127,7 +157,18 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
                 </>
               ) : (
                 <>
-                  <td>{booking.id}</td>
+                  <td>
+                    <div className="user-info">
+                      <span className="user-name" style={{ fontWeight: 600, color: '#1e293b' }}>
+                        {booking.displayId || booking.id}
+                      </span>
+                      {booking.orderNumber && (
+                        <span className="user-mobile" style={{ fontSize: '11px', color: '#64748b' }}>
+                          {booking.orderNumber}
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td>
                     <div className="user-info">
                       <span className="user-name">{booking.userName}</span>
@@ -136,8 +177,12 @@ export default function PartnerBookingTable({ bookings, viewType, onAccept, onRe
                   </td>
                   <td>
                     <div className="user-info">
-                      <span className="user-name" style={{ color: '#4f46e5' }}>Survey: {booking.surveyNumber}</span>
-                      <span className="user-mobile">{booking.village}, {booking.district}</span>
+                      {booking.surveyNumber && booking.surveyNumber !== 'N/A' && (
+                        <span className="user-name" style={{ color: '#4f46e5' }}>Survey: {booking.surveyNumber}</span>
+                      )}
+                      <span className="user-mobile">
+                        {[booking.village, booking.mandal, booking.district, booking.pincode].filter(x => x && x !== 'N/A').join(', ') || 'Address not provided'}
+                      </span>
                     </div>
                   </td>
                   <td>

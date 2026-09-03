@@ -7,24 +7,51 @@ import type { PartnerBooking } from '../types';
 import useAssignmentPage from '../hooks/useAssignmentPage';
 import './ManageServiceAssignments.css';
 
-const mapPartnerBooking = (b: any): PartnerBooking => ({
-  id: b.id,
-  displayId: b.Order?.order_number || 'N/A',
-  userId: b.Order?.customer_id || '',
-  userName: b.Order?.customer_name || 'N/A',
-  userMobile: b.Order?.customer_contact || 'N/A',
-  surveyNumber: b.metadata?.fld_1 || 'N/A',
-  district: b.metadata?.fld_3 || 'N/A',
-  mandal: b.metadata?.fld_4 || 'N/A',
-  village: b.metadata?.fld_5 || 'N/A',
-  pincode: b.pincode || 'N/A',
-  equipmentType: b.Service?.name || 'Unknown',
-  date: b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
-  time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
-  status: b.status,
-  partnerId: b.assigned_partner_id,
-  totalAmount: b.Order?.total_amount || 0,
-});
+const mapPartnerBooking = (b: any): PartnerBooking => {
+  const customFields = b.metadata?.custom_field_responses || b.metadata?.custom_fields || b.metadata || {};
+  
+  let addressObj: any = {};
+  let addressText = '';
+
+  const rawAddress = b.address || b.Order?.customer_address || '';
+  if (typeof rawAddress === 'string') {
+    try {
+      addressObj = JSON.parse(rawAddress);
+      addressText = [addressObj.line1, addressObj.line2, addressObj.city, addressObj.state].filter(Boolean).join(', ');
+    } catch {
+      addressText = rawAddress;
+    }
+  } else if (typeof rawAddress === 'object' && rawAddress) {
+    addressObj = rawAddress;
+    addressText = [addressObj.line1, addressObj.line2, addressObj.city, addressObj.state].filter(Boolean).join(', ');
+  }
+
+  const village = customFields['Village'] || customFields['village'] || customFields['fld_5'] || addressObj.line1 || '';
+  const mandal = customFields['Mandal'] || customFields['mandal'] || customFields['fld_4'] || addressObj.city || '';
+  const district = customFields['District'] || customFields['district'] || customFields['fld_3'] || addressObj.state || '';
+  const pincode = b.pincode || customFields['Pincode'] || customFields['fld_6'] || addressObj.pincode || 'N/A';
+
+  return {
+    id: b.id,
+    displayId: b.display_id || b.Order?.order_number || 'N/A',
+    orderNumber: b.Order?.order_number || '',
+    userId: b.Order?.customer_id || '',
+    userName: b.Order?.customer_name || 'N/A',
+    userMobile: b.Order?.customer_contact || 'N/A',
+    surveyNumber: customFields['Survey Number'] || customFields['Survey No'] || customFields['Survey No.'] || customFields['Survey'] || customFields['fld_1'] || b.metadata?.fld_1 || '',
+    district,
+    mandal,
+    village,
+    pincode,
+    fullAddress: addressText || [village, mandal, district].filter(Boolean).join(', '),
+    equipmentType: b.Service?.name || 'Unknown',
+    date: b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
+    time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+    status: b.status,
+    partnerId: b.assigned_partner_id,
+    totalAmount: b.Order?.total_amount || 0,
+  };
+};
 
 export default function ManagePartnerAssignments() {
   const mapBooking = useCallback(mapPartnerBooking, []);

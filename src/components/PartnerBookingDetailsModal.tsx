@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { PartnerBooking, DronePartner } from '../types';
-import './ServiceRequestDetailsModal.css'; // Reusing CSS
-
+import './ServiceRequestDetailsModal.css';
 import { usePartnerContext } from '../context/PartnerContext';
 
 interface PartnerBookingDetailsModalProps {
@@ -26,6 +25,14 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
   const pType = pricingTypes.find(pt => pt.id === booking.pricingTypeId);
   const unitName = pType ? pType.name.replace('Per ', '') : 'Units';
 
+  const assignedPartnerInfo = booking.assignedPartner || (partner ? {
+    id: partner.id,
+    display_id: partner.id,
+    name: partner.name,
+    mobile: partner.mobile,
+    email: partner.email
+  } : undefined);
+
   return createPortal(
     <div className="modal-overlay animate-fade-in">
       <div className="modal-content details-modal">
@@ -43,7 +50,7 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
             </div>
             {booking.paymentStatus === 'Paid' && (
               <div className="details-badge" style={{ backgroundColor: '#10b981', color: 'white', marginBottom: 0 }}>
-                Paid (₹{booking.totalAmount?.toLocaleString('en-IN')})
+                Paid (?{booking.totalAmount?.toLocaleString('en-IN')})
               </div>
             )}
             {booking.quantity && (
@@ -54,7 +61,7 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
           </div>
 
           <div className="details-card">
-            Farmer <br/><br/>
+            Farmer Information <br/><br/>
             <div className="details-row">
               <strong>Name:</strong> {booking.userName}
             </div>
@@ -62,48 +69,57 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
               <strong>Mobile:</strong> {booking.userMobile}
             </div>
             <div className="details-row">
-              <strong>Location:</strong> {booking.village}, {booking.mandal}, {booking.district} - {booking.pincode}
+              <strong>Location:</strong> {[booking.village, booking.mandal, booking.district, booking.pincode].filter(x => x && x !== 'N/A').join(', ') || 'Address not provided'}
             </div>
-            <div className="details-row" style={{ color: '#4f46e5', fontWeight: 600 }}>
-              <strong>Survey Number:</strong> {booking.surveyNumber}
-            </div>
+            {booking.surveyNumber && booking.surveyNumber !== 'N/A' && (
+              <div className="details-row" style={{ color: '#4f46e5', fontWeight: 600 }}>
+                <strong>Survey Number:</strong> {booking.surveyNumber}
+              </div>
+            )}
           </div>
 
           <div className="details-card">
             Service Details <br/><br/>
             <div className="details-row">
-              <strong>Equipment Type:</strong> {booking.equipmentType}
+              <strong>Equipment / Service:</strong> {booking.equipmentType}
             </div>
             <div className="details-row">
-              <strong>Date:</strong> {booking.date}
+              <strong>Scheduled Date:</strong> {booking.date}
             </div>
             <div className="details-row">
-              <strong>Time:</strong> {booking.time}
+              <strong>Scheduled Time:</strong> {booking.time}
             </div>
           </div>
-
-          {booking.customFieldResponses && Object.keys(booking.customFieldResponses).length > 0 && (
-            <div className="details-card">
-              Additional Information <br/><br/>
-              {Object.entries(booking.customFieldResponses).map(([key, value]) => (
-                <div className="details-row" key={key}>
-                  <strong>{key}:</strong> {value}
-                </div>
-              ))}
-            </div>
-          )}
 
           <div className="details-card">
             Assigned Partner <br/><br/>
-            <div className="details-row">
-              {partner ? partner.name : '-'}
-            </div>
-            {partner && (
-              <div className="details-row mt-2" style={{ fontSize: '14px', color: '#64748b' }}>
-                Contact: {partner.mobile}
+            {assignedPartnerInfo ? (
+              <>
+                <div className="details-row" style={{ fontWeight: 600, fontSize: '15px', color: '#1e293b' }}>
+                  {assignedPartnerInfo.name} {assignedPartnerInfo.display_id ? `(${assignedPartnerInfo.display_id})` : ''}
+                </div>
+                <div className="details-row mt-2" style={{ fontSize: '14px', color: '#64748b' }}>
+                  <strong>Contact:</strong> {assignedPartnerInfo.mobile || 'N/A'} {assignedPartnerInfo.email ? `| ${assignedPartnerInfo.email}` : ''}
+                </div>
+              </>
+            ) : (
+              <div className="details-row" style={{ color: '#94a3b8' }}>
+                No partner assigned yet
               </div>
             )}
           </div>
+
+          {booking.status === 'Cancelled' && (
+            <div className="details-card" style={{ borderLeft: '4px solid #ef4444', backgroundColor: '#fef2f2' }}>
+              <span style={{ color: '#b91c1c', fontWeight: 600 }}>Cancellation Information</span><br/><br/>
+              <div className="details-row">
+                <strong>Cancelled By:</strong> {booking.cancelledBy || 'N/A'}
+              </div>
+              <div className="details-row mt-2">
+                <strong>Reason:</strong> {booking.cancellationReason || 'No reason provided'}
+              </div>
+            </div>
+          )}
 
           {booking.startWorkPhotos && booking.startWorkPhotos.length > 0 && (
             <div className="details-card">

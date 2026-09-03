@@ -12,28 +12,30 @@ interface PartnerServiceFormProps {
   initialData?: PartnerService | null;
   categories: { id?: string; _id?: string; name: string }[];
   partnerTypes: { id: string; name: string }[];
+  pricingTypes?: { id: string; name: string }[];
 }
 
-export default function PartnerServiceForm({ onSaveService, onCancel, initialData, categories, partnerTypes }: PartnerServiceFormProps) {
-  const { pricingTypes } = usePartnerContext();
+export default function PartnerServiceForm({ onSaveService, onCancel, initialData, categories, partnerTypes, pricingTypes: propPricingTypes }: PartnerServiceFormProps) {
+  const { pricingTypes: contextPricingTypes } = usePartnerContext();
+  const pricingTypes = (propPricingTypes && propPricingTypes.length > 0) ? propPricingTypes : contextPricingTypes;
 
   const [category_id, setCategoryId] = useState(initialData?.category_id || '');
   const [serviceName, setServiceName] = useState(initialData?.name || initialData?.serviceName || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [customFields, setCustomFields] = useState<CustomField[]>(initialData?.custom_fields || initialData?.customFields || []);
-  const [pricingTypeId, setPricingTypeId] = useState<string>(initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
-  const [required_partner_type_id, setRequiredPartnerTypeId] = useState<string>(initialData?.required_partner_type_id || '');
+  const [pricingTypeId, setPricingTypeId] = useState<string>(initialData?.pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
+  const [required_partner_type_id, setRequiredPartnerTypeId] = useState<string>(initialData?.required_partner_type_id || (initialData as any)?.required_partner_type?.id || (initialData as any)?.requiredPartnerType?.id || '');
   const [rate, setRate] = useState<number | undefined>(initialData?.price !== undefined ? initialData.price : initialData?.rate);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (initialData) {
-      setCategoryId(initialData.category_id || '');
+      setCategoryId(initialData.category_id || (initialData as any)?.category?.id || '');
       setServiceName(initialData.name || initialData.serviceName || '');
       setCustomFields(initialData.custom_fields || initialData.customFields || []);
-      setPricingTypeId(initialData.pricingTypeId || '');
-      setRequiredPartnerTypeId(initialData.required_partner_type_id || '');
+      setPricingTypeId(initialData.pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
+      setRequiredPartnerTypeId(initialData.required_partner_type_id || (initialData as any)?.required_partner_type?.id || (initialData as any)?.requiredPartnerType?.id || '');
       setRate(initialData.price !== undefined ? initialData.price : initialData.rate);
     } else {
       setCategoryId('');
@@ -43,7 +45,7 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
       setRequiredPartnerTypeId('');
       setRate(undefined);
     }
-  }, [initialData]);
+  }, [initialData, pricingTypes]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

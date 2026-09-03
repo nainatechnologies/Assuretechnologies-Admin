@@ -12,6 +12,7 @@ export default function ManagePartnerServices() {
   const [services, setServices] = useState<PartnerService[]>([]);
   const [categories, setCategories] = useState<{ id?: string; _id?: string; name: string }[]>([]);
   const [partnerTypes, setPartnerTypes] = useState<{ id: string; name: string }[]>([]);
+  const [pricingTypes, setPricingTypes] = useState<{ id: string; name: string }[]>([]);
 
   const [editingService, setEditingService] = useState<PartnerService | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -23,7 +24,23 @@ export default function ManagePartnerServices() {
     fetchCategories();
     fetchServices();
     fetchPartnerTypes();
+    fetchPricingTypes();
   }, []);
+
+  
+  const fetchPricingTypes = async () => {
+    try {
+      const res = await API.get('/admin/pricing-types');
+      if (res.data.success) {
+        setPricingTypes(res.data.data.map((pt: any) => ({
+          id: pt.id || pt._id,
+          name: pt.name
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching pricing types:', error);
+    }
+  };
 
   const fetchPartnerTypes = async () => {
     try {
@@ -238,6 +255,7 @@ export default function ManagePartnerServices() {
                initialData={editingService}
                categories={categories}
                partnerTypes={partnerTypes}
+               pricingTypes={pricingTypes}
              />
           </div>
         </div>

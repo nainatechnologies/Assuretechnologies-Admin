@@ -8,9 +8,10 @@ interface PartnerModalProps {
   onSave: (partner: Partner | Omit<Partner, 'id' | 'status'>) => void;
   partner?: Partner;
   partnerTypes: PartnerType[];
+  servicesList?: any[];
 }
 
-export default function PartnerModal({ isOpen, onClose, onSave, partner, partnerTypes }: PartnerModalProps) {
+export default function PartnerModal({ isOpen, onClose, onSave, partner, partnerTypes, servicesList = [] }: PartnerModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -25,7 +26,7 @@ export default function PartnerModal({ isOpen, onClose, onSave, partner, partner
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [pincodeInput, setPincodeInput] = useState('');
   const [pincodesList, setPincodesList] = useState<string[]>([]);
-  const [serviceInput, setServiceInput] = useState('');
+  
 
   useEffect(() => {
     if (partner) {
@@ -84,20 +85,18 @@ export default function PartnerModal({ isOpen, onClose, onSave, partner, partner
     setCustomFieldValues(prev => ({ ...prev, [fieldId]: value }));
   };
 
-  const handleAddService = () => {
-    const s = serviceInput.trim();
-    if (!s) return;
-    if (formData.services.includes(s)) {
-      setErrors(prev => ({ ...prev, services: 'Service already added' }));
-      return;
-    }
-    setFormData(prev => ({ ...prev, services: [...prev.services, s] }));
-    setServiceInput('');
+  const handleToggleService = (serviceId: string) => {
+    setFormData(prev => {
+      const isSelected = prev.services.includes(serviceId);
+      let newServices = [];
+      if (isSelected) {
+        newServices = prev.services.filter(id => id !== serviceId);
+      } else {
+        newServices = [...prev.services, serviceId];
+      }
+      return { ...prev, services: newServices };
+    });
     setErrors(prev => ({ ...prev, services: '' }));
-  };
-
-  const handleRemoveService = (s: string) => {
-    setFormData(prev => ({ ...prev, services: prev.services.filter(svc => svc !== s) }));
   };
 
   const handleAddPincode = () => {
@@ -344,39 +343,30 @@ export default function PartnerModal({ isOpen, onClose, onSave, partner, partner
               </div>
             )}
 
-            {/* Manual Partner Services Input */}
+            {/* Services Checkbox List */}
             <div style={{ marginTop: '10px' }}>
               <h4 style={{ margin: '0 0 10px 0', color: '#374151', fontSize: '14px', fontWeight: 500 }}>Services Provided</h4>
-              <div className="pincode-input-row">
-                <input 
-                  type="text"
-                  name="serviceInput"
-                  className={`input-field ${errors.services ? 'input-field-error' : ''}`}
-                  value={serviceInput}
-                  onChange={handleChange}
-                  placeholder="e.g. 10L Drone Spraying"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddService();
-                    }
-                  }}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none' }}
-                />
-                <button type="button" className="btn-add-pincode" onClick={handleAddService}>Add</button>
-              </div>
-              {errors.services && <span className="error-text">{errors.services}</span>}
-              
-              {formData.services.length > 0 && (
-                <div className="pincode-tags">
-                  {formData.services.map(svc => (
-                    <span key={svc} className="pincode-tag">
-                      {svc}
-                      <button type="button" onClick={() => handleRemoveService(svc)}>&times;</button>
-                    </span>
+              {!formData.partnerTypeId ? (
+                <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>Please select a partner type first.</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  {servicesList.filter(s => s.required_partner_type_id === formData.partnerTypeId || s.requiredPartnerType?.id === formData.partnerTypeId || s.required_partner_type?.id === formData.partnerTypeId).map(svc => (
+                    <label key={svc.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: '#374151' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={formData.services.includes(svc.id)}
+                        onChange={() => handleToggleService(svc.id)}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      {svc.name}
+                    </label>
                   ))}
+                  {servicesList.filter(s => s.required_partner_type_id === formData.partnerTypeId || s.requiredPartnerType?.id === formData.partnerTypeId || s.required_partner_type?.id === formData.partnerTypeId).length === 0 && (
+                    <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>No services found for this partner type.</p>
+                  )}
                 </div>
               )}
+              {errors.services && <span className="error-text" style={{ color: '#ef4444', fontSize: '12px', display: 'block', marginTop: '4px' }}>{errors.services}</span>}
             </div>
 
           </form>

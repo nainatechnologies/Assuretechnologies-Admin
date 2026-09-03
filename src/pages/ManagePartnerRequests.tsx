@@ -1,180 +1,152 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import PartnerBookingTable from '../components/PartnerBookingTable';
 import Pagination from '../components/Pagination';
 import PartnerBookingDetailsModal from '../components/PartnerBookingDetailsModal';
 import AssignPartnerModal from '../components/AssignPartnerModal';
-import type { PartnerBooking, DronePartner } from '../types';
-import Swal from 'sweetalert2';
+import type { PartnerBooking } from '../types';
+import API from '../services/api';
 import './ManageServiceAssignments.css';
 
-const MOCK_PARTNERS: DronePartner[] = [
-  {
-    id: 'DP1',
-    name: 'AgriDrones AP',
-    mobile: '9988776655',
-    email: 'contact@agridrones.in',
-    location: '522201, 522202, 500001',
-    equipmentTypes: ['Standard Spray Drone (10L)', 'Heavy Lift (30L)'],
-    status: 'Active',
-    partnerType: 'Drone'
-  },
-  {
-    id: 'DP2',
-    name: 'Kisan Copters',
-    mobile: '9876543210',
-    email: 'info@kisancopters.in',
-    location: '506001, 506015, 500001',
-    equipmentTypes: ['High-Capacity Drone (20L)'],
-    status: 'Active',
-    partnerType: 'Drone'
-  },
-  {
-    id: 'TP1',
-    name: 'Rao Tractors',
-    mobile: '9000112233',
-    email: 'rao@tractors.in',
-    location: '522201, 522202',
-    equipmentTypes: ['Mini Tractor (Below 20 HP)', 'Tractor with Rotavator'],
-    status: 'Active',
-    partnerType: 'Tractor'
-  }
-];
+const TAB_STATUS_MAP: Record<string, string> = {
+  assigned: 'ASSIGNED',
+  inProgress: 'IN_PROGRESS',
+  awaiting: 'AWAITING_APPROVAL',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+};
 
-const INITIAL_BOOKINGS: PartnerBooking[] = [
-  {
-    id: 'PB-201',
-    userId: 'U1',
-    userName: 'admin',
-    userMobile: '9988776655',
-    surveyNumber: '123/A',
-    district: 'Guntur',
-    mandal: 'Tenali',
-    village: 'Kolakaluru',
-    pincode: '522201',
-    equipmentType: 'Standard Spray Drone (10L)',
-    date: '24 Jul 2026',
-    time: '2 PM - 4 PM',
-    status: 'Assigned',
-    partnerId: 'DP1',
-    partnerType: 'Drone',
-    pricingTypeId: 'prt1',
-    quantity: 5,
-    totalAmount: 2000,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 'PB-202',
-    userId: 'U2',
-    userName: 'Venkatesh Marripelly',
-    userMobile: '9701712335',
-    surveyNumber: '45/B',
-    district: 'Warangal',
-    mandal: 'Hanamkonda',
-    village: 'Bheemaram',
-    pincode: '506015',
-    equipmentType: 'High-Capacity Drone (20L)',
-    date: '06 May 2026',
-    time: '9 AM - 11 AM',
-    status: 'Assigned',
-    partnerId: 'DP2',
-    partnerType: 'Drone',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+1', 'https://placehold.co/1200x900/e2e8f0/64748b?text=Before+2'],
-    customFieldResponses: {
-      'Crop Type': 'Paddy',
-      'Acres': '5'
-    },
-    paymentStatus: 'Paid',
-    pricingTypeId: 'prt1',
-    quantity: 5,
-    totalAmount: 2000
-  },
-  {
-    id: 'PB-203',
-    userId: 'U3',
-    userName: 'siri',
-    userMobile: '9505261283',
-    surveyNumber: '67/D',
-    district: 'Guntur',
-    mandal: 'Tenali',
-    village: 'Kolakaluru',
-    pincode: '522201',
-    equipmentType: 'Mini Tractor (Below 20 HP)',
-    date: '10 Jan 2026',
-    time: '2 PM - 4 PM',
-    status: 'In Progress',
-    partnerId: 'TP1',
-    partnerType: 'Tractor',
-    pricingTypeId: 'prt2',
-    quantity: 4,
-    totalAmount: 5600,
-    paymentStatus: 'Paid',
-    progressUpdates: [
-      {
-        id: 'PRG1',
-        date: '2026-07-25 10:00:00',
-        description: 'Arrived at the field, starting the plowing process.',
-        photos: ['https://placehold.co/150x150/e2e8f0/64748b?text=Progress+1']
-      }
-    ]
-  },
-  {
-    id: 'PB-204',
-    userId: 'U4',
-    userName: 'Ravi',
-    userMobile: '9123456780',
-    surveyNumber: '88/E',
-    district: 'Hyderabad',
-    mandal: 'Serilingampally',
-    village: 'Kondapur',
-    pincode: '500084',
-    equipmentType: 'Standard Spray Drone (10L)',
-    date: '20 Jul 2026',
-    time: '10 AM - 12 PM',
-    status: 'Completed',
-    partnerId: 'DP1',
-    partnerType: 'Drone',
-    pricingTypeId: 'prt1',
-    quantity: 3,
-    totalAmount: 1200,
-    paymentStatus: 'Paid',
-    startWorkPhotos: ['https://placehold.co/1200x900/e2e8f0/64748b?text=Before+Work'],
-    completeWorkPhotos: ['https://placehold.co/1200x900/10b981/ffffff?text=After+Work']
+const mapBackendToPartnerBooking = (b: any): PartnerBooking => {
+  const customFields = b.metadata?.custom_field_responses || b.metadata?.custom_fields || b.metadata || {};
+  
+  let addressObj: any = {};
+  let addressText = '';
+
+  const rawAddress = b.address || b.Order?.customer_address || '';
+  if (typeof rawAddress === 'string') {
+    try {
+      addressObj = JSON.parse(rawAddress);
+      addressText = [addressObj.line1, addressObj.line2, addressObj.city, addressObj.state].filter(Boolean).join(', ');
+    } catch {
+      addressText = rawAddress;
+    }
+  } else if (typeof rawAddress === 'object' && rawAddress) {
+    addressObj = rawAddress;
+    addressText = [addressObj.line1, addressObj.line2, addressObj.city, addressObj.state].filter(Boolean).join(', ');
   }
-];
+
+  const village = customFields['Village'] || customFields['village'] || customFields['fld_5'] || addressObj.line1 || '';
+  const mandal = customFields['Mandal'] || customFields['mandal'] || customFields['fld_4'] || addressObj.city || '';
+  const district = customFields['District'] || customFields['district'] || customFields['fld_3'] || addressObj.state || '';
+  const pincode = b.pincode || customFields['Pincode'] || customFields['fld_6'] || addressObj.pincode || 'N/A';
+
+  const progressList = Array.isArray(b.progress_updates) ? b.progress_updates : [];
+  const startUpdates = progressList.filter((p: any) => p.update_type === 'START');
+  const completeUpdates = progressList.filter((p: any) => p.update_type === 'COMPLETE');
+
+  let uiStatus: any = 'Assigned';
+  if (b.status === 'ASSIGNED') uiStatus = 'Assigned';
+  else if (b.status === 'IN_PROGRESS') uiStatus = 'In Progress';
+  else if (b.status === 'AWAITING_APPROVAL') uiStatus = 'Awaiting Approval';
+  else if (b.status === 'COMPLETED') uiStatus = 'Completed';
+  else if (b.status === 'CANCELLED') uiStatus = 'Cancelled';
+  else if (b.status === 'NEW') uiStatus = 'Pending';
+  else if (b.status === 'ACCEPTED') uiStatus = 'Accepted';
+
+  return {
+    id: b.id,
+    displayId: b.display_id || b.Order?.order_number || 'N/A',
+    orderNumber: b.Order?.order_number || '',
+    userId: b.Order?.customer_id || '',
+    userName: b.Order?.customer_name || 'N/A',
+    userMobile: b.Order?.customer_contact || 'N/A',
+    surveyNumber: customFields['Survey Number'] || customFields['Survey No'] || customFields['Survey No.'] || customFields['Survey'] || customFields['fld_1'] || b.metadata?.fld_1 || 'N/A',
+    district,
+    mandal,
+    village,
+    pincode,
+    fullAddress: addressText || [village, mandal, district].filter(Boolean).join(', '),
+    equipmentType: b.Service?.name || 'Unknown',
+    date: b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
+    time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+    status: uiStatus,
+    partnerId: b.assigned_partner_id,
+    assignedPartner: b.assigned_partner ? {
+      id: b.assigned_partner.id,
+      display_id: b.assigned_partner.display_id,
+      name: b.assigned_partner.full_name,
+      mobile: b.assigned_partner.mobile,
+      email: b.assigned_partner.email
+    } : undefined,
+    partnerType: b.Service?.name || 'Partner',
+    pricingTypeId: b.Service?.pricing_type_id,
+    quantity: b.quantity || 1,
+    totalAmount: b.Order?.total_amount || 0,
+    paymentStatus: b.Order?.payment_status === 'PAID' ? 'Paid' : 'Pending',
+    startWorkPhotos: startUpdates.flatMap((p: any) => p.photos || []),
+    completeWorkPhotos: completeUpdates.flatMap((p: any) => p.photos || []),
+    progressUpdates: progressList.map((p: any) => ({
+      id: p.id,
+      date: new Date(p.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
+      description: p.description,
+      photos: Array.isArray(p.photos) ? p.photos : []
+    })),
+    customFieldResponses: customFields
+  };
+};
 
 export default function ManagePartnerRequests() {
   const [activeTab, setActiveTab] = useState<'assigned' | 'inProgress' | 'awaiting' | 'completed' | 'cancelled'>('assigned');
-  const [bookings, setBookings] = useState<PartnerBooking[]>(INITIAL_BOOKINGS);
-  
+  const [bookings, setBookings] = useState<PartnerBooking[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<PartnerBooking | null>(null);
+  const [selectedRawPartner, setSelectedRawPartner] = useState<any>(null);
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
-  const [selectedReassignId, setSelectedReassignId] = useState<string | null>(null);
+  const [selectedReassignBooking, setSelectedReassignBooking] = useState<PartnerBooking | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  const fetchBookings = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const backendStatus = TAB_STATUS_MAP[activeTab];
+      const res = await API.get('/admin/service-bookings', {
+        params: {
+          owner_type: 'PARTNER',
+          status: backendStatus,
+          page: currentPage,
+          limit: ITEMS_PER_PAGE
+        }
+      });
+
+      if (res.data?.success) {
+        const rawList = res.data.data?.data || res.data.data || [];
+        const mapped = rawList.map(mapBackendToPartnerBooking);
+        setBookings(mapped);
+        setTotalPages(res.data.data?.totalPages || 1);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch partner requests:', err);
+      setError(err.response?.data?.message || 'Failed to load partner requests');
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeTab, currentPage]);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [activeTab]);
-
-  const filteredBookings = useMemo(() => {
-    switch(activeTab) {
-      case 'assigned': return bookings.filter(b => b.status === 'Assigned');
-      case 'inProgress': return bookings.filter(b => b.status === 'In Progress');
-      case 'awaiting': return bookings.filter(b => b.status === 'Awaiting Approval');
-      case 'completed': return bookings.filter(b => b.status === 'Completed');
-      case 'cancelled': return bookings.filter(b => b.status === 'Cancelled');
-      default: return [];
-    }
-  }, [bookings, activeTab]);
-
-  const totalPages = Math.ceil(filteredBookings.length / ITEMS_PER_PAGE);
-  const paginatedBookings = filteredBookings.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
 
   const handleView = (id: string) => {
     const booking = bookings.find(b => b.id === id);
@@ -185,33 +157,17 @@ export default function ManagePartnerRequests() {
   };
 
   const handleReassign = (id: string) => {
-    setSelectedReassignId(id);
-    setAssignModalOpen(true);
+    const booking = bookings.find(b => b.id === id);
+    if (booking) {
+      setSelectedReassignBooking(booking);
+      setAssignModalOpen(true);
+    }
   };
 
-  const handleAssignConfirm = (_bookingId: string, partnerId: string) => {
-    if (selectedReassignId) {
-      Swal.fire({
-        title: 'Reassign Partner?',
-        text: "Are you sure you want to reassign this booking?",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#10b981',
-        confirmButtonText: 'Yes, Reassign'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          setBookings(prev => prev.map(booking => 
-            booking.id === selectedReassignId 
-              ? { ...booking, partnerId, status: 'Assigned' } 
-              : booking
-          ));
-          setAssignModalOpen(false);
-          setSelectedReassignId(null);
-          setActiveTab('assigned');
-          Swal.fire('Reassigned!', 'Partner has been reassigned successfully.', 'success');
-        }
-      });
-    }
+  const handleAssignSuccess = () => {
+    setAssignModalOpen(false);
+    setSelectedReassignBooking(null);
+    fetchBookings();
   };
 
   return (
@@ -255,40 +211,50 @@ export default function ManagePartnerRequests() {
         </div>
 
         <div className="tab-content">
-          <PartnerBookingTable 
-            bookings={paginatedBookings}
-            viewType="requests"
-            onView={handleView}
-            onReassign={handleReassign}
-          />
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {loading ? (
+            <div className="text-center py-8 text-gray-500">Loading partner requests...</div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-500">{error}</div>
+          ) : (
+            <>
+              <PartnerBookingTable 
+                bookings={bookings}
+                viewType="requests"
+                onView={handleView}
+                onReassign={handleReassign}
+              />
+              {totalPages > 1 && (
+                <Pagination 
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
 
       {viewModalOpen && selectedBooking && (
         <PartnerBookingDetailsModal 
           booking={selectedBooking}
-          partner={selectedBooking.partnerId ? MOCK_PARTNERS.find(p => p.id === selectedBooking.partnerId) : undefined}
-          onClose={() => setViewModalOpen(false)}
+          partner={selectedRawPartner}
+          onClose={() => {
+            setViewModalOpen(false);
+            setSelectedBooking(null);
+            setSelectedRawPartner(null);
+          }}
         />
       )}
 
-      {assignModalOpen && selectedReassignId && (
+      {assignModalOpen && selectedReassignBooking && (
         <AssignPartnerModal 
-          booking={bookings.find(b => b.id === selectedReassignId)!}
-          dronePartners={MOCK_PARTNERS.filter(p => {
-             const booking = bookings.find(b => b.id === selectedReassignId);
-             return booking && (p.partnerType === booking.partnerType || (!p.partnerType && booking.partnerType === 'Drone'));
-          })}
+          booking={selectedReassignBooking}
           onClose={() => {
             setAssignModalOpen(false);
-            setSelectedReassignId(null);
+            setSelectedReassignBooking(null);
           }}
-          onAssign={handleAssignConfirm}
+          onAssignSuccess={handleAssignSuccess}
         />
       )}
     </div>

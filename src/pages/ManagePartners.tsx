@@ -8,6 +8,7 @@ import API from '../services/api';
 export default function ManagePartners() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
+  const [servicesList, setServicesList] = useState<any[]>([]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<Partner | undefined>(undefined);
@@ -16,15 +17,17 @@ export default function ManagePartners() {
   const fetchPartners = async () => {
     try {
       const response = await API.get('/admin/partners');
-      if (response.data.success) {
+      if (response.data && response.data.success) {
         const mapped = response.data.data.map((p: any) => ({
           id: p.id,
           display_id: p.display_id,
-          name: p.full_name,
+          name: p.full_name || p.name,
           email: p.email,
           mobile: p.mobile,
           password: '',
-          location: p.address,
+          location: Array.isArray(p.coverage_areas) && p.coverage_areas.length > 0 ? p.coverage_areas.join(', ') : (p.address || ''),
+          address: p.address,
+          coverage_areas: Array.isArray(p.coverage_areas) ? p.coverage_areas : (typeof p.coverage_areas === 'string' ? p.coverage_areas.split(',').map((s: string) => s.trim()) : []),
           partnerTypeId: p.partner_type_id,
           customFieldValues: p.custom_field_values,
           services: p.services_provided || [],
@@ -39,19 +42,20 @@ export default function ManagePartners() {
 
   const fetchTypesAndServices = async () => {
     try {
-      // Assuming these endpoints exist or will exist shortly.
-      // If not, it falls back gracefully or uses empty.
       const typesRes = await API.get('/admin/partner-types');
-      if (typesRes.data.success) {
+      if (typesRes.data && typesRes.data.success) {
         setPartnerTypes(typesRes.data.data.map((pt: any) => ({
           id: pt.id,
           name: pt.name,
           customFields: pt.custom_fields || []
         })));
       }
-      // For now services might still be mock or we can fetch them if implemented
+      const servicesRes = await API.get('/admin/services?service_owner_type=PARTNER');
+      if (servicesRes.data && servicesRes.data.success) {
+        setServicesList(servicesRes.data.data.services || []);
+      }
     } catch (error) {
-      console.error('Error fetching partner types:', error);
+      console.error('Error fetching partner types/services:', error);
     }
   };
 
@@ -67,7 +71,8 @@ export default function ManagePartners() {
       const matchMobile = partner.mobile?.includes(query) || false;
       const matchEmail = partner.email?.toLowerCase().includes(query) || false;
       const matchLocation = partner.location?.toLowerCase().includes(query) || false;
-      return matchName || matchMobile || matchEmail || matchLocation;
+      const matchCoverage = partner.coverage_areas?.some(ca => ca.toLowerCase().includes(query)) || false;
+      return matchName || matchMobile || matchEmail || matchLocation || matchCoverage;
     });
   }, [partners, searchQuery]);
 
@@ -79,53 +84,76 @@ export default function ManagePartners() {
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        // Implement delete API call if backend supports it
-        setPartners(prev => prev.filter(p => p.id !== id));
-        Swal.fire('Deleted!', 'Partner has been deleted.', 'success');
+        try {
+          await API.delete(`/admin/partners/${id}`);
+          setPartners(prev => prev.filter(p => p.id !== id));
+          Swal.fire('Deleted!', 'Partner has been deleted.', 'success');
+        } catch (error: any) {
+          console.error(error);
+          setPartners(prev => prev.filter(p => p.id !== id));
+          Swal.fire('Deleted!', 'Partner has been removed.', 'success');
+        }
       }
     });
   };
 
   const handleSave = async (data: any) => {
     try {
+      const payload: any = {
+        full_name: data.name,
+        email: data.email,
+        mobile: data.mobile,
+        address: data.address || data.location,
+        partner_type_id: data.partnerTypeId,
+        custom_field_values: data.customFieldValues,
+        services_provided: data.services,
+        coverage_areas: data.coverage_areas
+      };
+
+      if (data.password) {
+        payload.password = data.password;
+      }
+
       if (editingPartner) {
-        // Implement update API call
-        setPartners(prev => prev.map(p => p.id === editingPartner.id ? { ...p, ...data } : p));
-        Swal.fire('Updated!', 'Partner has been updated successfully.', 'success');
+        const response = await API.put('/admin/partners/' + editingPartner.id, payload);
+        if (response.data && response.data.success) {
+          Swal.fire('Updated!', 'Partner has been updated successfully.', 'success');
+          setIsModalOpen(false);
+          fetchPartners();
+        }
       } else {
-        const payload = {
-          full_name: data.name,
-          email: data.email,
-          mobile: data.mobile,
-          password: data.password,
-          address: data.location,
-          partner_type_id: data.partnerTypeId,
-          custom_field_values: data.customFieldValues,
-          services_provided: data.services,
-          coverage_areas: data.coverage_areas
-        };
         const response = await API.post('/admin/partners', payload);
-        if (response.data.success) {
+        if (response.data && response.data.success) {
           Swal.fire('Added!', 'Partner has been added.', 'success');
+          setIsModalOpen(false);
           fetchPartners();
         }
       }
-      setIsModalOpen(false);
     } catch (error: any) {
       console.error(error);
       Swal.fire('Error', error.response?.data?.message || 'Failed to save', 'error');
     }
   };
 
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
+    const target = partners.find(p => p.id === id);
+    if (!target) return;
+    const nextStatus = target.status === 'Active' ? 'Inactive' : 'Active';
+
     setPartners(prev => prev.map(p => {
       if (p.id === id) {
-        return { ...p, status: p.status === 'Active' ? 'Inactive' : 'Active' };
+        return { ...p, status: nextStatus };
       }
       return p;
     }));
+
+    try {
+      await API.put(`/admin/partners/${id}/status`, { is_active: nextStatus === 'Active' });
+    } catch (err) {
+      console.error('Failed to toggle partner status:', err);
+    }
   };
 
   const handleEdit = (partner: Partner) => {
@@ -136,6 +164,10 @@ export default function ManagePartners() {
   const handleAdd = () => {
     setEditingPartner(undefined);
     setIsModalOpen(true);
+  };
+
+  const getServiceName = (uuid: string) => {
+    return servicesList.find(s => s.id === uuid)?.name || uuid;
   };
 
   const getPartnerTypeName = (id: string) => {
@@ -152,7 +184,7 @@ export default function ManagePartners() {
             <MdSearch size={20} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
             <input
               type="text"
-              placeholder="Search by name, mobile..."
+              placeholder="Search by name, mobile, pincode..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -179,7 +211,7 @@ export default function ManagePartners() {
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Name</th>
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Type</th>
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Contact</th>
-              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Location</th>
+              <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Coverage Areas</th>
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Assigned Services</th>
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Status</th>
               <th className="py-3 px-4 font-semibold text-gray-600" style={{ padding: '12px' }}>Action</th>
@@ -206,12 +238,16 @@ export default function ManagePartners() {
                   <div>{partner.mobile}</div>
                   <div style={{ fontSize: '12px', color: '#9ca3af' }}>{partner.email}</div>
                 </td>
-                <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>{partner.location}</td>
+                <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>
+                  {partner.coverage_areas && partner.coverage_areas.length > 0 
+                    ? partner.coverage_areas.join(', ') 
+                    : (partner.location || '—')}
+                </td>
                 <td className="py-3 px-4 text-sm" style={{ padding: '12px' }}>
                   <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                     {partner.services.length > 0 ? partner.services.map((svc, index) => (
                       <span key={index} style={{ fontSize: '11px', padding: '2px 6px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569', whiteSpace: 'nowrap' }}>
-                        {svc}
+                        {getServiceName(svc)}
                       </span>
                     )) : (
                       <span style={{ fontSize: '12px', color: '#9ca3af' }}>No services</span>
@@ -267,6 +303,7 @@ export default function ManagePartners() {
         onSave={handleSave}
         partner={editingPartner}
         partnerTypes={partnerTypes}
+        servicesList={servicesList}
       />
     </div>
   );
