@@ -113,7 +113,7 @@ export default function PartnerBookingDetailsModal({ booking, partner, onClose }
             <div className="details-card" style={{ borderLeft: '4px solid #ef4444', backgroundColor: '#fef2f2' }}>
               <span style={{ color: '#b91c1c', fontWeight: 600 }}>Cancellation Information</span><br/><br/>
               <div className="details-row">
-                <strong>Cancelled By:</strong> {booking.cancelledBy || 'N/A'}
+                <strong>Cancelled By:</strong> {booking.cancelledBy === 'ADMIN' ? 'Assure Admin' : booking.cancelledBy === 'CUSTOMER' ? 'Customer' : (booking.cancelledBy || 'N/A')}
               </div>
               <div className="details-row mt-2">
                 <strong>Reason:</strong> {booking.cancellationReason || 'No reason provided'}
