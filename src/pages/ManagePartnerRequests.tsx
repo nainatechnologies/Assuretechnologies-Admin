@@ -82,6 +82,8 @@ const mapBackendToPartnerBooking = (b: any): PartnerBooking => {
     quantity: b.quantity || 1,
     totalAmount: b.Order?.total_amount || 0,
     paymentStatus: b.Order?.payment_status === 'PAID' ? 'Paid' : 'Pending',
+    cancelledBy: b.cancelled_by,
+    cancellationReason: b.cancellation_reason,
     startWorkPhotos: startUpdates.flatMap((p: any) => p.photos || []),
     completeWorkPhotos: completeUpdates.flatMap((p: any) => p.photos || []),
     progressUpdates: progressList.map((p: any) => ({
@@ -102,7 +104,6 @@ export default function ManagePartnerRequests() {
 
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<PartnerBooking | null>(null);
-  const [selectedRawPartner, setSelectedRawPartner] = useState<any>(null);
 
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [selectedReassignBooking, setSelectedReassignBooking] = useState<PartnerBooking | null>(null);
@@ -238,11 +239,9 @@ export default function ManagePartnerRequests() {
       {viewModalOpen && selectedBooking && (
         <PartnerBookingDetailsModal 
           booking={selectedBooking}
-          partner={selectedRawPartner}
           onClose={() => {
             setViewModalOpen(false);
             setSelectedBooking(null);
-            setSelectedRawPartner(null);
           }}
         />
       )}

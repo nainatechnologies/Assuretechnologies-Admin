@@ -22,6 +22,7 @@ export default function ManageUsers() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [summary, setSummary] = useState<{ totalCustomers: number; activeUsers: number; inactiveUsers: number; totalOrders: number } | null>(null);
   const itemsPerPage = 10;
 
   // Search debounce
@@ -52,13 +53,16 @@ export default function ManageUsers() {
           stateName: c.state_name || '',
           isMobileVerified: c.is_mobile_verified,
           status: c.is_active ? 'Active' : 'Inactive',
-          ordersCount: c.ordersCount || 0,
-          totalSpent: c.totalSpent || 0,
+          ordersCount: c.ordersCount ?? c.order_count ?? (c.orders ? c.orders.length : 0),
+          totalSpent: c.totalSpent ?? c.total_spent ?? 0,
           createdAt: c.createdAt,
           addresses: c.addresses || [],
           orders: c.orders || []
         }));
         setCustomers(mappedCustomers);
+        if (response.data.summary) {
+          setSummary(response.data.summary);
+        }
         if (response.data.pagination) {
           setTotalPages(response.data.pagination.totalPages || 1);
           setTotalItems(response.data.pagination.totalItems || 0);
@@ -134,9 +138,9 @@ export default function ManageUsers() {
   };
 
   // Metrics calculation
-  const activeCount = customers.filter(c => c.status === 'Active').length;
-  const inactiveCount = customers.filter(c => c.status === 'Inactive').length;
-  const totalOrdersSum = customers.reduce((sum, c) => sum + (c.ordersCount || 0), 0);
+  const activeCount = summary ? summary.activeUsers : customers.filter(c => c.status === 'Active').length;
+  const inactiveCount = summary ? summary.inactiveUsers : customers.filter(c => c.status === 'Inactive').length;
+  const totalOrdersSum = summary ? summary.totalOrders : customers.reduce((sum, c) => sum + (c.ordersCount || 0), 0);
 
   return (
     <div className="manage-users-container">

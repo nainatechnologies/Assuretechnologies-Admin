@@ -445,3 +445,31 @@ export interface VendorLedgerItem {
   totalPendingCustomerUnpaid: number;
   orders: VendorLedgerOrder[];
 }
+<<<<<<< HEAD
+=======
+
+
+export interface DashboardStats {
+  totalRevenue: number;
+  revenueTrend: string;
+  revenueGrowthPositive: boolean;
+  activeUsers: number;
+  usersTrend: string;
+  usersGrowthPositive: boolean;
+  totalSales: number;
+  salesTrend: string;
+  salesGrowthPositive: boolean;
+}
+
+export interface DashboardActivityItem {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_email?: string;
+  customer_mobile?: string;
+  total_amount: number;
+  status: string;
+  payment_status: string;
+  createdAt: string;
+}
+>>>>>>> 299fee88d1cabb01b7a809b084f6cefb98d82a43

@@ -10,7 +10,7 @@ interface ServiceRequestDetailsModalProps {
   onMarkAsPaid?: (id: string) => void;
 }
 
-export default function ServiceRequestDetailsModal({ request, technician, onClose }: ServiceRequestDetailsModalProps) {
+export default function ServiceRequestDetailsModal({ request, technician, onClose, onMarkAsPaid }: ServiceRequestDetailsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 

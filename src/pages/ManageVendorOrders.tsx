@@ -1,3 +1,5 @@
+import Loading from '../components/Loading';
+import Pagination from '../components/Pagination';
 import { useState, useEffect } from 'react';
 import API from '../services/api';
 import { MdShoppingCart, MdSearch } from 'react-icons/md';
@@ -17,6 +19,7 @@ export default function ManageVendorOrders() {
 
   const fetchOrders = async () => {
     try {
+      setIsLoading(true);
       const response = await API.get('/admin/orders');
       const vendorOrdersFetched: any[] = [];
       
@@ -44,6 +47,8 @@ export default function ManageVendorOrders() {
     } catch (error) {
       console.error('Failed to fetch orders', error);
       Swal.fire('Error', 'Failed to fetch vendor orders', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,6 +60,8 @@ export default function ManageVendorOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [trackingOrder, setTrackingOrder] = useState<Order | null>(null);
   const [splittingItem, setSplittingItem] = useState<{ orderId: string; item: OrderItem } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Cancelled'];
 
@@ -85,6 +92,10 @@ export default function ManageVendorOrders() {
       };
     });
   });
+
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(vendorOrders.length / itemsPerPage) || 1;
+  const paginatedOrders = vendorOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => {
     let actionText = '';
@@ -252,15 +263,27 @@ export default function ManageVendorOrders() {
         </div>
       </div>
 
-      <OrderTable 
-        orders={vendorOrders} 
-        currentTab={activeTab} 
-        onViewOrder={setSelectedOrder} 
-        onActionOrder={handleActionOrder} 
-        onTrackOrder={setTrackingOrder}
-        showVendor={true}
-        hideActions={true}
-      />
+      {isLoading ? (
+        <Loading />
+      ) : (
+        <>
+          <OrderTable 
+            orders={paginatedOrders} 
+            currentTab={activeTab} 
+            onViewOrder={setSelectedOrder} 
+            onActionOrder={handleActionOrder} 
+            onTrackOrder={setTrackingOrder}
+            showVendor={true}
+            hideActions={true}
+          />
+
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={setCurrentPage} 
+          />
+        </>
+      )}
 
       {selectedOrder && (
         <OrderModal 
