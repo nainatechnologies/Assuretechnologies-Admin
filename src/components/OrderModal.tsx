@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MdClose, MdPersonOutline, MdLocationOn, MdCreditCard, MdVerifiedUser } from 'react-icons/md';
 import type { Order, OrderItem } from '../types';
 import './OrderModal.css';
@@ -9,6 +10,7 @@ interface OrderModalProps {
 }
 
 export default function OrderModal({ order, onClose, onSplitClick }: OrderModalProps) {
+  const [copiedId, setCopiedId] = useState(false);
   return (
     <div className="order-modal-overlay" onClick={onClose}>
       <div className="order-modal-content" onClick={(e) => e.stopPropagation()}>
@@ -66,9 +68,65 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
               <div className="order-card-title">
                 <MdCreditCard size={18} /> Payment
               </div>
-              <div className="order-card-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                <span className="payment-type-badge">{order.paymentMethod}</span>
-                <span className="payment-status-badge">{order.paymentStatus}</span>
+              <div className="order-card-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <span className="payment-type-badge">{order.paymentDetails?.card ? 'Card' : order.paymentDetails?.vpa ? 'UPI' : order.paymentDetails?.bank ? 'Net Banking' : order.paymentDetails?.wallet ? 'Wallet' : order.paymentMethod || 'Online'}</span>
+                  <span className="payment-status-badge" style={{ backgroundColor: order.paymentStatus === 'Paid' ? '#dcfce7' : '#fef3c7', color: order.paymentStatus === 'Paid' ? '#166534' : '#b45309', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>{order.paymentStatus}</span>
+                </div>
+                {order.paidAt && (
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>Paid on {order.paidAt}</span>
+                )}
+                {order.paymentDetails?.vpa && (
+                  <span style={{ fontSize: '11px', color: '#475569' }}>UPI: {order.paymentDetails.vpa}</span>
+                )}
+                {order.paymentDetails?.card && (
+                  <span style={{ fontSize: '11px', color: '#475569' }}>{order.paymentDetails.card.network && order.paymentDetails.card.network !== 'Unknown' ? order.paymentDetails.card.network : 'Card'} •••• {order.paymentDetails.card.last4 || '****'}</span>
+                )}
+                {order.paymentDetails?.bank && (
+                  <span style={{ fontSize: '11px', color: '#475569' }}>Bank: {order.paymentDetails.bank}</span>
+                )}
+                {order.paymentDetails?.wallet && (
+                  <span style={{ fontSize: '11px', color: '#475569' }}>Wallet: {order.paymentDetails.wallet}</span>
+                )}
+                {order.razorpayPaymentId && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', width: '100%', background: '#f8fafc', padding: '6px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontSize: '11px', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>ID: <strong>{order.razorpayPaymentId}</strong></span>
+                      <button
+                        onClick={() => {
+                          if (order.razorpayPaymentId) {
+                            navigator.clipboard.writeText(order.razorpayPaymentId);
+                            setCopiedId(true);
+                            setTimeout(() => setCopiedId(false), 2000);
+                          }
+                        }}
+                        style={{
+                          background: copiedId ? '#dcfce7' : '#fff',
+                          color: copiedId ? '#166534' : '#334155',
+                          border: '1px solid',
+                          borderColor: copiedId ? '#86efac' : '#cbd5e1',
+                          borderRadius: '3px',
+                          padding: '1px 7px',
+                          fontSize: '10px',
+                          cursor: 'pointer',
+                          fontWeight: copiedId ? 'bold' : 'normal',
+                          transition: 'all 0.2s'
+                        }}
+                        title="Copy"
+                      >
+                        {copiedId ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <a
+                      href={'https://dashboard.razorpay.com/app/payments/' + order.razorpayPaymentId}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '11px', color: '#2563eb', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '3px' }}
+                    >
+                      View on Razorpay ↗
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>

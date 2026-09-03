@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MdClose, MdVisibility, MdDownload } from 'react-icons/md';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import Swal from 'sweetalert2';
+import { quotationsApi, type CreateQuotationPayload } from '../services/quotationsApi';
 import type { Quotation, QuotationService } from '../types';
 import './ManageQuotations.css';
-import { Toast } from '../utils/errorHandler';
-
 
 export default function ManageQuotations() {
   const [activeTab, setActiveTab] = useState<'table' | 'form' | 'view'>('table');
   const [viewingQuotation, setViewingQuotation] = useState<Quotation | null>(null);
   const [quotations, setQuotations] = useState<Quotation[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Form State
   const [customerName, setCustomerName] = useState('');
@@ -22,7 +23,7 @@ export default function ManageQuotations() {
   const [pincode, setPincode] = useState('');
 
   const [services, setServices] = useState<QuotationService[]>([
-    { id: Date.now().toString(), name: '', qty: 1, cost: 0, total: 0 }
+    { id: '1', name: '', qty: 1, cost: 0, total: 0 }
   ]);
 
   const [additionalChargesDesc, setAdditionalChargesDesc] = useState('');
@@ -30,10 +31,52 @@ export default function ManageQuotations() {
   const [gstPercent, setGstPercent] = useState<number>(18);
 
   // Derived calculations
-  const servicesTotal = services.reduce((sum, s) => sum + s.total, 0);
-  const totalBeforeGst = servicesTotal + additionalCharges;
+  const servicesTotal = services.reduce((sum, s) => sum + (s.qty * s.cost), 0);
+  const totalBeforeGst = servicesTotal + (additionalCharges || 0);
   const gstAmount = (totalBeforeGst * gstPercent) / 100;
   const grandTotal = totalBeforeGst + gstAmount;
+
+  useEffect(() => {
+    fetchQuotations();
+  }, []);
+
+  const fetchQuotations = async () => {
+    try {
+      setLoading(true);
+      const res = await quotationsApi.getQuotations();
+      if (res.data) {
+        const mapped: Quotation[] = res.data.map((q: any) => ({
+          id: q.id,
+          quotationNumber: q.quotation_number,
+          customerName: q.customer_name,
+          mobile: q.mobile,
+          email: q.email || '',
+          companyName: q.company_name || '',
+          gstNumber: q.gst_number || '',
+          address: q.address || '',
+          pincode: q.pincode || '',
+          subtotal: parseFloat(q.subtotal || 0),
+          additionalChargesDesc: q.additional_charges_desc || '',
+          additionalCharges: parseFloat(q.additional_charges || 0),
+          gstPercent: parseFloat(q.gst_percent || 18),
+          grandTotal: parseFloat(q.grand_total || 0),
+          services: (q.items || []).map((it: any) => ({
+            id: it.id,
+            name: it.service_name,
+            qty: it.qty,
+            cost: parseFloat(it.cost || 0),
+            total: parseFloat(it.total || 0)
+          })),
+          date: q.createdAt ? new Date(q.createdAt).toLocaleDateString() : ''
+        }));
+        setQuotations(mapped);
+      }
+    } catch (err: any) {
+      console.error('Failed to fetch quotations:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddRow = () => {
     setServices([
@@ -48,12 +91,14 @@ export default function ManageQuotations() {
     }
   };
 
-  const handleServiceChange = (id: string, field: keyof QuotationService, value: string | number) => {
+  const handleServiceChange = (id: string, field: keyof QuotationService, value: any) => {
     setServices(services.map(s => {
       if (s.id === id) {
         const updated = { ...s, [field]: value };
         if (field === 'qty' || field === 'cost') {
-          updated.total = updated.qty * updated.cost;
+          const q = field === 'qty' ? parseInt(value) || 0 : s.qty;
+          const c = field === 'cost' ? parseFloat(value) || 0 : s.cost;
+          updated.total = q * c;
         }
         return updated;
       }
@@ -61,51 +106,105 @@ export default function ManageQuotations() {
     }));
   };
 
-  const handleSaveQuotation = () => {
-    if (!customerName || !mobile) {
-      Toast.fire({ icon: 'warning', title: "Please fill in the required customer details (Name, Mobile)." });
+  const handleSaveQuotation = async () => {
+    if (!customerName.trim()) {
+      Swal.fire({ icon: 'warning', title: 'Missing Details', text: 'Please enter Customer Name.' });
       return;
     }
 
-    const newQuotation: Quotation = {
-      id: Date.now().toString(),
-      quotationNumber: `QTN-${Math.floor(1000 + Math.random() * 9000)}`,
-      customerName,
-      mobile,
-      email,
-      companyName,
-      gstNumber,
-      address,
-      pincode,
-      services,
-      additionalChargesDesc,
-      additionalCharges,
-      gstPercent,
-      grandTotal,
-      date: new Date().toLocaleDateString()
-    };
+    const cleanMobile = mobile.replace(/\D/g, '');
+    if (cleanMobile.length !== 10) {
+      Swal.fire({ icon: 'warning', title: 'Invalid Mobile', text: 'Please enter a valid 10-digit mobile number.' });
+      return;
+    }
 
-    setQuotations([newQuotation, ...quotations]);
-    
-    // Reset Form
-    setCustomerName('');
-    setMobile('');
-    setEmail('');
-    setCompanyName('');
-    setGstNumber('');
-    setAddress('');
-    setPincode('');
-    setServices([{ id: Date.now().toString(), name: '', qty: 1, cost: 0, total: 0 }]);
-    setAdditionalChargesDesc('');
-    setAdditionalCharges(0);
-    setGstPercent(18);
-    
-    // Switch to table
-    setActiveTab('table');
+    if (gstNumber.trim() && gstNumber.trim().length !== 15) {
+      Swal.fire({ icon: 'warning', title: 'Invalid GSTIN', text: 'GST Number must be 15 characters.' });
+      return;
+    }
+
+    if (pincode.trim() && pincode.trim().length !== 6) {
+      Swal.fire({ icon: 'warning', title: 'Invalid Pincode', text: 'Pincode must be 6 digits.' });
+      return;
+    }
+
+    const validServices = services.filter(s => s.name.trim() && s.cost > 0);
+    if (validServices.length === 0) {
+      Swal.fire({ icon: 'warning', title: 'Missing Service Details', text: 'Please add at least one service with a name and cost.' });
+      return;
+    }
+
+    try {
+      const payload: CreateQuotationPayload = {
+        customer_name: customerName.trim(),
+        mobile: cleanMobile,
+        email: email.trim() || undefined,
+        company_name: companyName.trim() || undefined,
+        gst_number: gstNumber.trim().toUpperCase() || undefined,
+        address: address.trim() || undefined,
+        pincode: pincode.trim() || undefined,
+        services: validServices.map(s => ({
+          service_name: s.name.trim(),
+          sac_code: '9987',
+          qty: s.qty,
+          cost: s.cost
+        })),
+        additional_charges_desc: additionalChargesDesc.trim() || undefined,
+        additional_charges: additionalCharges || 0,
+        gst_percent: gstPercent
+      };
+
+      await quotationsApi.createQuotation(payload);
+      
+      Swal.fire({
+        icon: 'success',
+        title: 'Quotation Generated!',
+        timer: 1500,
+        showConfirmButton: false
+      });
+
+      // Reset Form
+      setCustomerName('');
+      setMobile('');
+      setEmail('');
+      setCompanyName('');
+      setGstNumber('');
+      setAddress('');
+      setPincode('');
+      setServices([{ id: Date.now().toString(), name: '', qty: 1, cost: 0, total: 0 }]);
+      setAdditionalChargesDesc('');
+      setAdditionalCharges(0);
+      setGstPercent(18);
+
+      // Refresh list & switch to table
+      await fetchQuotations();
+      setActiveTab('table');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to save quotation';
+      Swal.fire({ icon: 'error', title: 'Error', text: msg });
+    }
   };
 
-  const handleDeleteQuotation = (id: string) => {
-    setQuotations(quotations.filter(q => q.id !== id));
+  const handleDeleteQuotation = async (id: string) => {
+    const result = await Swal.fire({
+      title: 'Delete Quotation?',
+      text: 'Are you sure you want to delete this quotation?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        await quotationsApi.deleteQuotation(id);
+        setQuotations(quotations.filter(q => q.id !== id));
+        Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
+      } catch (err: any) {
+        Swal.fire({ icon: 'error', title: 'Error', text: err.message });
+      }
+    }
   };
 
   const handleDownloadPDF = async (quotationNumber: string) => {
@@ -142,13 +241,13 @@ export default function ManageQuotations() {
       <div className="quotation-tabs">
         <button 
           className={`quotation-tab ${activeTab === 'table' ? 'active' : ''}`}
-          onClick={() => setActiveTab('table')}
+          onClick={() => { setActiveTab('table'); setViewingQuotation(null); }}
         >
           Quotations
         </button>
         <button 
           className={`quotation-tab ${activeTab === 'form' ? 'active' : ''}`}
-          onClick={() => setActiveTab('form')}
+          onClick={() => { setActiveTab('form'); setViewingQuotation(null); }}
         >
           Generate Quotation
         </button>
@@ -169,7 +268,13 @@ export default function ManageQuotations() {
                 </tr>
               </thead>
               <tbody>
-                {quotations.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: '30px', textAlign: 'center' }}>
+                      Loading quotations...
+                    </td>
+                  </tr>
+                ) : quotations.length === 0 ? (
                   <tr>
                     <td colSpan={6} style={{ padding: '40px', textAlign: 'center', color: '#333' }}>
                       No quotations found
@@ -199,7 +304,6 @@ export default function ManageQuotations() {
                           onClick={() => {
                             setViewingQuotation(q);
                             setActiveTab('view');
-                            // Delay to allow DOM update
                             setTimeout(() => {
                               handleDownloadPDF(q.quotationNumber);
                             }, 300);
@@ -229,22 +333,69 @@ export default function ManageQuotations() {
             <h4 className="section-title">Customer Details</h4>
             
             <div className="form-grid-3">
-              <input type="text" className="ref-input" placeholder="Customer Name" value={customerName} onChange={e => setCustomerName(e.target.value)} required />
-              <input type="text" className="ref-input" placeholder="Mobile" value={mobile} onChange={e => setMobile(e.target.value)} required />
-              <input type="text" className="ref-input" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="Customer Name" 
+                value={customerName} 
+                onChange={e => setCustomerName(e.target.value)} 
+                required 
+              />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="Mobile" 
+                maxLength={10}
+                value={mobile} 
+                onChange={e => setMobile(e.target.value.replace(/\D/g, ''))} 
+                required 
+              />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="Email" 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+              />
             </div>
             
             <div className="form-grid-2">
-              <input type="text" className="ref-input" placeholder="Company Name (Optional)" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-              <input type="text" className="ref-input" placeholder="GST Number (Optional)" value={gstNumber} onChange={e => setGstNumber(e.target.value)} />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="Company Name (Optional)" 
+                value={companyName} 
+                onChange={e => setCompanyName(e.target.value)} 
+              />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="GST Number (Optional)" 
+                maxLength={15}
+                value={gstNumber} 
+                onChange={e => setGstNumber(e.target.value.toUpperCase())} 
+              />
             </div>
             
             <div className="form-grid-1">
-              <input type="text" className="ref-input" placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="Address" 
+                value={address} 
+                onChange={e => setAddress(e.target.value)} 
+              />
             </div>
             
             <div className="form-grid-1">
-              <input type="text" className="ref-input" placeholder="Pincode" value={pincode} onChange={e => setPincode(e.target.value)} />
+              <input 
+                type="text" 
+                className="ref-input" 
+                placeholder="Pincode" 
+                maxLength={6}
+                value={pincode} 
+                onChange={e => setPincode(e.target.value.replace(/\D/g, ''))} 
+              />
             </div>
 
             <hr style={{ border: '0', borderTop: '1px solid #dee2e6', margin: '20px 0' }} />
@@ -355,6 +506,7 @@ export default function ManageQuotations() {
             </button>
           </div>
         )}
+
         {activeTab === 'view' && viewingQuotation && (
           <div id="quotation-details-pdf" style={{ padding: '20px', background: 'white' }}>
             <div className="pdf-exclude-buttons" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>

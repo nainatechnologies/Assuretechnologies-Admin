@@ -18,8 +18,11 @@ export const mapApiOrderToOrder = (
     gstNumber: o.gst_number || undefined,
     pincode: o.customer?.pincode || 'N/A',
     totalAmount: totalAmount,
-    paymentMethod: 'Online',
+    paymentMethod: o.payment_method ? (o.payment_method === 'UPI' ? 'UPI / QR Code' : o.payment_method === 'CARD' ? 'Credit / Debit Card' : o.payment_method) : 'Online',
     paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
+    razorpayPaymentId: o.razorpay_payment_id || undefined,
+    paymentDetails: o.payment_details || undefined,
+    paidAt: o.paid_at ? new Date(o.paid_at).toLocaleString() : (o.payment_status === 'PAID' ? new Date(o.updatedAt || o.createdAt).toLocaleString() : undefined),
     status: o.status === 'NEW' ? 'New' 
           : o.status === 'ACCEPTED' ? 'Accepted' 
           : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' 

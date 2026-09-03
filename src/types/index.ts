@@ -133,6 +133,9 @@ export interface Order {
   transportName?: string;
   trackingId?: string;
   trackUrl?: string;
+  razorpayPaymentId?: string;
+  paymentDetails?: any;
+  paidAt?: string;
 }
 
 export type ServiceRequestStatus =
@@ -174,6 +177,10 @@ export interface ServiceRequest {
   customFieldResponses?: Record<string, string>;
   paymentStatus?: 'Prebooking Paid' | 'Pending' | 'Paid in Full';
   prebookingAmountPaid?: number;
+  razorpayPaymentId?: string;
+  paymentMethod?: string;
+  paymentDetails?: any;
+  paidAt?: string;
 }
 
 export interface QuotationService {
@@ -189,16 +196,17 @@ export interface Quotation {
   quotationNumber: string;
   customerName: string;
   mobile: string;
-  email: string;
+  email?: string;
   companyName?: string;
   gstNumber?: string;
-  address: string;
-  pincode: string;
-  services: QuotationService[];
+  address?: string;
+  pincode?: string;
+  subtotal: number;
   additionalChargesDesc?: string;
   additionalCharges: number;
   gstPercent: number;
   grandTotal: number;
+  services: QuotationService[];
   date: string;
 }
 
