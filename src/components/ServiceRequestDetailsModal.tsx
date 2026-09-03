@@ -13,6 +13,7 @@ interface ServiceRequestDetailsModalProps {
 export default function ServiceRequestDetailsModal({ request, technician, onClose, onMarkAsPaid }: ServiceRequestDetailsModalProps) {
   const [mounted, setMounted] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [copiedPaymentId, setCopiedPaymentId] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -74,6 +75,92 @@ export default function ServiceRequestDetailsModal({ request, technician, onClos
             </div>
           </div>
 
+
+                    <div className="details-card">
+            Payment Details <br/><br/>
+            <div className="details-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span><strong>Payment Status:</strong></span>
+              <span style={{
+                backgroundColor: (request.paymentStatus === 'Paid in Full' || request.paymentStatus === 'Prebooking Paid') ? '#dcfce7' : '#fef3c7',
+                color: (request.paymentStatus === 'Paid in Full' || request.paymentStatus === 'Prebooking Paid') ? '#166534' : '#b45309',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                {request.paymentStatus || 'Pending'} {request.prebookingAmountPaid ? `(₹${request.prebookingAmountPaid})` : ''}
+              </span>
+            </div>
+            {request.paymentMethod && (
+              <div className="details-row" style={{ marginBottom: '6px' }}>
+                <strong>Method:</strong> {request.paymentDetails?.card ? 'Credit / Debit Card' : request.paymentDetails?.vpa ? 'UPI / QR Code' : request.paymentDetails?.bank ? 'Net Banking' : request.paymentDetails?.wallet ? `Wallet (${request.paymentDetails.wallet})` : request.paymentMethod === 'UPI' ? 'UPI / QR Code' : request.paymentMethod === 'CARD' ? 'Credit / Debit Card' : request.paymentMethod === 'ONLINE' ? 'Online Payment' : request.paymentMethod || 'Online Payment'}
+              </div>
+            )}
+            {request.paymentDetails?.vpa && (
+              <div className="details-row" style={{ marginBottom: '6px', fontSize: '13px', color: '#475569' }}>
+                <strong>UPI ID:</strong> {request.paymentDetails.vpa}
+              </div>
+            )}
+            {request.paymentDetails?.card && (
+              <div className="details-row" style={{ marginBottom: '6px', fontSize: '13px', color: '#475569' }}>
+                <strong>Card:</strong> {request.paymentDetails.card.network && request.paymentDetails.card.network !== 'Unknown' ? request.paymentDetails.card.network : 'Card'} •••• {request.paymentDetails.card.last4 || '****'}
+              </div>
+            )}
+            {request.paymentDetails?.bank && (
+              <div className="details-row" style={{ marginBottom: '6px', fontSize: '13px', color: '#475569' }}>
+                <strong>Bank:</strong> {request.paymentDetails.bank}
+              </div>
+            )}
+            {request.paymentDetails?.wallet && (
+              <div className="details-row" style={{ marginBottom: '6px', fontSize: '13px', color: '#475569' }}>
+                <strong>Wallet:</strong> {request.paymentDetails.wallet}
+              </div>
+            )}
+            {request.paidAt && (
+              <div className="details-row" style={{ marginBottom: '6px', fontSize: '12px', color: '#64748b' }}>
+                <strong>Paid on:</strong> {request.paidAt}
+              </div>
+            )}
+            {request.razorpayPaymentId && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px', background: '#f8fafc', padding: '8px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '12px', color: '#334155', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>Txn ID: <strong>{request.razorpayPaymentId}</strong></span>
+                  <button
+                    onClick={() => {
+                      if (request.razorpayPaymentId) {
+                        navigator.clipboard.writeText(request.razorpayPaymentId);
+                        setCopiedPaymentId(true);
+                        setTimeout(() => setCopiedPaymentId(false), 2000);
+                      }
+                    }}
+                    style={{
+                      background: copiedPaymentId ? '#dcfce7' : '#fff',
+                      color: copiedPaymentId ? '#166534' : '#334155',
+                      border: '1px solid',
+                      borderColor: copiedPaymentId ? '#86efac' : '#cbd5e1',
+                      borderRadius: '3px',
+                      padding: '2px 8px',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      fontWeight: copiedPaymentId ? '600' : 'normal',
+                      transition: 'all 0.2s'
+                    }}
+                    title="Copy Transaction ID"
+                  >
+                    {copiedPaymentId ? '✓ Copied' : 'Copy'}
+                  </button>
+                </div>
+                <a
+                  href={'https://dashboard.razorpay.com/app/payments/' + request.razorpayPaymentId}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '11px', color: '#2563eb', textDecoration: 'none', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}
+                >
+                  View on Razorpay ↗
+                </a>
+              </div>
+            )}
+          </div>
 
           <div className="details-card">
             Technician <br/><br/>

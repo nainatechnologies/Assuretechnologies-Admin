@@ -274,7 +274,8 @@ export default function ManageVendorOrders() {
             onActionOrder={handleActionOrder} 
             onTrackOrder={setTrackingOrder}
             showVendor={true}
-            hideActions={true}
+            hideActions={false}
+            hideAcceptReject={true}
           />
 
           <Pagination 
