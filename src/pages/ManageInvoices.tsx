@@ -16,20 +16,35 @@ interface MockSR {
   service: string;
   category: string;
   completedOn: string;
+  email?: string;
+  address?: string;
+  qty: number;
+  rate: number;
   extraItems?: { description: string, qty: number }[];
 }
 
-const mockSRs: MockSR[] = [
-  { id: '1', srNo: 'SR1781691076', customerName: 'eswararao', mobile: '8008759767', service: 'internet installation service', category: 'Installation', completedOn: '17 Jun 2026' },
-  { id: '2', srNo: 'SR1781493494', customerName: 'eswararao', mobile: '8008759767', service: 'internet installation service', category: 'Installation', completedOn: '15 Jun 2026' },
-  { id: '3', srNo: 'SR1781493173', customerName: 'eswararao', mobile: '8008759767', service: 'Cctv installation', category: 'Installation', completedOn: '15 Jun 2026', extraItems: [{ description: 'Extra camera mount', qty: 2 }] },
-  { id: '4', srNo: 'SR1778593411', customerName: 'Venkatesh Marripelly', mobile: '9701712335', service: 'Biometric device', category: 'Device Delivery', completedOn: '12 May 2026' },
-  { id: '5', srNo: 'SR1767715098', customerName: 'Venkatesh Marripelly', mobile: '9701712335', service: 'Baofeng Walkie Talkie BF-888S Pack of 2 with Earphone', category: 'Device Delivery', completedOn: '06 Jan 2026' }
-];
+
 
 export default function ManageInvoices() {
   const [activeTab, setActiveTab] = useState<'vendor_invoices' | 'service_invoices' | 'form' | 'view'>('vendor_invoices');
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [pendingSRs, setPendingSRs] = useState<MockSR[]>([]);
+
+  useEffect(() => {
+    fetchInvoices();
+    fetchPendingSRs();
+  }, []);
+
+  const fetchPendingSRs = async () => {
+    try {
+      const response = await API.get('/invoices/service-bookings/pending');
+      if (response.data && response.data.data) {
+        setPendingSRs(response.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending SRs', err);
+    }
+  };
 
   useEffect(() => {
     fetchInvoices();
@@ -95,8 +110,6 @@ export default function ManageInvoices() {
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: Date.now().toString(), description: '', qty: 1, rate: 0, amount: 0, warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [] }
   ]);
-  const [serialInputs, setSerialInputs] = useState<Record<string, string>>({});
-
   const [additionalChargesDesc, setAdditionalChargesDesc] = useState('');
   const [additionalCharges, setAdditionalCharges] = useState<number>(0);
   const [gstPercent, setGstPercent] = useState<number>(18);
@@ -155,11 +168,13 @@ export default function ManageInvoices() {
       status: 'Paid',
       srNo: selectedSR ? selectedSR.srNo : `SR${Math.floor(1000000000 + Math.random() * 9000000000)}`,
       serviceName: selectedSR ? `${selectedSR.category} - ${selectedSR.service}` : items[0]?.description || 'Custom Service'
-    };
-
-    setInvoices([newInvoice, ...invoices]);
-
-    // Reset Form
+    };    API.post('/invoices/service', newInvoice)
+      .then(() => {
+        Toast.fire({ icon: 'success', title: 'Invoice generated successfully' });
+        fetchInvoices();
+        fetchPendingSRs();
+        
+        // Reset Form
     setCustomerName('');
     setMobile('');
     setEmail('');
@@ -169,22 +184,27 @@ export default function ManageInvoices() {
     setAdditionalCharges(0);
     setGstPercent(18);
     setSelectedSR(null);
-    setSerialInputs({});
-
-    // Switch to table
-    setActiveTab('service_invoices' as any);
+            // Switch to table
+        setActiveTab('service_invoices' as any);
+      })
+      .catch(err => {
+        console.error(err);
+        Toast.fire({ icon: 'error', title: 'Failed to generate invoice' });
+      });
   };
 
   const handleSelectSR = (sr: MockSR) => {
     setSelectedSR(sr);
     setCustomerName(sr.customerName);
     setMobile(sr.mobile);
+    setEmail(sr.email || "");
+    setAddress(sr.address || "");
     
     let newItems = [];
     if (items.length === 1 && items[0].description === '') {
-      newItems = [{ ...items[0], description: `${sr.category} - ${sr.service}` }];
+      newItems = [{ ...items[0], description: `${sr.category} - ${sr.service}`, qty: sr.qty || 1, rate: sr.rate || 0, amount: (sr.qty || 1) * (sr.rate || 0), _isFixed: true } as any];
     } else {
-      newItems = [{ id: Date.now().toString(), description: `${sr.category} - ${sr.service}`, qty: 1, rate: 0, amount: 0, warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [] }];
+      newItems = [{ id: Date.now().toString(), description: `${sr.category} - ${sr.service}`, qty: sr.qty || 1, rate: sr.rate || 0, amount: (sr.qty || 1) * (sr.rate || 0), warranty: '', modelNumber: '', hsnCode: '', serialNumbers: [], _isFixed: true } as any];
     }
 
     if (sr.extraItems && sr.extraItems.length > 0) {
@@ -198,8 +218,10 @@ export default function ManageInvoices() {
           warranty: '',
           modelNumber: '',
           hsnCode: '',
-          serialNumbers: []
-        });
+          serialNumbers: [],
+          _isFixed: true,
+          _isExtra: true
+        } as any);
       });
     }
     
@@ -365,7 +387,7 @@ export default function ManageInvoices() {
                 </tr>
               </thead>
               <tbody>
-                {mockSRs.map(sr => (
+                {pendingSRs.map(sr => (
                   <tr key={sr.id}>
                     <td>{sr.srNo}</td>
                     <td>
@@ -406,13 +428,13 @@ export default function ManageInvoices() {
             </div>
 
             <div className="form-grid-3">
-              <input type="text" className="ref-input" placeholder="Name" value={customerName} onChange={e => setCustomerName(e.target.value)} required />
-              <input type="text" className="ref-input" placeholder="Mobile" value={mobile} onChange={e => setMobile(e.target.value)} required />
-              <input type="text" className="ref-input" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+              <input type="text" className="ref-input" placeholder="Name" value={customerName} readOnly disabled style={{backgroundColor: '#e9ecef'}} required />
+              <input type="text" className="ref-input" placeholder="Mobile" value={mobile} readOnly disabled style={{backgroundColor: '#e9ecef'}} required />
+              <input type="text" className="ref-input" placeholder="Email" value={email} readOnly disabled style={{backgroundColor: '#e9ecef'}} />
             </div>
 
             <div className="form-grid-1">
-              <input type="text" className="ref-input" placeholder="Address" value={address} onChange={e => setAddress(e.target.value)} />
+              <input type="text" className="ref-input" placeholder="Address" value={address} readOnly disabled style={{backgroundColor: '#e9ecef'}} />
             </div>
 
             <hr style={{ border: '0', borderTop: '1px solid #dee2e6', margin: '20px 0' }} />
@@ -425,9 +447,7 @@ export default function ManageInvoices() {
                   <tr>
                     <th className="col-num">S.No</th>
                     <th className="col-name">Description</th>
-                    <th>Model No</th>
-                    <th>HSN Code</th>
-                    <th>Serial Numbers</th>
+                    
                     <th className="col-qty">Qty</th>
                     <th className="col-cost">Rate</th>
                     <th className="col-total">Amount</th>
@@ -439,57 +459,13 @@ export default function ManageInvoices() {
                     <tr key={item.id}>
                       <td className="col-num">{idx + 1}</td>
                       <td>
-                        <input
-                          type="text"
-                          className="ref-input"
-                          value={item.description}
-                          onChange={e => handleItemChange(item.id, 'description', e.target.value)}
-                        />
+                        <input type="text" className="ref-input" value={item.description} onChange={e => handleItemChange(item.id, 'description', e.target.value)} readOnly={(item as any)._isFixed} disabled={(item as any)._isFixed} style={(item as any)._isFixed ? {backgroundColor: '#e9ecef'} : {}} />
                       </td>
                       <td>
-                        <input
-                          type="text"
-                          className="ref-input"
-                          value={item.modelNumber || ''}
-                          onChange={e => handleItemChange(item.id, 'modelNumber', e.target.value)}
-                        />
+                        <input type="number" className="ref-input" value={item.qty === 0 ? 0 : (item.qty || '')} onChange={e => handleItemChange(item.id, 'qty', parseInt(e.target.value) || 0)} readOnly={(item as any)._isFixed} disabled={(item as any)._isFixed} style={(item as any)._isFixed ? {backgroundColor: '#e9ecef'} : {}} />
                       </td>
                       <td>
-                        <input
-                          type="text"
-                          className="ref-input"
-                          value={item.hsnCode || ''}
-                          onChange={e => handleItemChange(item.id, 'hsnCode', e.target.value)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="ref-input"
-                          placeholder="Comma separated"
-                          value={serialInputs[item.id] !== undefined ? serialInputs[item.id] : (item.serialNumbers?.join(', ') || '')}
-                          onChange={e => {
-                            setSerialInputs({ ...serialInputs, [item.id]: e.target.value });
-                            const newSerials = e.target.value.split(',').map(s => s.trim()).filter(s => s);
-                            handleItemChange(item.id, 'serialNumbers', newSerials);
-                          }}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          className="ref-input"
-                          value={item.qty || ''}
-                          onChange={e => handleItemChange(item.id, 'qty', parseInt(e.target.value) || 0)}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          className="ref-input"
-                          value={item.rate || ''}
-                          onChange={e => handleItemChange(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                        />
+                        <input type="number" className="ref-input" value={item.rate === 0 ? 0 : (item.rate || '')} onChange={e => handleItemChange(item.id, 'rate', parseFloat(e.target.value) || 0)} readOnly={(item as any)._isFixed && !(item as any)._isExtra} disabled={(item as any)._isFixed && !(item as any)._isExtra} style={(item as any)._isFixed && !(item as any)._isExtra ? {backgroundColor: '#e9ecef'} : {}} />
                       </td>
                       <td>
                         <div className="ref-input" style={{ background: '#e9ecef', border: '1px solid transparent', color: '#495057' }}>
@@ -497,9 +473,7 @@ export default function ManageInvoices() {
                         </div>
                       </td>
                       <td className="col-action">
-                        <button type="button" className="btn-remove-row" onClick={() => handleRemoveRow(item.id)}>
-                          <MdClose />
-                        </button>
+                        {!(item as any)._isFixed && (<button type="button" className="btn-remove-row" onClick={() => handleRemoveRow(item.id)}><MdClose /></button>)}
                       </td>
                     </tr>
                   ))}
@@ -601,8 +575,7 @@ export default function ManageInvoices() {
                   <tr>
                     <th className="col-num">S.No</th>
                     <th className="col-name">Description</th>
-                    <th>HSN Code</th>
-                    <th>Serial Numbers</th>
+                    
                     <th className="col-qty">Qty</th>
                     <th className="col-cost">Rate</th>
                     <th className="col-total">Amount</th>
@@ -615,18 +588,9 @@ export default function ManageInvoices() {
                       <td className="col-num">{idx + 1}</td>
                       <td>
                         <div>{item.description}</div>
-                        {item.modelNumber && <small style={{ color: '#6c757d', display: 'block', marginTop: '4px' }}>Model: {item.modelNumber}</small>}
+                        
                       </td>
-                      <td>{item.hsnCode || '-'}</td>
-                      <td>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {item.serialNumbers?.length ? item.serialNumbers.map((sn, i) => (
-                            <span key={i} style={{ background: '#e2e8f0', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem', color: '#334155' }}>
-                              {sn}
-                            </span>
-                          )) : '-'}
-                        </div>
-                      </td>
+                      
                       <td>{item.qty}</td>
                       <td>{item.rate.toFixed(2)}</td>
                       <td>{item.amount.toFixed(2)}</td>
@@ -656,3 +620,10 @@ export default function ManageInvoices() {
     </div>
   );
 }
+
+
+
+
+
+
+
