@@ -68,10 +68,6 @@ export default function PartnerModal({ isOpen, onClose, onSave, partner, partner
       setPincodeInput(newValue);
       setErrors(prev => ({ ...prev, location: '' }));
       return;
-    } else if (name === 'serviceInput') {
-      setServiceInput(newValue);
-      setErrors(prev => ({ ...prev, services: '' }));
-      return;
     }
 
     setFormData(prev => ({ ...prev, [name]: newValue }));

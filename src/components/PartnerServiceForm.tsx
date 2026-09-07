@@ -23,7 +23,7 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
   const [serviceName, setServiceName] = useState(initialData?.name || initialData?.serviceName || '');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [customFields, setCustomFields] = useState<CustomField[]>(initialData?.custom_fields || initialData?.customFields || []);
-  const [pricingTypeId, setPricingTypeId] = useState<string>(initialData?.pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
+  const [pricingTypeId, setPricingTypeId] = useState<string>((initialData as any)?.pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
   const [required_partner_type_id, setRequiredPartnerTypeId] = useState<string>(initialData?.required_partner_type_id || (initialData as any)?.required_partner_type?.id || (initialData as any)?.requiredPartnerType?.id || '');
   const [rate, setRate] = useState<number | undefined>(initialData?.price !== undefined ? initialData.price : initialData?.rate);
 
@@ -34,7 +34,7 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
       setCategoryId(initialData.category_id || (initialData as any)?.category?.id || '');
       setServiceName(initialData.name || initialData.serviceName || '');
       setCustomFields(initialData.custom_fields || initialData.customFields || []);
-      setPricingTypeId(initialData.pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
+      setPricingTypeId((initialData as any).pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
       setRequiredPartnerTypeId(initialData.required_partner_type_id || (initialData as any)?.required_partner_type?.id || (initialData as any)?.requiredPartnerType?.id || '');
       setRate(initialData.price !== undefined ? initialData.price : initialData.rate);
     } else {

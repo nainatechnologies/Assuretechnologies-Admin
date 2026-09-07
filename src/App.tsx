@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import AdminLayout from './layouts/AdminLayout';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import ManageProducts from './pages/ManageProducts';
 import ManageUsers from './pages/ManageUsers';
@@ -37,7 +38,7 @@ function App() {
             <Route path="/" element={<Login />} />
             
             {/* Admin Routes with Layout */}
-            <Route path="/admin" element={<AdminLayout />}>
+            <Route path="/admin" element={<AdminProtectedRoute><AdminLayout /></AdminProtectedRoute>}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="users" element={<ManageUsers />} />
