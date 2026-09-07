@@ -37,7 +37,7 @@ export default function AssignTechnicianModal({ request, onClose, onAssignSucces
     const timeoutId = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await API.get(`/admin/technicians?search=${searchQuery}`);
+        const res = await API.get(`/admin/technicians?search=${searchQuery}&available_only=true`);
         if (res.data.success && res.data.data) {
           const mapped = res.data.data.map((t: any) => ({
             id: t.id,
