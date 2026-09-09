@@ -453,8 +453,6 @@ export interface VendorLedgerItem {
   totalPendingCustomerUnpaid: number;
   orders: VendorLedgerOrder[];
 }
-<<<<<<< HEAD
-=======
 
 
 export interface DashboardStats {
@@ -480,4 +478,3 @@ export interface DashboardActivityItem {
   payment_status: string;
   createdAt: string;
 }
->>>>>>> 299fee88d1cabb01b7a809b084f6cefb98d82a43

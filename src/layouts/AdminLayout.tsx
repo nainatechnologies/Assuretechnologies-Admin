@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { MdDashboard, MdInventory, MdLogout, MdEngineering, MdStore, MdBuild, MdShoppingCart, MdAssignment, MdAssignmentInd, MdReceipt, MdAttachMoney, MdWork, MdPeople } from 'react-icons/md';
 import Swal from 'sweetalert2';
+import API from '../services/api';
+import { logoutUser } from '../services/auth';
 import './AdminLayout.css';
 
 export default function AdminLayout() {
@@ -18,8 +20,14 @@ export default function AdminLayout() {
       confirmButtonColor: '#4F46E5',
       cancelButtonColor: '#ef4444',
       confirmButtonText: 'Yes, log me out!'
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
+        try {
+          await API.post('/auth/logout');
+        } catch (err) {
+          console.error('Logout error:', err);
+        }
+        logoutUser();
         navigate('/');
       }
     });
