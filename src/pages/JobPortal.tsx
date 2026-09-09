@@ -311,7 +311,7 @@ export default function JobPortal() {
                       <td style={{ padding: '12px 16px', color: '#475569' }}>{app.appliedDate}</td>
                       <td style={{ padding: '12px 16px', color: '#475569' }}>
                         {app.resumeUrl ? (
-                          <a href={`${BASE_URL}${app.resumeUrl}`} target="_blank" rel="noopener noreferrer"
+                          <a href={app.resumeUrl.startsWith('/uploads/') ? `${BASE_URL}${app.resumeUrl}` : app.resumeUrl} target="_blank" rel="noopener noreferrer"
                             style={{ color: '#4F46E5', textDecoration: 'none', fontWeight: '500' }}>
                             View Resume
                           </a>
@@ -430,7 +430,7 @@ export default function JobPortal() {
               {viewingApplication.resumeUrl && (
                 <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '8px', padding: '8px 0' }}>
                   <span style={{ color: '#64748b', fontWeight: '500', fontSize: '0.9rem' }}>Resume</span>
-                  <a href={`${BASE_URL}${viewingApplication.resumeUrl}`} target="_blank" rel="noopener noreferrer" style={{ color: '#4F46E5', fontWeight: '500' }}>Download Resume</a>
+                  <a href={viewingApplication.resumeUrl.startsWith('/uploads/') ? `${BASE_URL}${viewingApplication.resumeUrl}` : viewingApplication.resumeUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#4F46E5', fontWeight: '500' }}>Download Resume</a>
                 </div>
               )}
             </div>

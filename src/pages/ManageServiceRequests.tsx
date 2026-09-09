@@ -154,30 +154,6 @@ export default function ManageServiceRequests() {
   };
 
 
-  const handleApproveWork = (id: string) => {
-    Swal.fire({
-      title: 'Approve Work?',
-      text: "Do you want to approve this work and mark the service as completed?",
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonColor: '#4f46e5',
-      confirmButtonText: 'Yes, Approve'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await API.patch(`/admin/service-bookings/${id}/status`, { status: 'COMPLETED' });
-          await fetchRequests();
-          if (selectedRequest?.id === id) {
-            setViewModalOpen(false);
-          }
-          Swal.fire('Success', 'Service work approved and marked as Completed.', 'success');
-        } catch (err: any) {
-          Swal.fire('Error', err.response?.data?.message || 'Failed to approve work', 'error');
-        }
-      }
-    });
-  };
-
   const handleMarkAsPaid = (id: string) => {
     Swal.fire({
       title: 'Approve & Mark as Completed?',
@@ -259,7 +235,6 @@ export default function ManageServiceRequests() {
               onView={handleView}
               onReassign={handleReassign}
               onMarkAsPaid={handleMarkAsPaid}
-              onApprove={handleApproveWork}
             />
           )}
           {totalPages > 1 && (

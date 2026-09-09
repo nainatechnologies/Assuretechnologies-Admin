@@ -37,6 +37,12 @@ const mapServiceBooking = (b: any): ServiceRequest => {
     time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
     status: b.status,
     technicianId: b.assigned_technician_id,
+    paymentStatus: b.Order?.payment_status === 'PAID' ? 'Paid in Full' : (b.prebooking_paid ? 'Prebooking Paid' : 'Pending'),
+    prebookingAmountPaid: b.prebooking_paid ? Number(b.Service?.prebooking_charge || 0) : 0,
+    razorpayPaymentId: b.Order?.razorpay_payment_id || undefined,
+    paymentMethod: b.Order?.payment_method || (b.Order?.payment_status === 'PAID' ? 'Online' : undefined),
+    paymentDetails: b.Order?.payment_details || undefined,
+    paidAt: b.Order?.paid_at ? new Date(b.Order.paid_at).toLocaleString() : undefined
   };
 };
 

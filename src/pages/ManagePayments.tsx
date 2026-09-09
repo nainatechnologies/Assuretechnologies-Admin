@@ -612,7 +612,7 @@ export default function ManagePayments() {
                         <td>
                           {payment.proof_image ? (
                             <a 
-                              href={`${BASE_URL}${payment.proof_image}`} 
+                              href={payment.proof_image.startsWith('/uploads/') ? `${BASE_URL}${payment.proof_image}` : payment.proof_image} 
                               target="_blank" 
                               rel="noreferrer"
                               style={{ color: '#4f46e5', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem', textDecoration: 'none' }}

@@ -559,7 +559,7 @@ export default function ManageInvoices() {
               <div><strong>Date:</strong> {viewingInvoice.date}</div>
               {viewingInvoice.srNo && <div><strong>SR No:</strong> {viewingInvoice.srNo}</div>}
               <div><strong>Customer:</strong> {viewingInvoice.customerName}</div>
-              <div><strong>Vendor Name:</strong> {viewingInvoice.vendorBusinessName || 'N/A'}</div>
+              {viewingInvoice.type === 'VENDOR' && <div><strong>Vendor Name:</strong> {viewingInvoice.vendorBusinessName || 'N/A'}</div>}
               <div><strong>Order ID:</strong> {viewingInvoice.orderId || 'N/A'}</div>
               <div><strong>Mobile:</strong> {viewingInvoice.mobile}</div>
               <div><strong>Email:</strong> {viewingInvoice.email || 'N/A'}</div>
@@ -620,6 +620,7 @@ export default function ManageInvoices() {
     </div>
   );
 }
+
 
 
 
