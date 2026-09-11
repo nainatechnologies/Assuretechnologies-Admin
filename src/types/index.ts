@@ -241,6 +241,7 @@ export interface Invoice {
   srNo?: string;
   serviceName?: string;
   vendorBusinessName?: string;
+  soldBy?: string;
   orderId?: string;
   type?: string;
 }

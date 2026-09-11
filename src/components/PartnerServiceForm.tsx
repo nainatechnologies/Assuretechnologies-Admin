@@ -5,13 +5,14 @@ import type { PartnerService, CustomField } from '../types';
 import { MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 
 import { usePartnerContext } from '../context/PartnerContext';
+import API from '../services/api';
 
 interface PartnerServiceFormProps {
   onSaveService: (service: Omit<PartnerService, 'id'> | PartnerService) => void;
   onCancel?: () => void;
   initialData?: PartnerService | null;
   categories: { id?: string; _id?: string; name: string }[];
-  partnerTypes: { id: string; name: string }[];
+  partnerTypes?: { id: string; name: string; category_id?: string }[];
   pricingTypes?: { id: string; name: string }[];
 }
 
@@ -26,6 +27,43 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
   const [pricingTypeId, setPricingTypeId] = useState<string>((initialData as any)?.pricing_type_id || (initialData as any)?.pricing_type?.id || (initialData as any)?.pricingType?.id || initialData?.pricingTypeId || (pricingTypes.length > 0 ? pricingTypes[0].id : ''));
   const [required_partner_type_id, setRequiredPartnerTypeId] = useState<string>(initialData?.required_partner_type_id || (initialData as any)?.required_partner_type?.id || (initialData as any)?.requiredPartnerType?.id || '');
   const [rate, setRate] = useState<number | undefined>(initialData?.price !== undefined ? initialData.price : initialData?.rate);
+  const [categoryPartnerTypes, setCategoryPartnerTypes] = useState<{ id: string; name: string }[]>([]);
+  const [isLoadingPartnerTypes, setIsLoadingPartnerTypes] = useState(false);
+
+  useEffect(() => {
+    if (!category_id) {
+      setCategoryPartnerTypes([]);
+      setRequiredPartnerTypeId('');
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingPartnerTypes(true);
+
+    API.get(`/admin/partner-types?category_id=${category_id}`)
+      .then(res => {
+        if (isMounted && res.data?.success) {
+          const list = res.data.data.map((pt: any) => ({
+            id: pt.id || pt._id,
+            name: pt.name
+          }));
+          setCategoryPartnerTypes(list);
+          setRequiredPartnerTypeId(prev => {
+            return list.some((pt: any) => pt.id === prev) ? prev : (list[0]?.id || '');
+          });
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load partner types for category:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingPartnerTypes(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [category_id]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,13 +166,24 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
                 value={required_partner_type_id}
                 onChange={(e) => setRequiredPartnerTypeId(e.target.value)}
                 required
+                disabled={!category_id || isLoadingPartnerTypes}
                 style={{
-                  padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none', backgroundColor: '#f8fafc', color: '#1e293b', fontSize: '14px',
-                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', appearance: 'none', cursor: 'pointer'
+                  padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none',
+                  backgroundColor: !category_id ? '#f1f5f9' : '#f8fafc', color: '#1e293b', fontSize: '14px',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', appearance: 'none',
+                  cursor: !category_id ? 'not-allowed' : 'pointer'
                 }}
               >
-                <option value="" disabled hidden>Select Partner Type...</option>
-                {partnerTypes.map(pt => (
+                <option value="" disabled hidden>
+                  {!category_id
+                    ? 'Select Category first...'
+                    : isLoadingPartnerTypes
+                      ? 'Loading partner types...'
+                      : categoryPartnerTypes.length === 0
+                        ? 'No partner types for this category'
+                        : 'Select Partner Type...'}
+                </option>
+                {categoryPartnerTypes.map(pt => (
                   <option key={pt.id} value={pt.id}>{pt.name}</option>
                 ))}
               </select>

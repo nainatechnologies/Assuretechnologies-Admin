@@ -89,14 +89,16 @@ export default function ManageInvoices() {
         date: new Date(inv.createdAt).toLocaleString(),
         status: inv.status,
         serviceName: inv.type === 'VENDOR' 
-          ? 'Vendor Product Order' 
+          ? (inv.product_name || inv.items?.[0]?.description || 'Product') 
           : (inv.service_name 
               || inv.items?.find((i: any) => i.description && (i.description.includes(' - ') || i.description.toLowerCase().includes('solution') || i.description.toLowerCase().includes('service') || i.description.toLowerCase().includes('networking') || i.description.toLowerCase().includes('drone') || i.description.toLowerCase().includes('tractor')))?.description 
               || inv.items?.find((i: any) => i.description && !i.description.toLowerCase().startsWith('a/c'))?.description
               || inv.items?.[0]?.description 
               || 'Service'),
+        soldBy: inv.sold_by || inv.vendor?.business_name || inv.vendor?.full_name || (inv.type === 'VENDOR' ? 'Assure Technologies' : '-'),
         vendorBusinessName: inv.vendor?.business_name || inv.vendor?.full_name || '',
-        orderId: inv.order_id
+        orderId: inv.order_id,
+        type: inv.type
       }));
       setInvoices(fetchedInvoices);
     } catch (err) {
@@ -310,8 +312,8 @@ export default function ManageInvoices() {
                 <tr>
                   <th className='tableheadings'>Invoice No</th>
                   <th>Customer</th>
-                  <th>Vendor</th>
-                  <th>Service</th>
+                  <th>Sold By</th>
+                  <th>{activeTab === 'service_invoices' ? 'Service' : 'Product'}</th>
                   {activeTab === 'service_invoices' && <th>SR No</th>}
                   <th>Order ID</th>
                   <th>Total</th>
@@ -321,18 +323,18 @@ export default function ManageInvoices() {
                 </tr>
               </thead>
               <tbody>
-                {invoices.filter(inv => activeTab === 'vendor_invoices' ? !!inv.vendorBusinessName : !inv.vendorBusinessName).length === 0 ? (
+                {invoices.filter(inv => activeTab === 'vendor_invoices' ? (inv.type === 'VENDOR' || !!inv.vendorBusinessName) : (inv.type === 'SERVICE' || !inv.vendorBusinessName)).length === 0 ? (
                   <tr>
                     <td colSpan={activeTab === 'service_invoices' ? 10 : 9} style={{ padding: '40px', textAlign: 'center', color: '#333' }}>
                       No invoices generated yet
                     </td>
                   </tr>
                 ) : (
-                  invoices.filter(inv => activeTab === 'vendor_invoices' ? !!inv.vendorBusinessName : !inv.vendorBusinessName).map(inv => (
+                  invoices.filter(inv => activeTab === 'vendor_invoices' ? (inv.type === 'VENDOR' || !!inv.vendorBusinessName) : (inv.type === 'SERVICE' || !inv.vendorBusinessName)).map(inv => (
                     <tr key={inv.id}>
                       <td><strong>{inv.invoiceNumber}</strong></td>
                       <td>{inv.customerName}</td>
-                      <td>{inv.vendorBusinessName || '-'}</td>
+                      <td>{inv.soldBy || inv.vendorBusinessName || 'Assure Technologies'}</td>
                       <td>{inv.serviceName}</td>
                       {activeTab === 'service_invoices' && <td>{inv.srNo || '-'}</td>}
                       <td>{inv.orderId || '-'}</td>
@@ -565,12 +567,12 @@ export default function ManageInvoices() {
               <div><strong>Date:</strong> {viewingInvoice.date}</div>
               {viewingInvoice.srNo && <div><strong>SR No:</strong> {viewingInvoice.srNo}</div>}
               <div><strong>Customer:</strong> {viewingInvoice.customerName}</div>
-              {viewingInvoice.type === 'VENDOR' && <div><strong>Vendor Name:</strong> {viewingInvoice.vendorBusinessName || 'N/A'}</div>}
+              <div><strong>Sold By:</strong> {viewingInvoice.soldBy || viewingInvoice.vendorBusinessName || 'Assure Technologies'}</div>
               <div><strong>Order ID:</strong> {viewingInvoice.orderId || 'N/A'}</div>
               <div><strong>Mobile:</strong> {viewingInvoice.mobile}</div>
               <div><strong>Email:</strong> {viewingInvoice.email || 'N/A'}</div>
               <div><strong>Address:</strong> {viewingInvoice.address || 'N/A'}</div>
-              <div><strong>Service Name:</strong> {viewingInvoice.serviceName || 'N/A'}</div>
+              <div><strong>{viewingInvoice.type === 'SERVICE' ? 'Service Name' : 'Product Name'}:</strong> {viewingInvoice.serviceName || 'N/A'}</div>
               <div><strong>Status:</strong> {viewingInvoice.status || 'N/A'}</div>
             </div>
 

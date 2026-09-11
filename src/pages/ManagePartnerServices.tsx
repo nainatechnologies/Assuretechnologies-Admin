@@ -48,7 +48,8 @@ export default function ManagePartnerServices() {
       if (res.data.success) {
         setPartnerTypes(res.data.data.map((pt: any) => ({
           id: pt.id || pt._id,
-          name: pt.name
+          name: pt.name,
+          category_id: pt.category_id || pt.category?.id
         })));
       }
     } catch (error) {
