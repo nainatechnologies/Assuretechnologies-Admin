@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { ServiceRequest, Technician } from '../types';
-import { MdClose, MdSearch } from 'react-icons/md';
+import { MdClose, MdSearch, MdFilterList, MdCheckCircle } from 'react-icons/md';
 import API from '../services/api';
 import './AssignTechnicianModal.css';
 import Swal from 'sweetalert2';
@@ -15,6 +15,7 @@ interface Props {
 export default function AssignTechnicianModal({ request, onClose, onAssignSuccess }: Props) {
   const [selectedTech, setSelectedTech] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterBySkill, setFilterBySkill] = useState(true);
   const [technicians, setTechnicians] = useState<Technician[]>([]);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -37,17 +38,28 @@ export default function AssignTechnicianModal({ request, onClose, onAssignSucces
     const timeoutId = setTimeout(async () => {
       setLoading(true);
       try {
-        const res = await API.get(`/admin/technicians?search=${searchQuery}&available_only=true`);
+        let url = `/admin/technicians?search=${encodeURIComponent(searchQuery)}&available_only=true`;
+        if (request.technicianId) {
+          url += `&exclude_id=${encodeURIComponent(request.technicianId)}`;
+        }
+        if (filterBySkill && request.serviceName) {
+          url += `&service_name=${encodeURIComponent(request.serviceName)}`;
+        }
+        const res = await API.get(url);
         if (res.data.success && res.data.data) {
-          const mapped = res.data.data.map((t: any) => ({
-            id: t.id,
-            name: t.full_name,
-            mobile: t.mobile,
-            email: t.email,
-            address: t.address || '',
-            location: t.service_pincodes ? t.service_pincodes.join(', ') : '',
-            status: t.is_active ? 'Active' : 'Inactive'
-          }));
+          const mapped = res.data.data
+            .filter((t: any) => !request.technicianId || t.id !== request.technicianId)
+            .map((t: any) => ({
+              id: t.id,
+              name: t.full_name,
+              mobile: t.mobile,
+              email: t.email,
+              address: t.address || '',
+              location: t.service_pincodes ? t.service_pincodes.join(', ') : '',
+              status: t.is_active ? 'Active' : 'Inactive',
+              services: t.services_provided || [],
+              services_names: t.services_names || []
+            }));
           setTechnicians(mapped);
         }
       } catch (err) {
@@ -58,17 +70,25 @@ export default function AssignTechnicianModal({ request, onClose, onAssignSucces
     }, 300);
     
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, filterBySkill, request.serviceName, request.technicianId]);
 
   const handleAssign = async () => {
     if (selectedTech) {
       try {
         await API.post(`/admin/service-bookings/${request.id}/assign`, { technician_id: selectedTech });
         onAssignSuccess();
-      } catch (error) {
-        Swal.fire('Error', 'Failed to assign technician', 'error');
+      } catch (error: any) {
+        Swal.fire('Cannot Assign', error.response?.data?.message || 'Failed to assign technician', 'warning');
       }
     }
+  };
+
+  const isSkillMatched = (tech: Technician) => {
+    if (!request.serviceName) return false;
+    const reqLower = request.serviceName.toLowerCase();
+    return (tech.services_names || []).some(name => 
+      name.toLowerCase().includes(reqLower) || reqLower.includes(name.toLowerCase())
+    );
   };
 
   if (!mounted) return null;
@@ -85,8 +105,12 @@ export default function AssignTechnicianModal({ request, onClose, onAssignSucces
         
         <div className="p-6">
           <div className="request-info">
-            <h3>{request.serviceName}</h3>
-            <p>{request.date}</p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h3>{request.serviceName}</h3>
+                <p>{request.date} &bull; Pincode: <strong>{request.pincode || 'N/A'}</strong></p>
+              </div>
+            </div>
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
@@ -100,30 +124,93 @@ export default function AssignTechnicianModal({ request, onClose, onAssignSucces
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
+            {/* Filter Toggle Bar */}
+            <div className="skill-filter-bar">
+              <div className="flex items-center gap-2">
+                <MdFilterList size={18} className="text-gray-500" />
+                <span className="skill-filter-label">
+                  Skill Match: <strong>{request.serviceName}</strong>
+                </span>
+              </div>
+              <button
+                type="button"
+                className={`skill-toggle-btn ${filterBySkill ? 'active' : 'inactive'}`}
+                onClick={() => setFilterBySkill(!filterBySkill)}
+                title="Toggle filtering technicians by requested service"
+              >
+                {filterBySkill ? 'Filtering ON' : 'All Nearby'}
+              </button>
+            </div>
             
             {searchQuery.trim() && (
               <div className="technician-list-container">
                 {loading ? (
-                  <div className="no-technicians">Searching...</div>
+                  <div className="no-technicians">Searching technicians...</div>
                 ) : technicians.length === 0 ? (
-                  <div className="no-technicians">No technicians found.</div>
+                  <div className="no-technicians-fallback">
+                    <p>
+                      No available technicians found
+                      {filterBySkill ? ` offering "${request.serviceName}"` : ''} in this area.
+                    </p>
+                    {filterBySkill && (
+                      <button
+                        type="button"
+                        className="btn-show-all-techs"
+                        onClick={() => setFilterBySkill(false)}
+                      >
+                        Show All Nearby Technicians
+                      </button>
+                    )}
+                  </div>
                 ) : (
                   <ul className="technician-list">
-                    {technicians.map(tech => (
-                      <li 
-                        key={tech.id} 
-                        className={`technician-list-item ${selectedTech === tech.id ? 'selected' : ''}`}
-                        onClick={() => setSelectedTech(tech.id)}
-                      >
-                        <div className="tech-info-main">
-                          <span className="tech-name">{tech.name}</span>
-                          <span className="tech-mobile">{tech.mobile}</span>
-                        </div>
-                        {tech.location && (
-                          <div className="tech-pincodes">{tech.location}</div>
-                        )}
-                      </li>
-                    ))}
+                    {technicians.map(tech => {
+                      const matched = isSkillMatched(tech);
+                      return (
+                        <li 
+                          key={tech.id} 
+                          className={`technician-list-item ${selectedTech === tech.id ? 'selected' : ''}`}
+                          onClick={() => setSelectedTech(tech.id)}
+                        >
+                          <div className="tech-info-main">
+                            <span className="tech-name flex items-center gap-2">
+                              {tech.name}
+                              {matched && (
+                                <span className="skill-match-pill" title="Matches requested service">
+                                  <MdCheckCircle size={14} /> Skill Match
+                                </span>
+                              )}
+                            </span>
+                            <span className="tech-mobile">{tech.mobile}</span>
+                          </div>
+
+                          {/* Services / Skills Provided */}
+                          {tech.services_names && tech.services_names.length > 0 && (
+                            <div className="tech-skills-wrap">
+                              {tech.services_names.map((sName, idx) => {
+                                const isThisMatched = request.serviceName && (
+                                  sName.toLowerCase().includes(request.serviceName.toLowerCase()) ||
+                                  request.serviceName.toLowerCase().includes(sName.toLowerCase())
+                                );
+                                return (
+                                  <span
+                                    key={idx}
+                                    className={`tech-skill-tag ${isThisMatched ? 'highlight' : ''}`}
+                                  >
+                                    {sName}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {tech.location && (
+                            <div className="tech-pincodes">Areas: {tech.location}</div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>

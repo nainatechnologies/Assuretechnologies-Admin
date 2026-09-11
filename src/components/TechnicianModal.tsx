@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import type { Technician } from '../types';
+import type { Technician, Service } from '../types';
 import './TechnicianModal.css';
 
 interface TechnicianModalProps {
@@ -8,9 +8,10 @@ interface TechnicianModalProps {
   onClose: () => void;
   onSave: (tech: any) => void;
   technician?: Technician;
+  servicesList?: Service[];
 }
 
-export default function TechnicianModal({ isOpen, onClose, onSave, technician }: TechnicianModalProps) {
+export default function TechnicianModal({ isOpen, onClose, onSave, technician, servicesList = [] }: TechnicianModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
@@ -27,7 +28,7 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
   const [nocFile, setNocFile] = useState<File | null>(null);
   const [pincodeInput, setPincodeInput] = useState('');
   const [pincodesList, setPincodesList] = useState<string[]>([]);
-  const [serviceInput, setServiceInput] = useState('');
+  const [selectedServiceId, setSelectedServiceId] = useState('');
 
   useEffect(() => {
     if (technician) {
@@ -37,7 +38,7 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
         email: technician.email || '',
         address: technician.address || '',
         location: technician.location || '',
-        password: technician.password || '',
+        password: '',
         services: technician.services || [],
       });
       if (technician.location) {
@@ -62,31 +63,35 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
       setPincodeInput(newValue);
       setErrors(prev => ({ ...prev, location: '' }));
       return;
-    } else if (name === 'serviceInput') {
-      setServiceInput(newValue);
-      setErrors(prev => ({ ...prev, services: '' }));
-      return;
     }
 
     setFormData(prev => ({ ...prev, [name]: newValue }));
     setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
+  const getServiceName = (idOrName: string) => {
+    const found = servicesList.find(s => s.id === idOrName || s.name === idOrName);
+    return found?.name || idOrName;
+  };
+
   const handleAddService = () => {
-    const s = serviceInput.trim();
-    if (!s) return;
-    if (formData.services.includes(s)) {
+    if (!selectedServiceId) return;
+    if (formData.services.includes(selectedServiceId)) {
       setErrors(prev => ({ ...prev, services: 'Service already added' }));
       return;
     }
-    setFormData(prev => ({ ...prev, services: [...prev.services, s] }));
-    setServiceInput('');
+    setFormData(prev => ({ ...prev, services: [...prev.services, selectedServiceId] }));
+    setSelectedServiceId('');
     setErrors(prev => ({ ...prev, services: '' }));
   };
 
   const handleRemoveService = (s: string) => {
     setFormData(prev => ({ ...prev, services: prev.services.filter(svc => svc !== s) }));
   };
+
+  const availableServices = (servicesList || []).filter(
+    s => !formData.services.includes(s.id) && !formData.services.includes(s.name || '')
+  );
 
   const handleAddPincode = () => {
     const code = pincodeInput.trim();
@@ -172,15 +177,21 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
 
     if (hasError) return;
 
-    const submittedData = {
-      ...formData,
-      ...(idFile && { idFile, idFileName: idFile.name }),
-      ...(nocFile && { nocFile, nocFileName: nocFile.name })
-    };
-
     if (technician) {
+      // In edit mode, exclude password so technician credentials are never overwritten
+      const { password, ...editData } = formData;
+      const submittedData = {
+        ...editData,
+        ...(idFile && { idFile, idFileName: idFile.name }),
+        ...(nocFile && { nocFile, nocFileName: nocFile.name })
+      };
       onSave({ ...technician, ...submittedData });
     } else {
+      const submittedData = {
+        ...formData,
+        ...(idFile && { idFile, idFileName: idFile.name }),
+        ...(nocFile && { nocFile, nocFileName: nocFile.name })
+      };
       onSave(submittedData);
     }
   };
@@ -279,36 +290,58 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
             )}
           </div>
 
-          <div className="input-group">
-            <label className="input-label">Set Password</label>
-            <input 
-              type="password" 
-              name="password" 
-              className={`input-field ${errors.password ? 'input-field-error' : ''}`} 
-              value={formData.password} 
-              onChange={handleChange} 
-            />
-            {errors.password && <span className="error-text">{errors.password}</span>}
-          </div>
+          {!technician ? (
+            <div className="input-group">
+              <label className="input-label">Set Password</label>
+              <input 
+                type="password" 
+                name="password" 
+                className={`input-field ${errors.password ? 'input-field-error' : ''}`} 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="Initial login password"
+              />
+              {errors.password && <span className="error-text">{errors.password}</span>}
+            </div>
+          ) : (
+            <div className="input-group">
+              <label className="input-label">Password</label>
+              <div style={{ padding: '8px 12px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '0.85rem', color: '#64748b' }}>
+                Password is encrypted and managed by the technician. They can change it in their profile or reset it via OTP.
+              </div>
+            </div>
+          )}
 
           <div className="input-group">
             <label className="input-label">Services Provided</label>
             <div className="pincode-input-row">
-              <input 
-                type="text"
-                name="serviceInput"
+              <select
                 className={`input-field ${errors.services ? 'input-field-error' : ''}`}
-                value={serviceInput}
-                onChange={handleChange}
-                placeholder="e.g. RO Repair"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddService();
-                  }
+                value={selectedServiceId}
+                onChange={(e) => {
+                  setSelectedServiceId(e.target.value);
+                  setErrors(prev => ({ ...prev, services: '' }));
                 }}
-              />
-              <button type="button" className="btn-add-pincode" onClick={handleAddService}>Add</button>
+              >
+                <option value="">-- Select a service to add --</option>
+                {availableServices.map(s => {
+                  const cat = (s as any).category;
+                  const categoryName = typeof cat === 'string' ? cat : cat?.name;
+                  return (
+                    <option key={s.id} value={s.id}>
+                      {s.name} {categoryName ? `(${categoryName})` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+              <button 
+                type="button" 
+                className="btn-add-pincode" 
+                onClick={handleAddService}
+                disabled={!selectedServiceId}
+              >
+                Add
+              </button>
             </div>
             {errors.services && <span className="error-text">{errors.services}</span>}
             
@@ -316,7 +349,7 @@ export default function TechnicianModal({ isOpen, onClose, onSave, technician }:
               <div className="pincode-tags">
                 {formData.services.map(svc => (
                   <span key={svc} className="pincode-tag">
-                    {svc}
+                    {getServiceName(svc)}
                     <button type="button" onClick={() => handleRemoveService(svc)}>&times;</button>
                   </span>
                 ))}

@@ -1,15 +1,15 @@
-import type { Technician } from '../types';
-import { MdEdit, MdDelete } from 'react-icons/md';
+import type { Technician, Service } from '../types';
+import { MdEdit } from 'react-icons/md';
 import './TechnicianTable.css';
 
 interface TechnicianTableProps {
   technicians: Technician[];
+  servicesList?: Service[];
   onEditTechnician: (id: string) => void;
-  onDeleteTechnician: (id: string) => void;
   onToggleStatus: (id: string) => void;
 }
 
-export default function TechnicianTable({ technicians, onEditTechnician, onDeleteTechnician, onToggleStatus }: TechnicianTableProps) {
+export default function TechnicianTable({ technicians, servicesList = [], onEditTechnician, onToggleStatus }: TechnicianTableProps) {
   if (technicians.length === 0) {
     return (
       <div className="glass-panel empty-state">
@@ -33,26 +33,34 @@ export default function TechnicianTable({ technicians, onEditTechnician, onDelet
           </tr>
         </thead>
         <tbody>
-          {technicians.map((tech) => (
-            <tr key={tech.id}>
-              <td>{tech.display_id || tech.id}</td>
-              <td>{tech.name}</td>
-              <td>
-                <div>{tech.mobile}</div>
-                <div style={{ fontSize: '12px', color: '#9ca3af' }}>{tech.email}</div>
-              </td>
-              <td>{tech.location}</td>
-              <td>
-                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                  {tech.services && tech.services.length > 0 ? tech.services.map((svc, index) => (
-                    <span key={index} style={{ fontSize: '11px', padding: '2px 6px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '4px', color: '#475569', whiteSpace: 'nowrap' }}>
-                      {svc}
-                    </span>
-                  )) : (
-                    <span style={{ fontSize: '12px', color: '#9ca3af' }}>No services</span>
-                  )}
-                </div>
-              </td>
+          {technicians.map((tech) => {
+            const displayServices = (tech.services_names && tech.services_names.length > 0)
+              ? tech.services_names
+              : (tech.services || []).map(svc => {
+                  const found = servicesList.find(s => s.id === svc || s.name === svc);
+                  return found?.name || svc;
+                });
+
+            return (
+              <tr key={tech.id}>
+                <td>{tech.display_id || tech.id}</td>
+                <td>{tech.name}</td>
+                <td>
+                  <div>{tech.mobile}</div>
+                  <div style={{ fontSize: '12px', color: '#9ca3af' }}>{tech.email}</div>
+                </td>
+                <td>{tech.location}</td>
+                <td>
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                    {displayServices.length > 0 ? displayServices.map((svc, index) => (
+                      <span key={index} style={{ fontSize: '11px', padding: '2px 8px', background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: '12px', color: '#334155', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                        {svc}
+                      </span>
+                    )) : (
+                      <span style={{ fontSize: '12px', color: '#9ca3af' }}>No services</span>
+                    )}
+                  </div>
+                </td>
               <td>
                 <span className={`status-badge ${tech.status.toLowerCase()}`}>
                   {tech.status}
@@ -75,17 +83,11 @@ export default function TechnicianTable({ technicians, onEditTechnician, onDelet
                   >
                     <MdEdit size={20} />
                   </button>
-                  <button 
-                    className="icon-btn delete-icon" 
-                    onClick={() => onDeleteTechnician(tech.id)}
-                    title="Delete"
-                  >
-                    <MdDelete size={20} />
-                  </button>
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

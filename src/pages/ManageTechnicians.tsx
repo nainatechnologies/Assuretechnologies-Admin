@@ -3,13 +3,14 @@ import { MdSearch } from 'react-icons/md';
 import TechnicianTable from '../components/TechnicianTable';
 import TechnicianModal from '../components/TechnicianModal';
 import Pagination from '../components/Pagination';
-import type { Technician } from '../types';
+import type { Technician, Service } from '../types';
 import Swal from 'sweetalert2';
 import API from '../services/api';
 import './ManageTechnicians.css';
 
 export default function ManageTechnicians() {
   const [technicians, setTechnicians] = useState<Technician[]>([]);
+  const [servicesList, setServicesList] = useState<Service[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTechnician, setEditingTechnician] = useState<Technician | null>(null);
   
@@ -20,6 +21,29 @@ export default function ManageTechnicians() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 10;
+
+  const fetchServices = async () => {
+    try {
+      const res = await API.get('/admin/services?limit=500');
+      let data: Service[] = [];
+      if (Array.isArray(res.data)) {
+        data = res.data;
+      } else if (Array.isArray(res.data?.data)) {
+        data = res.data.data;
+      } else if (res.data?.data?.services && Array.isArray(res.data.data.services)) {
+        data = res.data.data.services;
+      } else if (res.data?.services && Array.isArray(res.data.services)) {
+        data = res.data.services;
+      }
+      setServicesList(data);
+    } catch (error) {
+      console.error('Failed to fetch services:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -46,6 +70,8 @@ export default function ManageTechnicians() {
           address: t.address || '',
           location: Array.isArray(t.service_pincodes) ? t.service_pincodes.join(', ') : '',
           services: Array.isArray(t.services_provided) ? t.services_provided : [],
+          services_provided: Array.isArray(t.services_provided) ? t.services_provided : [],
+          services_names: Array.isArray(t.services_names) ? t.services_names : [],
           status: t.is_active ? 'Active' : 'Inactive'
         }));
         setTechnicians(mappedTechs);
@@ -99,43 +125,45 @@ export default function ManageTechnicians() {
     }
   };
 
-  const handleUpdateTechnician = (updatedTech: Technician) => {
-    setTechnicians(prev =>
-      prev.map(t => (t.id === updatedTech.id ? updatedTech : t))
-    );
-    setEditingTechnician(null);
-    Swal.fire({
-      title: 'Updated!',
-      text: 'Technician has been updated.',
-      icon: 'success',
-      confirmButtonColor: '#4F46E5',
-      timer: 2000,
-      showConfirmButton: false
-    });
-  };
+  const handleUpdateTechnician = async (updatedTechData: any) => {
+    try {
+      const formData = new FormData();
+      formData.append('email', updatedTechData.email);
+      formData.append('mobile', updatedTechData.mobile);
+      if (updatedTechData.password && updatedTechData.password.trim()) {
+        formData.append('password', updatedTechData.password.trim());
+      }
+      formData.append('full_name', updatedTechData.name);
+      formData.append('address', updatedTechData.address || '');
+      
+      const pincodes = updatedTechData.location ? updatedTechData.location.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+      formData.append('service_pincodes', JSON.stringify(pincodes));
+      formData.append('services_provided', JSON.stringify(updatedTechData.services || []));
 
-  const handleDeleteTechnician = (id: string) => {
-    Swal.fire({
-      title: 'Delete Technician?',
-      text: 'Are you sure you want to delete this technician?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        setTechnicians(prev => prev.filter(t => t.id !== id));
+      if (updatedTechData.idFile instanceof File) {
+        formData.append('id_proof', updatedTechData.idFile);
+      }
+      if (updatedTechData.nocFile instanceof File) {
+        formData.append('noc_document', updatedTechData.nocFile);
+      }
+
+      const response = await API.put(`/admin/technicians/${updatedTechData.id}`, formData);
+      if (response.data && response.data.success) {
         Swal.fire({
-          title: 'Deleted!',
-          text: 'Technician removed successfully.',
+          title: 'Updated!',
+          text: 'Technician has been updated successfully.',
           icon: 'success',
           confirmButtonColor: '#4F46E5',
-          timer: 1500,
+          timer: 2000,
           showConfirmButton: false
         });
+        setEditingTechnician(null);
+        fetchTechnicians();
       }
-    });
+    } catch (error: any) {
+      console.error('Update technician error:', error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to update technician', 'error');
+    }
   };
 
   const handleEditTechnician = (id: string) => {
@@ -145,13 +173,22 @@ export default function ManageTechnicians() {
     }
   };
 
-  const handleToggleStatus = (id: string) => {
-    setTechnicians(prev => prev.map(t => {
-      if (t.id === id) {
-        return { ...t, status: t.status === 'Active' ? 'Inactive' : 'Active' };
-      }
-      return t;
-    }));
+  const handleToggleStatus = async (id: string) => {
+    const tech = technicians.find(t => t.id === id);
+    if (!tech) return;
+    const newActive = tech.status !== 'Active';
+    try {
+      await API.patch(`/admin/technicians/${id}/status`, { is_active: newActive });
+      setTechnicians(prev => prev.map(t => {
+        if (t.id === id) {
+          return { ...t, status: newActive ? 'Active' : 'Inactive' };
+        }
+        return t;
+      }));
+    } catch (error: any) {
+      console.error('Toggle status error:', error);
+      Swal.fire('Error', error.response?.data?.message || 'Failed to update status', 'error');
+    }
   };
 
   return (
@@ -192,8 +229,8 @@ export default function ManageTechnicians() {
         )}
         <TechnicianTable
           technicians={technicians}
+          servicesList={servicesList}
           onEditTechnician={handleEditTechnician}
-          onDeleteTechnician={handleDeleteTechnician}
           onToggleStatus={handleToggleStatus}
         />
       </div>
@@ -207,6 +244,7 @@ export default function ManageTechnicians() {
       {isModalOpen && (
         <TechnicianModal
           isOpen={isModalOpen}
+          servicesList={servicesList}
           onClose={() => setIsModalOpen(false)}
           onSave={handleAddTechnician}
         />
@@ -216,6 +254,7 @@ export default function ManageTechnicians() {
         <TechnicianModal
           isOpen={Boolean(editingTechnician)}
           technician={editingTechnician}
+          servicesList={servicesList}
           onClose={() => setEditingTechnician(null)}
           onSave={(tech) => handleUpdateTechnician(tech as Technician)}
         />

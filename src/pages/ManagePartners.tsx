@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MdEdit, MdDelete, MdSearch } from 'react-icons/md';
+import { MdEdit, MdSearch } from 'react-icons/md';
 import type { Partner, PartnerType } from '../types';
 import Swal from 'sweetalert2';
 import PartnerModal from '../components/PartnerModal';
@@ -76,28 +76,6 @@ export default function ManagePartners() {
     });
   }, [partners, searchQuery]);
 
-  const handleDelete = (id: string) => {
-    Swal.fire({
-      title: 'Delete Partner?',
-      text: "Are you sure you want to delete this partner?",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, delete it!'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          await API.delete(`/admin/partners/${id}`);
-          setPartners(prev => prev.filter(p => p.id !== id));
-          Swal.fire('Deleted!', 'Partner has been deleted.', 'success');
-        } catch (error: any) {
-          console.error(error);
-          setPartners(prev => prev.filter(p => p.id !== id));
-          Swal.fire('Deleted!', 'Partner has been removed.', 'success');
-        }
-      }
-    });
-  };
 
   const handleSave = async (data: any) => {
     try {
@@ -279,9 +257,6 @@ export default function ManagePartners() {
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button onClick={() => handleEdit(partner)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Edit">
                       <MdEdit size={20} />
-                    </button>
-                    <button onClick={() => handleDelete(partner.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete">
-                      <MdDelete size={20} />
                     </button>
                   </div>
                 </td>

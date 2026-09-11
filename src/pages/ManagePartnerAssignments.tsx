@@ -46,7 +46,7 @@ const mapPartnerBooking = (b: any): PartnerBooking => {
     fullAddress: addressText || [village, mandal, district].filter(Boolean).join(', '),
     equipmentType: b.Service?.name || 'Unknown',
     date: b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
-    time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+    time: b.scheduled_time_slot || b.metadata?.scheduled_time_slot || b.metadata?.time_slot || (b.scheduled_date && !String(b.scheduled_date).includes('T00:00:00') ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'),
     status: b.status,
     partnerId: b.assigned_partner_id,
     totalAmount: b.Order?.total_amount || 0,

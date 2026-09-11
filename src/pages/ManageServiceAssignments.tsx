@@ -34,11 +34,15 @@ const mapServiceBooking = (b: any): ServiceRequest => {
     pincode,
     serviceName: b.Service?.name || 'Unknown',
     date: b.scheduled_date ? new Date(b.scheduled_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A',
-    time: b.scheduled_date ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+    time: b.scheduled_time_slot || b.metadata?.scheduled_time_slot || b.metadata?.time_slot || (b.scheduled_date && !String(b.scheduled_date).includes('T00:00:00') ? new Date(b.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'),
     status: b.status,
     technicianId: b.assigned_technician_id,
-    paymentStatus: b.Order?.payment_status === 'PAID' ? 'Paid in Full' : (b.prebooking_paid ? 'Prebooking Paid' : 'Pending'),
-    prebookingAmountPaid: b.prebooking_paid ? Number(b.Service?.prebooking_charge || 0) : 0,
+    paymentStatus: (b.prebooking_paid || b.Order?.payment_status === 'PAID')
+      ? (b.Service?.prebooking_charge && Number(b.Service.prebooking_charge) > 0 && !b.Service?.price ? 'Prebooking Paid' : 'Paid in Full')
+      : 'Pending',
+    prebookingAmountPaid: (b.prebooking_paid || b.Order?.payment_status === 'PAID')
+      ? Number(b.Order?.total_amount || b.Service?.prebooking_charge || 0)
+      : 0,
     razorpayPaymentId: b.Order?.razorpay_payment_id || undefined,
     paymentMethod: b.Order?.payment_method || (b.Order?.payment_status === 'PAID' ? 'Online' : undefined),
     paymentDetails: b.Order?.payment_details || undefined,

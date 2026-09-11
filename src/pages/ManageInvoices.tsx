@@ -88,7 +88,13 @@ export default function ManageInvoices() {
         grandTotal: parseFloat(inv.grand_total) || 0,
         date: new Date(inv.createdAt).toLocaleString(),
         status: inv.status,
-        serviceName: inv.type === 'VENDOR' ? 'Vendor Product Order' : 'Service',
+        serviceName: inv.type === 'VENDOR' 
+          ? 'Vendor Product Order' 
+          : (inv.service_name 
+              || inv.items?.find((i: any) => i.description && (i.description.includes(' - ') || i.description.toLowerCase().includes('solution') || i.description.toLowerCase().includes('service') || i.description.toLowerCase().includes('networking') || i.description.toLowerCase().includes('drone') || i.description.toLowerCase().includes('tractor')))?.description 
+              || inv.items?.find((i: any) => i.description && !i.description.toLowerCase().startsWith('a/c'))?.description
+              || inv.items?.[0]?.description 
+              || 'Service'),
         vendorBusinessName: inv.vendor?.business_name || inv.vendor?.full_name || '',
         orderId: inv.order_id
       }));

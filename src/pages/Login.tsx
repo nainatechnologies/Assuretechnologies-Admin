@@ -1,5 +1,6 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import API from '../services/api';
 import { loginUser } from '../services/auth';
@@ -8,6 +9,7 @@ import './Login.css';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -82,18 +84,29 @@ export default function Login() {
             <div className="password-header">
               <label className="input-label" htmlFor="password">Password</label>
             </div>
-            <input
-              type="password"
-              id="password"
-              className="input-field"
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (e.target.value.length >= 6) setPasswordError('');
-              }}
-              required
-            />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                className="input-field"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (e.target.value.length >= 6) setPasswordError('');
+                }}
+                required
+              />
+              <button
+                type="button"
+                className="password-toggle-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+              </button>
+            </div>
           </div>
           {passwordError && <div className="input-error">{passwordError}</div>}
 

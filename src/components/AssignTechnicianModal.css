@@ -234,3 +234,132 @@
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .gap-3 { gap: 12px; }
+
+/* Skill Filter Bar */
+.skill-filter-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.skill-filter-label {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.skill-filter-label strong {
+  color: #1e293b;
+}
+
+.skill-toggle-btn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.skill-toggle-btn.active {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.skill-toggle-btn.active:hover {
+  background-color: #dbeafe;
+}
+
+.skill-toggle-btn.inactive {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border-color: #cbd5e1;
+}
+
+.skill-toggle-btn.inactive:hover {
+  background-color: #e2e8f0;
+}
+
+/* Fallback message */
+.no-technicians-fallback {
+  padding: 16px 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.btn-show-all-techs {
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-show-all-techs:hover {
+  background-color: #2563eb;
+}
+
+/* Skill Tags on Technician Cards */
+.tech-skills-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+.tech-skill-tag {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.tech-skill-tag.highlight {
+  background-color: #dcfce7;
+  color: #166534;
+  font-weight: 600;
+}
+
+.skill-match-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background-color: #dcfce7;
+  color: #15803d;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.gap-2 {
+  gap: 8px;
+}

@@ -33,8 +33,8 @@ export default function AssignPartnerModal({ booking, onClose, onAssignSuccess }
           showConfirmButton: false
         });
         onAssignSuccess();
-      } catch (error) {
-        Swal.fire('Error', 'Failed to assign partner', 'error');
+      } catch (error: any) {
+        Swal.fire('Cannot Assign', error.response?.data?.message || 'Failed to assign partner', 'warning');
       }
     }
   };
@@ -61,15 +61,17 @@ export default function AssignPartnerModal({ booking, onClose, onAssignSuccess }
       try {
         const res = await API.get("/admin/service-bookings/" + booking.id + "/available-partners");
         if (res.data.success && res.data.data) {
-          const mapped = res.data.data.map((p: any) => ({
-            id: p.id,
-            name: p.full_name || p.name,
-            mobile: p.mobile,
-            email: p.email,
-            location: Array.isArray(p.coverage_areas) ? p.coverage_areas.join(', ') : '',
-            status: p.is_active ? 'Active' : 'Inactive',
-            equipmentTypes: p.services_provided || [],
-          }));
+          const mapped = res.data.data
+            .filter((p: any) => !booking.partnerId || p.id !== booking.partnerId)
+            .map((p: any) => ({
+              id: p.id,
+              name: p.full_name || p.name,
+              mobile: p.mobile,
+              email: p.email,
+              location: Array.isArray(p.coverage_areas) ? p.coverage_areas.join(', ') : '',
+              status: p.is_active ? 'Active' : 'Inactive',
+              equipmentTypes: p.services_provided || [],
+            }));
           if (isMounted) setPartners(mapped);
         }
       } catch (err) {
@@ -82,7 +84,7 @@ export default function AssignPartnerModal({ booking, onClose, onAssignSuccess }
     fetchPartners();
     
     return () => { isMounted = false; };
-  }, [booking.id]);
+  }, [booking.id, booking.partnerId]);
 
   const filteredPartners = partners.filter(p => 
     !searchQuery || 

@@ -25,6 +25,8 @@ export interface Technician {
   status: 'Active' | 'Inactive';
   password?: string;
   services?: string[];
+  services_names?: string[];
+  services_provided?: string[];
   idFile?: string | File;
   idFileName?: string;
   nocFile?: string | File;
@@ -240,6 +242,7 @@ export interface Invoice {
   serviceName?: string;
   vendorBusinessName?: string;
   orderId?: string;
+  type?: string;
 }
 
 export interface PartnerCustomField {

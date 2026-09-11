@@ -71,10 +71,12 @@ export default function ManageServiceRequests() {
           }
 
           let paymentStatus: 'Prebooking Paid' | 'Pending' | 'Paid in Full' = 'Pending';
-          if (raw.Order?.payment_status === 'PAID') {
-            paymentStatus = 'Paid in Full';
-          } else if (raw.prebooking_paid) {
-            paymentStatus = 'Prebooking Paid';
+          if (raw.prebooking_paid || raw.Order?.payment_status === 'PAID') {
+            if (raw.Service?.prebooking_charge && Number(raw.Service.prebooking_charge) > 0 && !raw.Service?.price) {
+              paymentStatus = 'Prebooking Paid';
+            } else {
+              paymentStatus = 'Paid in Full';
+            }
           }
 
           const startPhotos = raw.progress_updates
@@ -103,7 +105,7 @@ export default function ManageServiceRequests() {
             pincode: raw.pincode || '',
             serviceName: raw.Service?.name || 'Service Request',
             date: formattedDate,
-            time: raw.scheduled_time_slot || (raw.scheduled_date ? new Date(raw.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'),
+            time: raw.scheduled_time_slot || raw.metadata?.scheduled_time_slot || raw.metadata?.time_slot || (raw.scheduled_date && !String(raw.scheduled_date).includes('T00:00:00') ? new Date(raw.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'),
             status: status,
             technicianId: raw.assigned_technician_id || undefined,
             technician: raw.assigned_technician ? {
@@ -116,7 +118,7 @@ export default function ManageServiceRequests() {
               status: 'Active'
             } : undefined,
             paymentStatus: paymentStatus,
-            prebookingAmountPaid: raw.prebooking_paid ? Number(raw.Service?.prebooking_charge || 0) : 0,
+            prebookingAmountPaid: (raw.prebooking_paid || raw.Order?.payment_status === 'PAID') ? Number(raw.Order?.total_amount || raw.Service?.prebooking_charge || 0) : 0,
             razorpayPaymentId: raw.Order?.razorpay_payment_id || undefined,
             paymentMethod: raw.Order?.payment_method || (raw.Order?.payment_status === 'PAID' ? 'Online' : undefined),
             paymentDetails: raw.Order?.payment_details || undefined,
