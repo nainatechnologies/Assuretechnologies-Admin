@@ -44,9 +44,9 @@ export default function ManageVendorOrders() {
       });
       
       setOrders(vendorOrdersFetched);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch orders', error);
-      Swal.fire('Error', 'Failed to fetch vendor orders', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to fetch vendor orders', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -97,16 +97,62 @@ export default function ManageVendorOrders() {
   const totalPages = Math.ceil(vendorOrders.length / itemsPerPage) || 1;
   const paginatedOrders = vendorOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => {
+  const handleActionOrder = (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid', rowOrder?: Order) => {
     let actionText = '';
     let successText = '';
     let nextStatus: OrderStatus = 'New';
 
+    const targetOrder = rowOrder || orders.find(o => o.id === orderId);
+    const targetVendorId = targetOrder?.items[0]?.vendorId;
+
     if (action === 'Reject') {
-      actionText = 'reject this order';
-      successText = 'The order has been rejected.';
-      nextStatus = 'Cancelled';
-    } else if (action === 'Accept') {
+      Swal.fire({
+        title: 'Reject Vendor Order Item?',
+        text: 'Please select a reason for rejecting this vendor item (this will queue a partial customer refund if paid):',
+        input: 'select',
+        inputOptions: {
+          'Out of stock': 'Out of stock',
+          'Damaged / Defective inventory': 'Damaged / Defective inventory',
+          'Delivery location unserviceable': 'Delivery location unserviceable',
+          'Pricing error': 'Pricing error',
+          'Vendor requested cancellation': 'Vendor requested cancellation',
+          'Other': 'Other reason'
+        },
+        inputPlaceholder: 'Select rejection reason',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Confirm Rejection',
+        inputValidator: (value) => {
+          if (!value) return 'Please select a reason for rejection!';
+          return null;
+        }
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await API.put(`/admin/orders/${orderId}/status`, {
+              status: 'CANCELLED',
+              reason: result.value,
+              vendorId: targetVendorId
+            });
+            setOrders(orders.map(o => {
+              if (o.id !== orderId) return o;
+              return {
+                ...o,
+                items: o.items.map(item => (!targetVendorId || item.vendorId === targetVendorId) ? { ...item, status: 'Cancelled' } : item)
+              };
+            }));
+            Swal.fire('Item Rejected', 'The vendor order item has been rejected and queued for refund if paid.', 'success');
+          } catch (error: any) {
+            console.error('Failed to update order status', error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to update order status. Please try again.', 'error');
+          }
+        }
+      });
+      return;
+    }
+
+    if (action === 'Accept') {
       actionText = 'accept this order';
       successText = 'Order status updated to Accepted.';
       nextStatus = 'Accepted';
@@ -142,19 +188,30 @@ export default function ManageVendorOrders() {
                              nextStatus === 'Accepted' ? 'ACCEPTED' :
                              nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
                              nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
-            payload = { status: dbStatus };
+            payload = { 
+              status: dbStatus,
+              vendorId: targetVendorId,
+              target: 'vendor'
+            };
           }
           await API.put(`/admin/orders/${orderId}/status`, payload);
           
           if (action === 'MarkPaid') {
             setOrders(orders.map(o => o.id === orderId ? { ...o, paymentStatus: 'Paid' } : o));
           } else {
-            setOrders(orders.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
+            setOrders(orders.map(o => {
+              if (o.id !== orderId) return o;
+              return {
+                ...o,
+                status: nextStatus,
+                items: o.items.map(item => (!targetVendorId || item.vendorId === targetVendorId) ? { ...item, status: nextStatus } : item)
+              };
+            }));
           }
           Swal.fire('Updated!', successText, 'success');
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to update order status', error);
-          Swal.fire('Error', 'Failed to update order status. Please try again.', 'error');
+          Swal.fire('Error', error?.response?.data?.message || 'Failed to update order status. Please try again.', 'error');
         }
       }
     });
@@ -309,13 +366,23 @@ export default function ManageVendorOrders() {
           onClose={() => setTrackingOrder(null)}
           onSubmit={async (transportName, trackingId, trackUrl) => {
             try {
-              await API.put(`/admin/orders/${trackingOrder.id}/tracking`, { transportName, trackingId, trackUrl: trackUrl });
-              setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId, trackUrl } : o));
+              const targetVendorId = trackingOrder.items[0]?.vendorId;
+              await API.put(`/admin/orders/${trackingOrder.id}/tracking`, { transportName, trackingId, trackUrl: trackUrl, vendorId: targetVendorId });
+              setOrders(orders.map(o => {
+                if (o.id !== trackingOrder.id) return o;
+                return {
+                  ...o,
+                  items: o.items.map(item => (!targetVendorId || item.vendorId === targetVendorId) ? { ...item, transportName, trackingId, trackUrl } : item),
+                  transportName,
+                  trackingId,
+                  trackUrl
+                };
+              }));
               Swal.fire('Saved!', `Tracking info saved for order ${trackingOrder.id}.`, 'success');
               setTrackingOrder(null);
-            } catch (error) {
+            } catch (error: any) {
               console.error('Failed to save tracking', error);
-              Swal.fire('Error', 'Failed to save tracking information.', 'error');
+              Swal.fire('Error', error?.response?.data?.message || 'Failed to save tracking information.', 'error');
             }
           }}
         />

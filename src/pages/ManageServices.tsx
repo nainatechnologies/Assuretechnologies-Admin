@@ -87,9 +87,9 @@ export default function ManageServices() {
         timer: 2000,
         showConfirmButton: false
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding service:', error);
-      Swal.fire('Error', 'Failed to add service', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to add service', 'error');
     }
   };
 
@@ -133,9 +133,9 @@ export default function ManageServices() {
         showConfirmButton: false
       });
       fetchServices();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating service:', error);
-      Swal.fire('Error', 'Failed to update service', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to update service', 'error');
     }
   };
 

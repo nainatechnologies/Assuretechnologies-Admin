@@ -112,6 +112,11 @@ export interface OrderItem {
   price: number;
   qty: number;
   subtotal: number;
+  status?: string;
+  trackingId?: string;
+  transportName?: string;
+  trackUrl?: string;
+  vendorId?: string;
 }
 
 export type OrderStatus = 'New' | 'Accepted' | 'Out for Delivery' | 'Completed' | 'Rejected' | 'Cancelled';

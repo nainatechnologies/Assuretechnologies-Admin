@@ -77,10 +77,46 @@ export default function ManageOrders() {
     let nextStatus: OrderStatus = 'New';
 
     if (action === 'Reject') {
-      actionText = 'reject this order';
-      successText = 'The order has been rejected.';
-      nextStatus = 'Cancelled';
-    } else if (action === 'Accept') {
+      Swal.fire({
+        title: 'Reject Order?',
+        text: 'Please select a reason for rejecting this order (this will queue a customer refund if paid):',
+        input: 'select',
+        inputOptions: {
+          'Out of stock': 'Out of stock',
+          'Damaged / Defective inventory': 'Damaged / Defective inventory',
+          'Delivery location unserviceable': 'Delivery location unserviceable',
+          'Pricing error': 'Pricing error',
+          'Customer requested cancellation': 'Customer requested cancellation',
+          'Other': 'Other reason'
+        },
+        inputPlaceholder: 'Select rejection reason',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Confirm Rejection',
+        inputValidator: (value) => {
+          if (!value) return 'Please select a reason for rejection!';
+          return null;
+        }
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await API.put(`/admin/orders/${orderId}/status`, {
+              status: 'CANCELLED',
+              reason: result.value
+            });
+            setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o));
+            Swal.fire('Order Rejected', 'The order has been rejected and queued for customer refund if paid.', 'success');
+          } catch (error: any) {
+            console.error('Failed to update order status', error);
+            Swal.fire('Error', error.response?.data?.message || 'Failed to update order status. Please try again.', 'error');
+          }
+        }
+      });
+      return;
+    }
+
+    if (action === 'Accept') {
       actionText = 'accept this order';
       successText = 'Order status updated to Accepted.';
       nextStatus = 'Accepted';
