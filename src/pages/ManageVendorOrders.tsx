@@ -24,15 +24,16 @@ export default function ManageVendorOrders() {
       const vendorOrdersFetched: any[] = [];
       
       response.data.forEach((o: any) => {
-        const vendorItems = (o.items || []).filter((i: any) => i.vendor);
+        const vendorItems = (o.items || []).filter((i: any) => i.vendor || i.vendor_id);
         
         if (vendorItems.length > 0) {
           const itemWithTracking = vendorItems.find((i: any) => i.tracking_id);
+          const vendorTotal = vendorItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
 
           vendorOrdersFetched.push(mapApiOrderToOrder(
             o, 
             vendorItems, 
-            parseFloat(o.total_amount) || 0, 
+            vendorTotal, 
             (i: any) => i.vendor?.business_name || i.vendor?.full_name || 'Vendor Product',
             {
               transportName: itemWithTracking?.transport_name,
@@ -66,13 +67,13 @@ export default function ManageVendorOrders() {
   const tabs: string[] = ['New', 'Accepted', 'Out for Delivery', 'Completed', 'Cancelled'];
 
   const filteredOrders = orders.filter(order => {
-    let matchesTab = order.status === activeTab;
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
     const matchesSearch = query === '' || 
       order.id.toLowerCase().includes(query) ||
       order.user.toLowerCase().includes(query) ||
       order.mobile.includes(query) ||
       order.email.toLowerCase().includes(query);
+    const matchesTab = query !== '' ? true : (order.status === activeTab);
     return matchesTab && matchesSearch;
   });
 
@@ -174,7 +175,7 @@ export default function ManageVendorOrders() {
       text: `Do you want to ${actionText}?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: action === 'Reject' ? '#ef4444' : '#10b981',
+      confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes'
     }).then(async (result) => {
@@ -184,8 +185,7 @@ export default function ManageVendorOrders() {
           if (action === 'MarkPaid') {
             payload = { payment_status: 'PAID' };
           } else {
-            const dbStatus = nextStatus === 'Cancelled' ? 'CANCELLED' :
-                             nextStatus === 'Accepted' ? 'ACCEPTED' :
+            const dbStatus = nextStatus === 'Accepted' ? 'ACCEPTED' :
                              nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
                              nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
             payload = { 
@@ -217,76 +217,20 @@ export default function ManageVendorOrders() {
     });
   };
 
-  const handleSplitOrder = (orderId: string, originalItemId: string, newVendorName: string | null, transferQty: number) => {
-    setOrders(orders.map(order => {
-      if (order.id !== orderId) return order;
-
-      const newItems = [...order.items];
-      const originalItemIndex = newItems.findIndex(i => i.id === originalItemId);
-      if (originalItemIndex === -1) return order;
-
-      const originalItem = { ...newItems[originalItemIndex] };
-      
-      // Reduce original
-      originalItem.qty -= transferQty;
-      originalItem.subtotal = originalItem.qty * originalItem.price;
-      
-      if (originalItem.qty === 0) {
-        newItems.splice(originalItemIndex, 1);
-      } else {
-        newItems[originalItemIndex] = originalItem;
-      }
-
-      // Create new split item
-      const splitItem: OrderItem = {
-        ...originalItem,
-        id: `${originalItem.id}-split-${Date.now()}`,
-        vendorName: newVendorName || 'Unknown Vendor',
-        qty: transferQty,
-        subtotal: transferQty * originalItem.price
+  const handleSplitOrder = async (orderId: string, originalItemId: string, newVendorName: string | null, transferQty: number) => {
+    try {
+      const payload = {
+        newVendorId: newVendorName,
+        qtyToTransfer: transferQty
       };
-
-      newItems.push(splitItem);
-
-      return {
-        ...order,
-        items: newItems
-      };
-    }));
-
-    // If we're viewing this order, update it in the view
-    if (selectedOrder && selectedOrder.id === orderId) {
-      setSelectedOrder(prev => {
-        if (!prev) return prev;
-        
-        const newItems = [...prev.items];
-        const originalItemIndex = newItems.findIndex(i => i.id === originalItemId);
-        if (originalItemIndex !== -1) {
-          const originalItem = { ...newItems[originalItemIndex] };
-          originalItem.qty -= transferQty;
-          originalItem.subtotal = originalItem.qty * originalItem.price;
-          
-          if (originalItem.qty === 0) {
-            newItems.splice(originalItemIndex, 1);
-          } else {
-            newItems[originalItemIndex] = originalItem;
-          }
-          
-          const splitItem: OrderItem = {
-            ...originalItem,
-            id: `${originalItem.id}-split-${Date.now()}`,
-            vendorName: newVendorName || 'Unknown Vendor',
-            qty: transferQty,
-            subtotal: transferQty * originalItem.price
-          };
-          newItems.push(splitItem);
-        }
-        return { ...prev, items: newItems };
-      });
+      await API.post(`/admin/orders/${orderId}/items/${originalItemId}/split`, payload);
+      setSplittingItem(null);
+      fetchOrders();
+      Swal.fire('Split Successful', 'Order item split assigned', 'success');
+    } catch (error: any) {
+      console.error('Failed to split order', error);
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to split order', 'error');
     }
-
-    setSplittingItem(null);
-    Swal.fire('Split Successful', `Order item split to ${newVendorName}`, 'success');
   };
 
   return (

@@ -31,22 +31,18 @@ export default function ManageOrders() {
       const adminOrders: any[] = [];
 
       response.data.forEach((o: any) => {
-        // Admin orders only include items assigned to the main platform
-        const adminItems = o.items?.filter((i: any) => !i.vendor_id) || [];
+        // Admin orders strictly only include items assigned to the main platform (vendor_id is null)
+        const adminItems = (o.items || []).filter((i: any) => !i.vendor_id);
         if (adminItems.length > 0) {
           const adminTotal = adminItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
           adminOrders.push(mapApiOrderToOrder(o, adminItems, adminTotal, () => 'Admin Product'));
-        } else if (!o.isVendorOrder && (!o.order_number || !o.order_number.startsWith('SBK'))) {
-          // All items belong to admin
-          const adminTotal = o.items.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
-          adminOrders.push(mapApiOrderToOrder(o, o.items, adminTotal, () => 'Admin Product'));
         }
       });
 
       setOrders(adminOrders);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch orders', error);
-      Swal.fire('Error', 'Failed to fetch orders', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to fetch orders', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -57,13 +53,13 @@ export default function ManageOrders() {
   }, []);
 
   const filteredOrders = orders.filter(order => {
-    let matchesTab = order.status === activeTab;
-    const query = searchQuery.toLowerCase();
+    const query = searchQuery.trim().toLowerCase();
     const matchesSearch = query === '' ||
       order.id.toLowerCase().includes(query) ||
       order.user.toLowerCase().includes(query) ||
       order.mobile.includes(query) ||
       order.email.toLowerCase().includes(query);
+    const matchesTab = query !== '' ? true : (order.status === activeTab);
     return matchesTab && matchesSearch;
   });
 
@@ -138,7 +134,7 @@ export default function ManageOrders() {
       text: `Do you want to ${actionText}?`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: action === 'Reject' ? '#ef4444' : '#10b981',
+      confirmButtonColor: '#10b981',
       cancelButtonColor: '#6b7280',
       confirmButtonText: 'Yes'
     }).then(async (result) => {
@@ -148,10 +144,9 @@ export default function ManageOrders() {
           if (action === 'MarkPaid') {
             payload = { payment_status: 'PAID' };
           } else {
-            const dbStatus = nextStatus === 'Cancelled' ? 'CANCELLED' :
-              nextStatus === 'Accepted' ? 'ACCEPTED' :
-                nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
-                  nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
+            const dbStatus = nextStatus === 'Accepted' ? 'ACCEPTED' :
+              nextStatus === 'Out for Delivery' ? 'OUT_FOR_DELIVERY' :
+                nextStatus === 'Completed' ? 'COMPLETED' : 'NEW';
             payload = { status: dbStatus };
           }
           await API.put(`/admin/orders/${orderId}/status`, payload);
@@ -162,9 +157,9 @@ export default function ManageOrders() {
             setOrders(orders.map(o => o.id === orderId ? { ...o, status: nextStatus } : o));
           }
           Swal.fire('Updated!', successText, 'success');
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to update order status', error);
-          Swal.fire('Error', 'Failed to update order status. Please try again.', 'error');
+          Swal.fire('Error', error?.response?.data?.message || 'Failed to update order status. Please try again.', 'error');
         }
       }
     });
@@ -186,9 +181,9 @@ export default function ManageOrders() {
       setSplittingItem(null);
       fetchOrders();
       Swal.fire('Split Successful', `Order item split assigned`, 'success');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to split order', error);
-      Swal.fire('Error', 'Failed to split order', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to split order', 'error');
     }
   };
 
@@ -271,9 +266,9 @@ export default function ManageOrders() {
               setOrders(orders.map(o => o.id === trackingOrder.id ? { ...o, transportName, trackingId, trackUrl } : o));
               Swal.fire('Saved!', `Tracking info saved for order ${trackingOrder.id}.`, 'success');
               setTrackingOrder(null);
-            } catch (error) {
+            } catch (error: any) {
               console.error('Failed to save tracking', error);
-              Swal.fire('Error', 'Failed to save tracking information.', 'error');
+              Swal.fire('Error', error?.response?.data?.message || 'Failed to save tracking information.', 'error');
             }
           }}
         />

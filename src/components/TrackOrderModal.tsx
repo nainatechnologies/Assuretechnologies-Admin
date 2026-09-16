@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MdClose } from 'react-icons/md';
 import type { Order } from '../types';
 import './TrackOrderModal.css';
@@ -20,7 +21,7 @@ export default function TrackOrderModal({ order, onClose, onSubmit }: TrackOrder
     onSubmit(transportName, trackingId, trackUrl);
   };
 
-  return (
+  return createPortal(
     <div className="track-modal-overlay" onClick={onClose}>
       <div className="track-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="track-modal-header">
@@ -75,6 +76,7 @@ export default function TrackOrderModal({ order, onClose, onSubmit }: TrackOrder
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
