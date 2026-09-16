@@ -4,6 +4,7 @@ import { MdEdit, MdClose, MdSave } from 'react-icons/md';
 import type { PricingType } from '../types';
 import Swal from 'sweetalert2';
 import API from '../services/api';
+import { getErrorMessage } from '../utils/errorHandler';
 
 export default function ManagePricingTypes() {
   const [pricingTypes, setPricingTypes] = useState<PricingType[]>([]);
@@ -45,17 +46,16 @@ export default function ManagePricingTypes() {
   };
 
   const handleToggleStatus = async (type: PricingType) => {
+    const newStatus = !(type.is_active ?? true);
     try {
-      const newStatus = !(type.is_active ?? true);
-      // TODO: Replace with actual PATCH API once backend is built
-      // const response = await API.patch(`/admin/pricing-types/${type.id}/status`, { is_active: newStatus });
-      // if (response.data.success) { ... }
-      
-      setPricingTypes(prev => prev.map(t => t.id === type.id ? { ...t, is_active: newStatus } : t));
-      Swal.fire('Updated!', `Pricing Type is now ${newStatus ? 'Active' : 'Inactive'}.`, 'success');
+      const response = await API.patch(`/admin/pricing-types/${type.id}/status`, { is_active: newStatus });
+      if (response.data.success) {
+        setPricingTypes(prev => prev.map(t => t.id === type.id ? { ...t, is_active: newStatus } : t));
+        Swal.fire('Updated!', `Pricing Type is now ${newStatus ? 'Active' : 'Inactive'}.`, 'success');
+      }
     } catch (error: any) {
       console.error(error);
-      Swal.fire('Error', 'Failed to update status', 'error');
+      Swal.fire('Error', getErrorMessage(error, 'Failed to update status'), 'error');
     }
   };
 
@@ -67,8 +67,11 @@ export default function ManagePricingTypes() {
 
     try {
       if (editingType) {
-        setPricingTypes(prev => prev.map(t => t.id === editingType.id ? { ...t, name, label } : t));
-        Swal.fire('Updated!', 'Pricing Type updated successfully.', 'success');
+        const response = await API.put(`/admin/pricing-types/${editingType.id}`, { name, label });
+        if (response.data.success) {
+          Swal.fire('Updated!', 'Pricing Type updated successfully.', 'success');
+          fetchPricingTypes();
+        }
       } else {
         const response = await API.post('/admin/pricing-types', { name, label });
         if (response.data.success) {
@@ -79,7 +82,7 @@ export default function ManagePricingTypes() {
       setIsModalOpen(false);
     } catch (error: any) {
       console.error(error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to save', 'error');
+      Swal.fire('Error', getErrorMessage(error, 'Failed to save'), 'error');
     }
   };
 

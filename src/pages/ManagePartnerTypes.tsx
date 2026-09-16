@@ -3,6 +3,7 @@ import { MdEdit, MdDelete, MdAdd, MdClose, MdSave } from 'react-icons/md';
 import type { PartnerType, PartnerCustomField } from '../types';
 import Swal from 'sweetalert2';
 import API from '../services/api';
+import { getErrorMessage } from '../utils/errorHandler';
 
 export default function ManagePartnerTypes() {
   const [partnerTypes, setPartnerTypes] = useState<PartnerType[]>([]);
@@ -79,22 +80,6 @@ export default function ManagePartnerTypes() {
     setIsModalOpen(true);
   };
 
-  const handleDeleteType = (id: string) => {
-    Swal.fire({
-      title: 'Delete Partner Type?',
-      text: 'Are you sure you want to delete this partner type?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, delete it!'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Implement delete API if available, for now just local state
-        setPartnerTypes(prev => prev.filter(t => t.id !== id));
-        Swal.fire('Deleted!', 'Partner Type deleted.', 'success');
-      }
-    });
-  };
 
   const handleAddField = () => {
     setCustomFields(prev => [
@@ -131,7 +116,7 @@ export default function ManagePartnerTypes() {
       }
     } catch (error: any) {
       console.error(error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to update status', 'error');
+      Swal.fire('Error', getErrorMessage(error, 'Failed to update status'), 'error');
     }
   };
 
@@ -182,7 +167,7 @@ export default function ManagePartnerTypes() {
       setIsModalOpen(false);
     } catch (error: any) {
       console.error(error);
-      Swal.fire('Error', error.response?.data?.message || 'Failed to save', 'error');
+      Swal.fire('Error', getErrorMessage(error, 'Failed to save'), 'error');
     }
   };
 
@@ -243,9 +228,6 @@ export default function ManagePartnerTypes() {
                   <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button onClick={() => handleEditType(type)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer' }} title="Edit">
                       <MdEdit size={20} />
-                    </button>
-                    <button onClick={() => handleDeleteType(type.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }} title="Delete">
-                      <MdDelete size={20} />
                     </button>
                   </div>
                 </td>

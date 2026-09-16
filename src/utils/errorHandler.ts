@@ -13,14 +13,18 @@ export const Toast = Swal.mixin({
 });
 
 export const getErrorMessage = (err: any, defaultMessage = "Something went wrong"): string => {
+  let msg = defaultMessage;
   if (err.response?.data?.errors && Array.isArray(err.response.data.errors) && err.response.data.errors.length > 0) {
     const firstError = err.response.data.errors[0];
-    return firstError.message || firstError.msg || defaultMessage;
+    msg = firstError.message || firstError.msg || defaultMessage;
+  } else if (err.response?.data?.message) {
+    msg = err.response.data.message;
+  } else if (err.message) {
+    msg = err.message;
   }
-  if (err.response?.data?.message) {
-    return err.response.data.message;
-  }
-  return err.message || defaultMessage;
+  return typeof msg === 'string' 
+    ? msg.replace(/^Validation Error:\s*([a-zA-Z0-9_.]+\s*-\s*)?/i, '').trim()
+    : defaultMessage;
 };
 
 export const showApiError = (err: any, defaultMessage = "Something went wrong") => {
