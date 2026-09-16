@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { MdClose, MdSearch } from 'react-icons/md';
 import type { OrderItem } from '../types';
 import './SplitOrderModal.css';
@@ -86,7 +87,7 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
     }
   };
 
-  return (
+  return createPortal(
     <div className="split-modal-overlay">
       <div className="split-modal-content">
         <div className="split-modal-header">
@@ -144,7 +145,15 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
                     <div className="split-vendor-empty">Searching...</div>
                   ) : filteredVendors.length > 0 ? (
                     filteredVendors.map(vendor => (
-                      <div key={vendor.id || 'admin'} className="split-vendor-option">
+                      <div 
+                        key={vendor.id || 'admin'} 
+                        className="split-vendor-option"
+                        onClick={() => {
+                          setSelectedVendor(vendor);
+                          setSearchQuery(vendor.businessName);
+                          setIsDropdownOpen(false);
+                        }}
+                      >
                         <div className="split-vendor-info">
                           <div className="split-vendor-business">
                             {vendor.businessName} {vendor.pincode ? `- ${vendor.pincode}` : ''}
@@ -191,6 +200,7 @@ export default function SplitOrderModal({ orderId, item, onClose, onSplit }: Spl
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

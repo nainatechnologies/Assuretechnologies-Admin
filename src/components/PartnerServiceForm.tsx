@@ -16,7 +16,7 @@ interface PartnerServiceFormProps {
   pricingTypes?: { id: string; name: string }[];
 }
 
-export default function PartnerServiceForm({ onSaveService, onCancel, initialData, categories, partnerTypes, pricingTypes: propPricingTypes }: PartnerServiceFormProps) {
+export default function PartnerServiceForm({ onSaveService, onCancel, initialData, categories, pricingTypes: propPricingTypes }: PartnerServiceFormProps) {
   const { pricingTypes: contextPricingTypes } = usePartnerContext();
   const pricingTypes = (propPricingTypes && propPricingTypes.length > 0) ? propPricingTypes : contextPricingTypes;
 

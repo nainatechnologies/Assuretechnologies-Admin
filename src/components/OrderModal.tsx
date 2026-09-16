@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MdClose, MdPersonOutline, MdLocationOn, MdCreditCard, MdVerifiedUser } from 'react-icons/md';
 import type { Order, OrderItem } from '../types';
 import './OrderModal.css';
@@ -11,7 +12,7 @@ interface OrderModalProps {
 
 export default function OrderModal({ order, onClose, onSplitClick }: OrderModalProps) {
   const [copiedId, setCopiedId] = useState(false);
-  return (
+  return createPortal(
     <div className="order-modal-overlay" onClick={onClose}>
       <div className="order-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="order-modal-header">
@@ -183,6 +184,7 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

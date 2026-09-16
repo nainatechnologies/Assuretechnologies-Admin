@@ -21,10 +21,10 @@ export const mapApiOrderToOrder = (
     pincode: o.customer?.pincode || 'N/A',
     totalAmount: totalAmount,
     paymentMethod: o.payment_method ? (o.payment_method === 'UPI' ? 'UPI / QR Code' : o.payment_method === 'CARD' ? 'Credit / Debit Card' : o.payment_method) : 'Online',
-    paymentStatus: o.payment_status === 'PAID' ? 'Paid' : 'Pending',
+    paymentStatus: (o.payment_status === 'PAID' || o.payment_status === 'REFUND_PENDING' || o.payment_status === 'REFUNDED') ? 'Paid' : 'Pending',
     razorpayPaymentId: o.razorpay_payment_id || undefined,
     paymentDetails: o.payment_details || undefined,
-    paidAt: o.paid_at ? new Date(o.paid_at).toLocaleString() : (o.payment_status === 'PAID' ? new Date(o.updatedAt || o.createdAt).toLocaleString() : undefined),
+    paidAt: o.paid_at ? new Date(o.paid_at).toLocaleString() : ((o.payment_status === 'PAID' || o.payment_status === 'REFUND_PENDING' || o.payment_status === 'REFUNDED') ? new Date(o.updatedAt || o.createdAt).toLocaleString() : undefined),
     status: effectiveStatus === 'NEW' ? 'New' 
           : effectiveStatus === 'ACCEPTED' ? 'Accepted' 
           : effectiveStatus === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' 
