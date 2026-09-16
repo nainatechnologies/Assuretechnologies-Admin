@@ -123,9 +123,9 @@ export default function ManagePartnerServices() {
       setEditingService(null);
       setIsAdding(false);
       fetchServices();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving partner service:', error);
-      Swal.fire('Error', 'Failed to save partner service', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to save partner service', 'error');
     }
   };
 

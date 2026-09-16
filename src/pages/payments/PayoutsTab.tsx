@@ -47,9 +47,14 @@ export const PayoutsTab: React.FC<PayoutsTabProps> = ({
               </td>
               <td>{item.date}</td>
               <td>
-                <span className="status-badge completed">
-                  <FiCheckCircle style={{ marginRight: '4px' }} /> Customer Paid
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                  <span className="status-badge completed">
+                    <FiCheckCircle style={{ marginRight: '4px' }} /> Customer Paid
+                  </span>
+                  <span className="status-badge completed">
+                    ✓ Delivered
+                  </span>
+                </div>
               </td>
               <td className="amount-col">
                 <div><strong>₹{(item.netPayable || 0).toLocaleString()}</strong></div>

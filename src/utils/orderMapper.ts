@@ -7,6 +7,8 @@ export const mapApiOrderToOrder = (
   mapItemVendorName: (i: any) => string,
   extraTransportData?: { transportName?: string; trackingId?: string; trackUrl?: string }
 ): Order => {
+  const effectiveStatus = (items.length === 1 && items[0]?.status) ? items[0].status : (o.status || items[0]?.status);
+  const itemTracking = items.find((i: any) => i.tracking_id);
   return {
     id: o.order_number || o.id,
     date: new Date(o.createdAt).toLocaleString(),
@@ -23,20 +25,21 @@ export const mapApiOrderToOrder = (
     razorpayPaymentId: o.razorpay_payment_id || undefined,
     paymentDetails: o.payment_details || undefined,
     paidAt: o.paid_at ? new Date(o.paid_at).toLocaleString() : (o.payment_status === 'PAID' ? new Date(o.updatedAt || o.createdAt).toLocaleString() : undefined),
-    status: o.status === 'NEW' ? 'New' 
-          : o.status === 'ACCEPTED' ? 'Accepted' 
-          : o.status === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' 
-          : o.status === 'COMPLETED' ? 'Completed' 
-          : o.status === 'CANCELLED' ? 'Cancelled' 
+    status: effectiveStatus === 'NEW' ? 'New' 
+          : effectiveStatus === 'ACCEPTED' ? 'Accepted' 
+          : effectiveStatus === 'OUT_FOR_DELIVERY' ? 'Out for Delivery' 
+          : effectiveStatus === 'COMPLETED' ? 'Completed' 
+          : effectiveStatus === 'CANCELLED' ? 'Cancelled' 
           : 'Rejected',
-    transportName: extraTransportData !== undefined ? extraTransportData.transportName : (o.transport_name || undefined),
-    trackingId: extraTransportData !== undefined ? extraTransportData.trackingId : (o.tracking_id || undefined),
-    trackUrl: extraTransportData !== undefined ? extraTransportData.trackUrl : (o.tracking_url || undefined),
+    transportName: extraTransportData !== undefined ? extraTransportData.transportName : (itemTracking?.transport_name || undefined),
+    trackingId: extraTransportData !== undefined ? extraTransportData.trackingId : (itemTracking?.tracking_id || undefined),
+    trackUrl: extraTransportData !== undefined ? extraTransportData.trackUrl : (itemTracking?.tracking_url || undefined),
     items: items.map((i: any) => ({
       id: i.id,
       productName: i.product?.name || 'Unknown',
       vendorName: mapItemVendorName(i),
       vendorId: i.vendor_id,
+      status: i.status,
       trackingId: i.tracking_id,
       transportName: i.transport_name,
       trackUrl: i.tracking_url,
