@@ -6,7 +6,7 @@ interface OrderTableProps {
   orders: Order[];
   currentTab: string;
   onViewOrder: (order: Order) => void;
-  onActionOrder: (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid') => void;
+  onActionOrder: (orderId: string, action: 'Accept' | 'Reject' | 'Out for Delivery' | 'Complete' | 'MarkPaid', order?: Order) => void;
   onTrackOrder?: (order: Order) => void;
   showVendor?: boolean;
   hideActions?: boolean;
@@ -114,18 +114,18 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
                   <div className="order-action-buttons">
                     {currentTab === 'New' && !hideAcceptReject && (
                       <>
-                        <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept')}>Accept</button>
-                        <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject')}>Reject</button>
+                        <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept', order)}>Accept</button>
+                        <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject', order)}>Reject</button>
                       </>
                     )}
                     {currentTab === 'New' && hideAcceptReject && (
                       <span className="order-status-badge">Waiting for Vendor</span>
                     )}
                     {currentTab === 'Accepted' && (
-                      <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery')}>Out for Delivery</button>
+                      <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery', order)}>Out for Delivery</button>
                     )}
                     {currentTab === 'Out for Delivery' && (
-                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Complete')}>Delivered</button>
+                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Complete', order)}>Delivered</button>
                     )}
                     {currentTab === 'Completed' && (
                       <span className="order-status-badge">Delivered</span>

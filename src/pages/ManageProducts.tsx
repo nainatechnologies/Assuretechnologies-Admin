@@ -41,9 +41,9 @@ export default function ManageProducts() {
       }));
       setProducts(fetchedProducts);
       setTotalPages(response.data.pagination.totalPages);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch products', error);
-      Swal.fire('Error', 'Failed to fetch products', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to fetch products', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -86,9 +86,9 @@ export default function ManageProducts() {
         timer: 2000,
         showConfirmButton: false
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add product', error);
-      Swal.fire('Error', 'Failed to add product', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to add product', 'error');
     }
   };
 
@@ -128,9 +128,9 @@ export default function ManageProducts() {
         timer: 2000,
         showConfirmButton: false
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update product', error);
-      Swal.fire('Error', 'Failed to update product', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to update product', 'error');
     }
   };
 
@@ -156,9 +156,9 @@ export default function ManageProducts() {
             timer: 1500,
             showConfirmButton: false
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error('Failed to delete product', error);
-          Swal.fire('Error', 'Failed to delete product', 'error');
+          Swal.fire('Error', error?.response?.data?.message || 'Failed to delete product', 'error');
         }
       }
     });
@@ -177,9 +177,9 @@ export default function ManageProducts() {
         timer: 1500,
         showConfirmButton: false
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to update product status', error);
-      Swal.fire('Error', 'Failed to update product status', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to update product status', 'error');
     }
   };
 

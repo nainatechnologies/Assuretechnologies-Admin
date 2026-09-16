@@ -57,9 +57,9 @@ export default function ManageVendors() {
           setTotalPages(1);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch vendors:', error);
-      Swal.fire('Error', 'Failed to load vendors', 'error');
+      Swal.fire('Error', error?.response?.data?.message || 'Failed to load vendors', 'error');
     } finally {
       setLoading(false);
     }
@@ -103,7 +103,7 @@ export default function ManageVendors() {
         }
       } catch (error: any) {
         console.error('Create vendor error:', error);
-        throw error;
+        Swal.fire('Error', error?.response?.data?.message || 'Failed to add vendor', 'error');
       }
     }
   };

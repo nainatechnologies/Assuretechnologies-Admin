@@ -67,18 +67,36 @@ export default function useAssignmentPage<T extends { id: string }>(config: UseA
   const handleReject = async (id: string) => {
     const result = await Swal.fire({
       title: `Reject ${entityLabel}?`,
-      text: `Are you sure you want to reject this ${entityLabel}?`,
-      icon: 'warning',
+      text: `Please select a reason for rejecting this ${entityLabel} (this will queue a customer refund if paid):`,
+      input: 'select',
+      inputOptions: {
+        'Technician unavailable': 'Technician unavailable',
+        'Service area unserviceable': 'Service area unserviceable',
+        'Customer requested cancellation': 'Customer requested cancellation',
+        'Equipment / Spare parts unavailable': 'Equipment / Spare parts unavailable',
+        'Other': 'Other reason'
+      },
+      inputPlaceholder: 'Select rejection reason',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, Reject',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Confirm Rejection',
+      inputValidator: (value) => {
+        if (!value) return 'Please select a reason for rejection!';
+        return null;
+      }
     });
     if (result.isConfirmed) {
       try {
-        await API.put(`/admin/service-bookings/${id}/status`, { status: 'CANCELLED' });
-        Swal.fire('Rejected!', `The ${entityLabel} has been rejected.`, 'success');
+        await API.put(`/admin/service-bookings/${id}/status`, { 
+          status: 'CANCELLED',
+          reason: result.value
+        });
+        Swal.fire('Rejected!', `The ${entityLabel} has been rejected and queued for customer refund if paid.`, 'success');
         fetchBookings(currentPage);
-      } catch { Swal.fire('Error', `Failed to reject ${entityLabel}`, 'error'); }
+      } catch (error: any) { 
+        Swal.fire('Error', error.response?.data?.message || `Failed to reject ${entityLabel}`, 'error'); 
+      }
     }
   };
 
