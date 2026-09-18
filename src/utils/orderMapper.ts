@@ -1,5 +1,15 @@
 import type { Order } from '../types';
 
+const cleanAddress = (rawAddress?: string): string => {
+  if (!rawAddress) return 'N/A';
+  const cleaned = rawAddress
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter(Boolean)
+    .join(', ');
+  return cleaned || 'N/A';
+};
+
 export const mapApiOrderToOrder = (
   o: any, 
   items: any[], 
@@ -15,7 +25,7 @@ export const mapApiOrderToOrder = (
     user: o.customer?.full_name || o.customer_name || 'N/A',
     mobile: o.customer?.mobile || o.customer_contact || 'N/A',
     email: o.customer?.email || 'N/A',
-    address: o.customer_address || 'N/A',
+    address: cleanAddress(o.customer_address),
     companyName: o.company_name || undefined,
     gstNumber: o.gst_number || undefined,
     pincode: o.customer?.pincode || 'N/A',
