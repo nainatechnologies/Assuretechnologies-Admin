@@ -10,7 +10,59 @@ interface OrderModalProps {
   onSplitClick?: (item: OrderItem) => void;
 }
 
+interface ParsedAddress {
+  line1: string;
+  line2: string | null;
+  pincode: string | null;
+}
+
+function formatDeliveryAddress(rawAddress: string, fallbackPin?: string): ParsedAddress {
+  if (!rawAddress || rawAddress === 'N/A') {
+    return { line1: 'N/A', line2: null, pincode: null };
+  }
+
+  // Split by newlines or commas
+  const rawParts = rawAddress
+    .replace(/\r\n/g, '\n')
+    .split(/[\n,]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  if (rawParts.length === 0) {
+    return { line1: 'N/A', line2: null, pincode: null };
+  }
+
+  // Extract 6-digit Indian PIN code
+  const rawJoined = rawParts.join(', ');
+  const pinMatch = rawJoined.match(/\b(\d{6})\b/);
+  const pincode = pinMatch ? pinMatch[1] : (fallbackPin && fallbackPin !== 'N/A' && /^\d{6}$/.test(fallbackPin) ? fallbackPin : null);
+
+  // Strip pincode and trailing hyphens from address parts
+  const parts = rawParts
+    .map(p => p.replace(/[-–—]?\s*\b\d{6}\b/g, '').trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return { line1: rawJoined, line2: null, pincode };
+  }
+
+  if (parts.length <= 2) {
+    return {
+      line1: parts.join(', '),
+      line2: null,
+      pincode
+    };
+  }
+
+  return {
+    line1: parts.slice(0, -2).join(', '),
+    line2: parts.slice(-2).join(', '),
+    pincode
+  };
+}
+
 export default function OrderModal({ order, onClose, onSplitClick }: OrderModalProps) {
+  const addressInfo = formatDeliveryAddress(order.address, order.pincode);
   const [copiedId, setCopiedId] = useState(false);
   return createPortal(
     <div className="order-modal-overlay" onClick={onClose}>
@@ -60,8 +112,16 @@ export default function OrderModal({ order, onClose, onSplitClick }: OrderModalP
                 <MdLocationOn size={18} /> Delivery Address
               </div>
               <div className="order-card-content">
-                <p>{order.address}</p>
-                <span className="saved-address-badge">Saved Address</span>
+                <div className="address-display">
+                  {addressInfo.line1 && <p className="address-line-primary">{addressInfo.line1}</p>}
+                  {addressInfo.line2 && <p className="address-line-secondary">{addressInfo.line2}</p>}
+                </div>
+                <div className="address-badges">
+                  {addressInfo.pincode && (
+                    <span className="pincode-badge">PIN: {addressInfo.pincode}</span>
+                  )}
+                  <span className="saved-address-badge">Saved Address</span>
+                </div>
               </div>
             </div>
 
