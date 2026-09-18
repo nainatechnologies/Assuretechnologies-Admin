@@ -158,21 +158,25 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
               </select>
               {category_id && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
             </div>
+          </div>
 
-            {/* Required Partner Type */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', flex: 1 }}>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#4b5563' }}>Partner Type</label>
+          {/* Required Partner Type */}
+          <div className="input-group form-group">
+            <label className="input-label" htmlFor="partnerType">Partner Type</label>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <select
+                id="partnerType"
+                className="input-field category-select colorful-input"
+                style={{
+                  width: '100%',
+                  paddingRight: required_partner_type_id ? '40px' : '16px',
+                  backgroundColor: !category_id ? '#f1f5f9' : '#ffffff',
+                  cursor: !category_id ? 'not-allowed' : 'pointer'
+                }}
                 value={required_partner_type_id}
                 onChange={(e) => setRequiredPartnerTypeId(e.target.value)}
                 required
                 disabled={!category_id || isLoadingPartnerTypes}
-                style={{
-                  padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', outline: 'none',
-                  backgroundColor: !category_id ? '#f1f5f9' : '#f8fafc', color: '#1e293b', fontSize: '14px',
-                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)', appearance: 'none',
-                  cursor: !category_id ? 'not-allowed' : 'pointer'
-                }}
               >
                 <option value="" disabled hidden>
                   {!category_id
@@ -187,7 +191,12 @@ export default function PartnerServiceForm({ onSaveService, onCancel, initialDat
                   <option key={pt.id} value={pt.id}>{pt.name}</option>
                 ))}
               </select>
-              {required_partner_type_id && <MdCheckCircle color="#10B981" style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }} />}
+              {required_partner_type_id && (
+                <MdCheckCircle
+                  color="#10B981"
+                  style={{ position: 'absolute', right: '16px', pointerEvents: 'none' }}
+                />
+              )}
             </div>
           </div>
 

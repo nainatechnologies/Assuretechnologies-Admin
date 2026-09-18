@@ -4,6 +4,7 @@ import type { Partner, PartnerType } from '../types';
 import Swal from 'sweetalert2';
 import PartnerModal from '../components/PartnerModal';
 import API from '../services/api';
+import { getErrorMessage } from '../utils/errorHandler';
 
 export default function ManagePartners() {
   const [partners, setPartners] = useState<Partner[]>([]);
@@ -128,9 +129,26 @@ export default function ManagePartners() {
     }));
 
     try {
-      await API.put(`/admin/partners/${id}/status`, { is_active: nextStatus === 'Active' });
-    } catch (err) {
+      const response = await API.patch(`/admin/partners/${id}/status`, { is_active: nextStatus === 'Active' });
+      if (response.data?.success) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Partner is now ${nextStatus}`,
+          showConfirmButton: false,
+          timer: 1500
+        });
+      }
+    } catch (err: any) {
       console.error('Failed to toggle partner status:', err);
+      setPartners(prev => prev.map(p => {
+        if (p.id === id) {
+          return { ...p, status: target.status };
+        }
+        return p;
+      }));
+      Swal.fire('Error', getErrorMessage(err, 'Failed to update partner status'), 'error');
     }
   };
 
