@@ -17,7 +17,26 @@ export const mapApiOrderToOrder = (
   mapItemVendorName: (i: any) => string,
   extraTransportData?: { transportName?: string; trackingId?: string; trackUrl?: string }
 ): Order => {
-  const effectiveStatus = (items.length === 1 && items[0]?.status) ? items[0].status : (o.status || items[0]?.status);
+  // Determine effective status from the specific items in this order slice
+  let effectiveStatus = o.status;
+  if (items && items.length > 0) {
+    const activeItems = items.filter((i: any) => i.status !== 'CANCELLED');
+    if (activeItems.length > 0) {
+      if (activeItems.every((i: any) => i.status === 'COMPLETED')) {
+        effectiveStatus = 'COMPLETED';
+      } else if (activeItems.some((i: any) => i.status === 'OUT_FOR_DELIVERY')) {
+        effectiveStatus = 'OUT_FOR_DELIVERY';
+      } else if (activeItems.some((i: any) => i.status === 'ACCEPTED')) {
+        effectiveStatus = 'ACCEPTED';
+      } else if (activeItems.some((i: any) => i.status === 'NEW')) {
+        effectiveStatus = 'NEW';
+      } else if (activeItems[0]?.status) {
+        effectiveStatus = activeItems[0].status;
+      }
+    } else {
+      effectiveStatus = 'CANCELLED';
+    }
+  }
   const itemTracking = items.find((i: any) => i.tracking_id);
   return {
     id: o.order_number || o.id,
