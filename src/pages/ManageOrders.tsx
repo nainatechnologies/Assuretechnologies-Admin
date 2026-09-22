@@ -59,7 +59,7 @@ export default function ManageOrders() {
       order.user.toLowerCase().includes(query) ||
       order.mobile.includes(query) ||
       order.email.toLowerCase().includes(query);
-    const matchesTab = query !== '' ? true : (order.status === activeTab);
+    const matchesTab = order.status === activeTab;
     return matchesTab && matchesSearch;
   });
 

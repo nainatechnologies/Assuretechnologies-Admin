@@ -11,9 +11,10 @@ interface OrderTableProps {
   showVendor?: boolean;
   hideActions?: boolean;
   hideAcceptReject?: boolean;
+  readOnlyStatus?: boolean;
 }
 
-export default function OrderTable({ orders, currentTab, onViewOrder, onActionOrder, onTrackOrder, showVendor, hideActions, hideAcceptReject }: OrderTableProps) {
+export default function OrderTable({ orders, currentTab, onViewOrder, onActionOrder, onTrackOrder, showVendor, hideActions, hideAcceptReject, readOnlyStatus }: OrderTableProps) {
   if (orders.length === 0) {
     return (
       <div className="order-table-container">
@@ -30,7 +31,7 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
               <th>Payment</th>
               <th>View</th>
               {currentTab !== 'New' && <th>Track Id</th>}
-              {!hideActions && <th>Action</th>}
+              {!hideActions && <th>{readOnlyStatus ? 'Status' : 'Action'}</th>}
             </tr>
           </thead>
         </table>
@@ -56,7 +57,7 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
             <th>Payment</th>
             <th>View</th>
             {currentTab !== 'New' && <th>Track Id</th>}
-            {!hideActions && <th>Action</th>}
+            {!hideActions && <th>{readOnlyStatus ? 'Status' : 'Action'}</th>}
           </tr>
         </thead>
         <tbody>
@@ -111,26 +112,35 @@ export default function OrderTable({ orders, currentTab, onViewOrder, onActionOr
               )}
               {!hideActions && (
                 <td>
-                  <div className="order-action-buttons">
-                    {currentTab === 'New' && !hideAcceptReject && (
-                      <>
-                        <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept', order)}>Accept</button>
-                        <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject', order)}>Reject</button>
-                      </>
-                    )}
-                    {currentTab === 'New' && hideAcceptReject && (
-                      <span className="order-status-badge">Waiting for Vendor</span>
-                    )}
-                    {currentTab === 'Accepted' && (
-                      <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery', order)}>Out for Delivery</button>
-                    )}
-                    {currentTab === 'Out for Delivery' && (
-                      <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Complete', order)}>Delivered</button>
-                    )}
-                    {currentTab === 'Completed' && (
-                      <span className="order-status-badge">Delivered</span>
-                    )}
-                  </div>
+                  {readOnlyStatus ? (
+                    <span className={`order-status-badge order-status-${(order.status || 'New').toLowerCase().replace(/\s+/g, '-')}`}>
+                      {order.status === 'New' ? 'Waiting for Vendor' : order.status === 'Completed' ? 'Delivered' : order.status}
+                    </span>
+                  ) : (
+                    <div className="order-action-buttons">
+                      {currentTab === 'New' && !hideAcceptReject && (
+                        <>
+                          <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Accept', order)}>Accept</button>
+                          <button className="order-btn-reject" onClick={() => onActionOrder(order.id, 'Reject', order)}>Reject</button>
+                        </>
+                      )}
+                      {currentTab === 'New' && hideAcceptReject && (
+                        <span className="order-status-badge order-status-new">Waiting for Vendor</span>
+                      )}
+                      {currentTab === 'Accepted' && (
+                        <button className="order-btn-delivery" onClick={() => onActionOrder(order.id, 'Out for Delivery', order)}>Out for Delivery</button>
+                      )}
+                      {currentTab === 'Out for Delivery' && (
+                        <button className="order-btn-accept" onClick={() => onActionOrder(order.id, 'Complete', order)}>Delivered</button>
+                      )}
+                      {currentTab === 'Completed' && (
+                        <span className="order-status-badge order-status-completed">Delivered</span>
+                      )}
+                      {currentTab === 'Cancelled' && (
+                        <span className="order-status-badge order-status-cancelled">Cancelled</span>
+                      )}
+                    </div>
+                  )}
                 </td>
               )}
             </tr>

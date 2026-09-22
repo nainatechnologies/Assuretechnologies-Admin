@@ -27,20 +27,30 @@ export default function ManageVendorOrders() {
         const vendorItems = (o.items || []).filter((i: any) => i.vendor || i.vendor_id);
         
         if (vendorItems.length > 0) {
-          const itemWithTracking = vendorItems.find((i: any) => i.tracking_id);
-          const vendorTotal = vendorItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
+          // Group by vendor so each vendor sub-order has its own accurate items, total, and status
+          const itemsByVendorMap = vendorItems.reduce((acc: any, item: any) => {
+            const vKey = item.vendor_id || item.vendor?.id || item.vendor?.business_name || 'Vendor Product';
+            if (!acc[vKey]) acc[vKey] = [];
+            acc[vKey].push(item);
+            return acc;
+          }, {});
 
-          vendorOrdersFetched.push(mapApiOrderToOrder(
-            o, 
-            vendorItems, 
-            vendorTotal, 
-            (i: any) => i.vendor?.business_name || i.vendor?.full_name || 'Vendor Product',
-            {
-              transportName: itemWithTracking?.transport_name,
-              trackingId: itemWithTracking?.tracking_id,
-              trackUrl: itemWithTracking?.tracking_url
-            }
-          ));
+          Object.values(itemsByVendorMap).forEach((vItems: any) => {
+            const itemWithTracking = vItems.find((i: any) => i.tracking_id);
+            const vendorTotal = vItems.reduce((sum: number, i: any) => sum + (parseFloat(i.subtotal) || 0), 0);
+
+            vendorOrdersFetched.push(mapApiOrderToOrder(
+              o, 
+              vItems, 
+              vendorTotal, 
+              (i: any) => i.vendor?.business_name || i.vendor?.full_name || 'Vendor Product',
+              {
+                transportName: itemWithTracking?.transport_name,
+                trackingId: itemWithTracking?.tracking_id,
+                trackUrl: itemWithTracking?.tracking_url
+              }
+            ));
+          });
         }
       });
       
@@ -73,26 +83,11 @@ export default function ManageVendorOrders() {
       order.user.toLowerCase().includes(query) ||
       order.mobile.includes(query) ||
       order.email.toLowerCase().includes(query);
-    const matchesTab = query !== '' ? true : (order.status === activeTab);
+    const matchesTab = order.status === activeTab;
     return matchesTab && matchesSearch;
   });
 
-  const vendorOrders = filteredOrders.flatMap(order => {
-    const itemsByVendor = order.items.reduce((acc, item) => {
-      if (!acc[item.vendorName]) acc[item.vendorName] = [];
-      acc[item.vendorName].push(item);
-      return acc;
-    }, {} as Record<string, OrderItem[]>);
-
-    return Object.entries(itemsByVendor).map(([, vendorItems]) => {
-      const vendorTotal = vendorItems.reduce((sum, i) => sum + i.subtotal, 0);
-      return {
-        ...order,
-        items: vendorItems,
-        totalAmount: vendorTotal,
-      };
-    });
-  });
+  const vendorOrders = filteredOrders;
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(vendorOrders.length / itemsPerPage) || 1;
@@ -277,6 +272,7 @@ export default function ManageVendorOrders() {
             showVendor={true}
             hideActions={false}
             hideAcceptReject={true}
+            readOnlyStatus={true}
           />
 
           <Pagination 
