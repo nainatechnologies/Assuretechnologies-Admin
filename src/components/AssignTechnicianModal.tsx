@@ -38,13 +38,7 @@ export default function AssignTechnicianModal({ request, onClose, onAssignSucces
     const timeoutId = setTimeout(async () => {
       setLoading(true);
       try {
-        let url = `/admin/technicians?search=${encodeURIComponent(searchQuery)}&available_only=true`;
-        if (request.technicianId) {
-          url += `&exclude_id=${encodeURIComponent(request.technicianId)}`;
-        }
-        if (filterBySkill && request.serviceName) {
-          url += `&service_name=${encodeURIComponent(request.serviceName)}`;
-        }
+        let url = `/admin/service-bookings/${request.id}/available-technicians`;
         const res = await API.get(url);
         if (res.data.success && res.data.data) {
           const mapped = res.data.data
